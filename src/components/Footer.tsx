@@ -1,16 +1,42 @@
 import { Building2, Mail, MapPin } from "lucide-react";
+import { Link } from "react-router";
 
-export default function Footer() {
+type FooterVariant = "default" | "solid" | "alt";
+
+interface FooterProps {
+  variant?: FooterVariant;
+}
+
+export default function Footer({ variant = "default" }: FooterProps) {
+  const rootClass =
+    variant === "solid"
+      ? "footer-solid border-t"
+      : variant === "alt"
+      ? "footer-alt border-t"
+      : "bg-muted/30 border-t";
+
   return (
-    <footer className="bg-muted/30 border-t">
+    <footer className={rootClass}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           <div>
             <div className="flex items-center gap-2 font-semibold text-lg mb-4">
-              <Building2 className="h-6 w-6 text-primary" />
+              <Building2
+                className={
+                  variant === "default"
+                    ? "h-6 w-6 text-primary"
+                    : "h-6 w-6 text-white"
+                }
+              />
               <span>Ronda de Negocios</span>
             </div>
-            <p className="text-muted-foreground leading-relaxed">
+            <p
+              className={
+                variant === "default"
+                  ? "text-muted-foreground leading-relaxed"
+                  : "leading-relaxed text-white/90"
+              }
+            >
               El evento empresarial más importante de Trenque Lauquen
             </p>
           </div>
@@ -19,28 +45,40 @@ export default function Footer() {
             <h3 className="font-semibold mb-4">Enlaces</h3>
             <ul className="space-y-2">
               <li>
-                <a
-                  href="#landing"
-                  className="text-muted-foreground hover:text-primary transition-colors"
+                <Link
+                  to="/"
+                  className={
+                    variant === "default"
+                      ? "text-muted-foreground hover:text-primary transition-colors"
+                      : "text-white/95 hover:opacity-90 transition-opacity"
+                  }
                 >
                   Inicio
-                </a>
+                </Link>
               </li>
               <li>
-                <a
-                  href="#companies"
-                  className="text-muted-foreground hover:text-primary transition-colors"
+                <Link
+                  to="/companies"
+                  className={
+                    variant === "default"
+                      ? "text-muted-foreground hover:text-primary transition-colors"
+                      : "text-white/95 hover:opacity-90 transition-opacity"
+                  }
                 >
                   Empresas
-                </a>
+                </Link>
               </li>
               <li>
-                <a
-                  href="#register"
-                  className="text-muted-foreground hover:text-primary transition-colors"
+                <Link
+                  to="/register"
+                  className={
+                    variant === "default"
+                      ? "text-muted-foreground hover:text-primary transition-colors"
+                      : "text-white/95 hover:opacity-90 transition-opacity"
+                  }
                 >
                   Inscribirse
-                </a>
+                </Link>
               </li>
             </ul>
           </div>

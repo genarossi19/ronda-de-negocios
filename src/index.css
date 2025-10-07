@@ -10,14 +10,16 @@
   --card-foreground: oklch(0.145 0 0);
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
+  --primary: #143e29;
+  --primary-foreground: #ffffff;
+  --secondary: #f3efe6;
+  --secondary-foreground: #2b2b2b;
+  /* Accent: gold-ish for elegance */
+  --accent: #f58a1fdc;
+  --accent-foreground: #ffffff;
   --muted: oklch(0.97 0 0);
   --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
+  --muted-foreground: #6b6b6b;
   --destructive: oklch(0.577 0.245 27.325);
   --destructive-foreground: oklch(0.577 0.245 27.325);
   --border: oklch(0.922 0 0);
@@ -37,6 +39,39 @@
   --sidebar-accent-foreground: oklch(0.205 0 0);
   --sidebar-border: oklch(0.922 0 0);
   --sidebar-ring: oklch(0.708 0 0);
+}
+
+/* Form-focused utilities for a refined, formal + striking look */
+.form-hero {
+  background: linear-gradient(
+    180deg,
+    rgba(20, 62, 41, 0.06),
+    rgba(184, 134, 11, 0.03)
+  );
+  border: 1px solid rgba(20, 62, 41, 0.06);
+  border-radius: calc(var(--radius) * 1.6);
+}
+
+.form-card {
+  background: var(--color-card);
+  border-radius: var(--radius);
+  box-shadow: 0 10px 30px rgba(20, 62, 41, 0.08);
+  border: 1px solid rgba(20, 62, 41, 0.06);
+}
+
+.accent-btn {
+  background: linear-gradient(90deg, var(--accent), #8f6f09);
+  color: var(--accent-foreground);
+}
+
+.muted-panel {
+  background: linear-gradient(
+    180deg,
+    var(--secondary),
+    rgba(243, 239, 230, 0.85)
+  );
+  border-radius: calc(var(--radius) - 2px);
+  border: 1px solid rgba(20, 62, 41, 0.04);
 }
 
 @theme inline {
@@ -110,4 +145,109 @@ html {
 
 ::-webkit-scrollbar-thumb:hover {
   background: var(--color-primary);
+}
+
+/* Accessibility & legibility improvements for form */
+.form-card label {
+  font-size: 0.98rem;
+  font-weight: 600;
+  color: var(--color-foreground);
+}
+.form-card input,
+.form-card textarea,
+.form-card select {
+  font-size: 1rem;
+  padding: 0.75rem 0.9rem;
+}
+
+.form-card .space-y-2 {
+  gap: 0.6rem;
+}
+
+/* Focus-visible outlines for keyboard users */
+.form-card input:focus-visible,
+.form-card textarea:focus-visible,
+.form-card select:focus-visible,
+.form-card button:focus-visible {
+  outline: 3px solid rgba(184, 134, 11, 0.25);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+/* Buttons responsive adjustments */
+.form-actions {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+}
+.form-actions .btn-secondary {
+  flex: 0 0 auto;
+  min-width: 140px;
+}
+.form-actions .btn-primary {
+  flex: 1 1 auto;
+}
+
+@media (max-width: 640px) {
+  .form-actions {
+    flex-direction: column-reverse;
+    gap: 0.75rem;
+  }
+  .muted-panel {
+    display: none; /* hide side panel on very small screens to prioritize form */
+  }
+}
+
+/* Navbar solid variant: solid primary color with white elements and no blur */
+.navbar-solid {
+  background: var(--primary) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  border-bottom-color: rgba(0, 0, 0, 0.08);
+}
+.navbar-solid .text-white,
+.navbar-solid .text-white * {
+  color: #ffffff !important;
+}
+.navbar-solid .text-primary {
+  color: #ffffff !important;
+}
+.navbar-solid .btn-primary,
+.navbar-solid .btn-secondary {
+  color: #ffffff;
+}
+
+/* Footer variants */
+.footer-solid {
+  background: var(--color-primary) !important;
+  color: var(--color-primary-foreground) !important;
+}
+.footer-solid .text-muted-foreground,
+.footer-solid .text-muted-foreground * {
+  color: rgba(255, 255, 255, 0.85) !important;
+}
+.footer-solid a {
+  color: rgba(255, 255, 255, 0.95) !important;
+}
+.footer-solid .border-t {
+  border-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+/* Alternative footer with subtle dark overlay */
+.footer-alt {
+  background: linear-gradient(
+    180deg,
+    rgba(20, 62, 41, 0.95),
+    rgba(20, 62, 41, 0.9)
+  );
+  color: rgba(255, 255, 255, 0.96);
+}
+.footer-alt a {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+/* Smooth transition for color changes when switching nav variants */
+nav[data-navbar-variant] {
+  transition: background-color 260ms ease, color 260ms ease,
+    backdrop-filter 260ms ease;
 }

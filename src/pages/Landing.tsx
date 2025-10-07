@@ -10,34 +10,72 @@ import {
   Users,
   Handshake,
   TrendingUp,
+  Calendar,
+  MapPin,
 } from "lucide-react";
 
-export default function Landing() {
-  const handleRegisterClick = () => {
-    window.location.href = "#register";
-  };
+import { TextAnimate } from "../components/ui/text-animate";
+import { useNavigate } from "react-router";
 
-  const handleViewCompanies = () => {
-    window.location.href = "#companies";
-  };
+export default function Landing() {
+  const navigate = useNavigate();
+  const handleRegisterClick = () => navigate("/register");
+  const handleViewCompanies = () => navigate("/companies");
 
   return (
     <div className="min-h-screen">
-      <Navbar />
+      <Navbar variant="default" />
 
       {/* Hero Section */}
       <section className="relative pt-32 pb-20 px-4 sm:px-6 lg:px-8">
+        <div className="text-center">
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-accent/10 text-accent text-sm font-medium mb-8">
+            <span className="w-2 h-2 rounded-full bg-accent animate-pulse"></span>
+            Inscripciones abiertas
+          </div>
+        </div>
+        {/* Date & Location */}
+        <div className="flex justify-center gap-6 mb-6">
+          <div className="inline-flex items-center gap-3 bg-muted/10 px-4 py-3 rounded-lg">
+            <Calendar className="h-6 w-6 text-primary" />
+            <div className="text-left">
+              <div className="text-sm text-muted-foreground">Fecha</div>
+              <div className="font-semibold">21 de octubre, 2025</div>
+            </div>
+          </div>
+
+          <div className="inline-flex items-center gap-3 bg-muted/10 px-4 py-3 rounded-lg">
+            <MapPin className="h-6 w-6 text-primary" />
+            <div className="text-left">
+              <div className="text-sm text-muted-foreground">Lugar</div>
+              <div className="font-semibold">
+                Polo Cientifico Tecnologico{" "}
+                <span className="text-muted-foreground">Hernandez 816</span>
+              </div>
+            </div>
+          </div>
+        </div>
         <div className="max-w-7xl mx-auto">
           <div className="text-center">
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-accent/10 text-accent text-sm font-medium mb-8">
-              <span className="w-2 h-2 rounded-full bg-accent animate-pulse"></span>
-              Inscripciones abiertas
-            </div>
-
-            <h1 className="text-5xl sm:text-6xl lg:text-7xl font-bold text-foreground mb-6 text-balance">
+            <TextAnimate
+              animation="blurInUp"
+              by="character"
+              once
+              as={"h1"}
+              className="text-5xl sm:text-6xl lg:text-7xl font-bold text-foreground mb-6 text-balance"
+            >
               Ronda de Negocios
-              <span className="block text-primary mt-2">Trenque Lauquen</span>
-            </h1>
+              {/* <span className="">Trenque Lauquen</span> */}
+            </TextAnimate>
+            <TextAnimate
+              animation="blurInUp"
+              by="character"
+              once
+              as={"h1"}
+              className="text-5xl sm:text-6xl lg:text-7xl font-bold  mb-6 text-balance block text-primary mt-2"
+            >
+              Trenque Lauquen
+            </TextAnimate>
 
             <p className="text-xl text-muted-foreground max-w-3xl mx-auto mb-12 text-pretty leading-relaxed">
               Conectá con empresas líderes, expandí tu red de contactos y
@@ -64,6 +102,21 @@ export default function Landing() {
               </Button>
             </div>
           </div>
+        </div>
+      </section>
+
+      {/* Companies Carousel */}
+      <section className="py-20 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-7xl mx-auto">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl sm:text-4xl font-bold mb-4">
+              Empresas Participantes
+            </h2>
+            <p className="text-lg text-muted-foreground">
+              Más de 50 empresas ya confirmaron su participación
+            </p>
+          </div>
+          <Carousel />
         </div>
       </section>
 
@@ -111,21 +164,6 @@ export default function Landing() {
               </p>
             </div>
           </div>
-        </div>
-      </section>
-
-      {/* Companies Carousel */}
-      <section className="py-20 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl sm:text-4xl font-bold mb-4">
-              Empresas Participantes
-            </h2>
-            <p className="text-lg text-muted-foreground">
-              Más de 50 empresas ya confirmaron su participación
-            </p>
-          </div>
-          <Carousel />
         </div>
       </section>
 

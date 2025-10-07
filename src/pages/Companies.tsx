@@ -4,20 +4,18 @@ import CompanyCard from "../components/CompanyCard";
 import { useCompanies } from "../context/CompanyContext";
 import { Button } from "../components/ui/button";
 import { ArrowLeft } from "lucide-react";
+import { useNavigate } from "react-router";
 
 export default function Companies() {
   const { companies } = useCompanies();
+  const navigate = useNavigate();
 
   return (
     <div className="min-h-screen">
       <Navbar />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
-        <Button
-          variant="ghost"
-          onClick={() => (window.location.href = "#landing")}
-          className="mb-8"
-        >
+        <Button variant="ghost" onClick={() => navigate("/")} className="mb-8">
           <ArrowLeft className="mr-2 h-4 w-4" />
           Volver al inicio
         </Button>

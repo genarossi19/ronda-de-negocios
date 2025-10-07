@@ -6,13 +6,13 @@ import { useCompanies } from "../context/CompanyContext";
 import { Button } from "../components/ui/button";
 import { ArrowLeft, Mail, Phone, MapPin, Building2 } from "lucide-react";
 
-interface CompanyDetailProps {
-  companyId: string | null;
-}
+import { useParams, useNavigate } from "react-router";
 
-export default function CompanyDetail({ companyId }: CompanyDetailProps) {
+export default function CompanyDetail() {
+  const { id } = useParams<{ id?: string }>();
+  const navigate = useNavigate();
   const { getCompany } = useCompanies();
-  const company = companyId ? getCompany(companyId) : null;
+  const company = id ? getCompany(id) : null;
 
   if (!company) {
     return (
@@ -21,7 +21,7 @@ export default function CompanyDetail({ companyId }: CompanyDetailProps) {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
           <Button
             variant="ghost"
-            onClick={() => (window.location.href = "#companies")}
+            onClick={() => navigate("/companies")}
             className="mb-8"
           >
             <ArrowLeft className="mr-2 h-4 w-4" />
@@ -46,7 +46,7 @@ export default function CompanyDetail({ companyId }: CompanyDetailProps) {
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
         <Button
           variant="ghost"
-          onClick={() => (window.location.href = "#companies")}
+          onClick={() => navigate("/companies")}
           className="mb-8"
         >
           <ArrowLeft className="mr-2 h-4 w-4" />
