@@ -2,8 +2,11 @@ import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import tailwindcss from "@tailwindcss/vite";
 import path from "path";
+import dotenv from "dotenv";
 
-// Leemos variable de entorno al inicio
+// Cargar variables del .env.development si corresponde
+dotenv.config({ path: ".env.development" }); // ajusta según el modo
+
 const allowNgrok = process.env.VITE_ALLOW_NGROK === "true";
 
 export default defineConfig({
@@ -15,6 +18,6 @@ export default defineConfig({
   },
   server: {
     host: true,
-    allowedHosts: allowNgrok ? true : undefined, // ✅ Compatible con TS
+    allowedHosts: allowNgrok ? true : undefined,
   },
 });
