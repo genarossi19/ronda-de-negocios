@@ -15,7 +15,8 @@
   --secondary: #f3efe6;
   --secondary-foreground: #2b2b2b;
   /* Accent: gold-ish for elegance */
-  --accent: #f58a1fdc;
+  /* --accent: #f58a1fdc; */
+  --accent: #68a243;
   --accent-foreground: #ffffff;
   --muted: oklch(0.97 0 0);
   --muted-foreground: oklch(0.556 0 0);
