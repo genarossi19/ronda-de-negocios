@@ -1,5 +1,3 @@
-"use client";
-
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import Carousel from "../components/Carousel";
@@ -16,14 +14,12 @@ import {
 } from "lucide-react";
 
 import { TextAnimate } from "../components/ui/text-animate";
-
+import { useNavigate } from "react-router";
 export default function Landing() {
-  const handleRegisterClick = () => {
-    window.location.href = "#register";
-  };
+  const navigate = useNavigate();
 
   const handleViewCompanies = () => {
-    window.location.href = "#companies";
+    navigate("/companies");
   };
 
   return (
@@ -39,29 +35,32 @@ export default function Landing() {
         }}
       >
         {/* Overlay para oscurecer fondo y mejorar legibilidad */}
-        <div className="absolute inset-0 bg-black/70" />
+        <div className="absolute inset-0 bg-gradient-to-br from-black/80  to-black/70" />
 
         {/* Contenido: agregamos padding-top = altura navbar */}
         <div className="relative z-10 w-full pt-[80px] pb-20 px-4 sm:px-6 lg:px-8">
           {/* Aviso superior */}
           <div className="text-center">
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-accent/10 text-accent text-sm font-medium mb-8">
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-accent/20 text-accent border border-accent/30 text-sm font-medium mb-8">
               <span className="w-2 h-2 rounded-full bg-accent animate-pulse"></span>
               Inscripciones abiertas
             </div>
           </div>
 
           <div className="flex flex-wrap justify-center gap-6 mb-6">
-            <div className="inline-flex items-center gap-3 px-4 py-3 rounded-lg">
-              <Calendar className="h-6 w-6 text-white" />
+            <div className="inline-flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-white/5 hover:backdrop-blur-sm hover:border hover:border-white/10 transition-all duration-150 ease-in-out">
+              <Calendar className="h-6 w-6 text-secondary" />
               <div className="text-left text-white">
                 <div className="text-sm text-gray-300">Fecha</div>
-                <div className="font-semibold">21 de octubre, 2025</div>
+                <div className="font-semibold flex flex-col">
+                  Martes 21 de Octubre
+                  <span className="text-gray-300">2025</span>
+                </div>
               </div>
             </div>
 
-            <div className="inline-flex items-center gap-3 px-4 py-3 rounded-lg">
-              <MapPin className="h-6 w-6 text-white" />
+            <div className="inline-flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-white/5 hover:backdrop-blur-sm hover:border hover:border-white/10 transition-all duration-150 ease-in-out">
+              <MapPin className="h-6 w-6 text-secondary" />
               <div className="text-left text-white">
                 <div className="text-sm text-gray-300">Lugar</div>
                 <div className="font-semibold flex flex-col">
@@ -71,11 +70,14 @@ export default function Landing() {
               </div>
             </div>
 
-            <div className="inline-flex items-center gap-3 px-4 py-3 rounded-lg">
-              <Clock className="h-6 w-6 text-white" />
+            <div className="inline-flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-white/5 hover:backdrop-blur-sm hover:border hover:border-white/10 transition-all duration-150 ease-in-out">
+              <Clock className="h-6 w-6 text-secondary" />
               <div className="text-left text-white">
                 <div className="text-sm text-gray-300">Hora</div>
-                <div className="font-semibold">8:00 a.m.</div>
+                <div className="font-semibold flex flex-col">
+                  8:00 hs
+                  <span className="text-gray-300">Inicio formal 8:20 hs</span>
+                </div>
               </div>
             </div>
           </div>
@@ -96,7 +98,7 @@ export default function Landing() {
               by="character"
               once
               as="h1"
-              className="text-5xl sm:text-6xl lg:text-7xl font-bold mb-6 text-balance block text-accent mt-2"
+              className="text-5xl sm:text-6xl lg:text-7xl font-bold mb-6 text-balance block text-white mt-2"
             >
               Trenque Lauquen
             </TextAnimate>
@@ -113,7 +115,10 @@ export default function Landing() {
                 target="_blank"
                 rel="noopener noreferrer"
               >
-                <Button size="lg" className="text-lg px-8 py-6 group">
+                <Button
+                  size="lg"
+                  className="bg-secondary hover:bg-secondary/90 text-white text-lg px-8 py-6 group"
+                >
                   Inscribir mi empresa
                   <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
                 </Button>
@@ -123,7 +128,7 @@ export default function Landing() {
                 size="lg"
                 variant="outline"
                 onClick={handleViewCompanies}
-                className="text-lg px-8 py-6 bg-transparent text-white border-white hover:bg-white hover:text-black"
+                className="text-lg px-8 py-6 bg-transparent text-white border-white/30 hover:bg-accent hover:border-accent hover:text-white transition-colors duration-200 ease-in-out"
               >
                 Ver empresas inscriptas
               </Button>
@@ -155,40 +160,48 @@ export default function Landing() {
         <div className="max-w-7xl mx-auto">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
             <div className="text-center">
-              <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-primary/10 text-primary mb-4">
+              <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-secondary/10 text-secondary mb-4">
                 <Building2 className="h-8 w-8" />
               </div>
-              <h3 className="text-xl font-semibold mb-2">Empresas Líderes</h3>
+              <h3 className="text-xl font-semibold mb-2 text-primary">
+                Empresas Líderes
+              </h3>
               <p className="text-muted-foreground leading-relaxed">
                 Conectá con las empresas más importantes de la región
               </p>
             </div>
 
             <div className="text-center">
-              <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-primary/10 text-primary mb-4">
+              <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-secondary/10 text-secondary mb-4">
                 <Users className="h-8 w-8" />
               </div>
-              <h3 className="text-xl font-semibold mb-2">Networking</h3>
+              <h3 className="text-xl font-semibold mb-2 text-primary">
+                Networking
+              </h3>
               <p className="text-muted-foreground leading-relaxed">
                 Expandí tu red de contactos profesionales
               </p>
             </div>
 
             <div className="text-center">
-              <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-primary/10 text-primary mb-4">
+              <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-secondary/10 text-secondary mb-4">
                 <Handshake className="h-8 w-8" />
               </div>
-              <h3 className="text-xl font-semibold mb-2">Oportunidades</h3>
+              <h3 className="text-xl font-semibold mb-2 text-primary">
+                Oportunidades
+              </h3>
               <p className="text-muted-foreground leading-relaxed">
                 Descubrí nuevas alianzas estratégicas
               </p>
             </div>
 
             <div className="text-center">
-              <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-primary/10 text-primary mb-4">
+              <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-secondary/10 text-secondary mb-4">
                 <TrendingUp className="h-8 w-8" />
               </div>
-              <h3 className="text-xl font-semibold mb-2">Crecimiento</h3>
+              <h3 className="text-xl font-semibold mb-2 text-primary">
+                Crecimiento
+              </h3>
               <p className="text-muted-foreground leading-relaxed">
                 Impulsá el desarrollo de tu negocio
               </p>
@@ -212,11 +225,12 @@ export default function Landing() {
           </p>
           <Button
             size="lg"
-            variant="secondary"
-            onClick={handleRegisterClick}
-            className="text-lg px-8 py-6 group"
+            className="bg-secondary hover:bg-accent text-white text-lg px-8 py-6 group"
           >
-            Inscribir mi empresa ahora
+            <a href="https://forms.gle/qBi7m8FHxooiSZSMA" target="_blank">
+              Inscribir mi empresa ahora
+            </a>
+
             <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
           </Button>
         </div>

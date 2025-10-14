@@ -1,33 +1,47 @@
-"use client";
-
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import { useCompanies } from "../context/CompanyContext";
 import { Button } from "../components/ui/button";
-import { ArrowLeft, Mail, Phone, MapPin, Building2 } from "lucide-react";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "../components/ui/card";
+import { Badge } from "../components/ui/badge";
+import {
+  ArrowLeft,
+  Mail,
+  Phone,
+  MapPin,
+  Building2,
+  User,
+  FileText,
+} from "lucide-react";
 
-import { useParams, useNavigate } from "react-router";
+interface CompanyDetailProps {
+  companyId: string | null;
+}
 
-export default function CompanyDetail() {
-  const { id } = useParams<{ id?: string }>();
-  const navigate = useNavigate();
+export default function CompanyDetail({ companyId }: CompanyDetailProps) {
   const { getCompany } = useCompanies();
-  const company = id ? getCompany(id) : null;
+  const company = companyId ? getCompany(companyId) : null;
 
   if (!company) {
     return (
       <div className="min-h-screen">
         <Navbar />
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 pt-20">
           <Button
             variant="ghost"
-            onClick={() => navigate("/companies")}
-            className="mb-8"
+            onClick={() => (window.location.href = "#companies")}
+            className="mb-8 hover:bg-secondary/10 hover:text-secondary"
           >
             <ArrowLeft className="mr-2 h-4 w-4" />
             Volver a empresas
           </Button>
           <div className="text-center py-20">
+            <Building2 className="h-16 w-16 mx-auto mb-4 text-muted-foreground" />
             <h2 className="text-2xl font-bold mb-4">Empresa no encontrada</h2>
             <p className="text-muted-foreground">
               La empresa que buscás no existe
@@ -43,106 +57,146 @@ export default function CompanyDetail() {
     <div className="min-h-screen">
       <Navbar />
 
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
-        <Button
-          variant="ghost"
-          onClick={() => navigate("/companies")}
-          className="mb-8"
-        >
-          <ArrowLeft className="mr-2 h-4 w-4" />
-          Volver a empresas
-        </Button>
+      <div className="pt-20 bg-gradient-to-br from-[#143E29] to-[#1a5236]">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+          <Button
+            variant="ghost"
+            onClick={() => (window.location.href = "#companies")}
+            className="text-white hover:bg-white/10 hover:text-white"
+          >
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Volver a empresas
+          </Button>
+        </div>
+      </div>
 
-        <div className="bg-card rounded-2xl border overflow-hidden">
-          <div className="bg-muted/30 p-8 sm:p-12 text-center">
-            <img
-              src={company.logo || "/placeholder.svg"}
-              alt={company.name}
-              className="h-32 w-32 object-contain mx-auto mb-6 rounded-xl bg-background p-4"
-            />
-            <h1 className="text-3xl sm:text-4xl font-bold mb-2">
-              {company.name}
-            </h1>
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 text-primary text-sm font-medium">
-              <Building2 className="h-4 w-4" />
-              {company.sector}
-            </div>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Left Sidebar - Company Overview */}
+          <div className="lg:col-span-1 space-y-4">
+            <Card className="border-2 border-[#68A243]/20 animate-fade-in-up">
+              <CardContent className="pt-6">
+                <div className="text-center space-y-4">
+                  <div className="inline-block p-4 bg-gradient-to-br from-[#143E29] to-[#1a5236] rounded-xl">
+                    <img
+                      src={company.logo || "/placeholder.svg"}
+                      alt={company.name}
+                      className="h-20 w-20 object-contain"
+                    />
+                  </div>
+                  <div>
+                    <h1 className="text-2xl font-bold text-[#143E29] mb-2 text-balance">
+                      {company.name}
+                    </h1>
+                    <Badge className="bg-[#68A243] hover:bg-[#68A243]/90 text-white">
+                      <Building2 className="h-3 w-3 mr-1" />
+                      {company.sector}
+                    </Badge>
+                  </div>
+                </div>
+
+                <div className="mt-6 pt-6 border-t space-y-3">
+                  <div className="flex items-center gap-3 text-sm">
+                    <div className="p-2 rounded-lg bg-[#68A243]/10">
+                      <MapPin className="h-4 w-4 text-[#68A243]" />
+                    </div>
+                    <div>
+                      <p className="text-xs text-muted-foreground">Provincia</p>
+                      <p className="font-medium text-foreground">
+                        {company.province}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-3 text-sm">
+                    <div className="p-2 rounded-lg bg-[#68A243]/10">
+                      <User className="h-4 w-4 text-[#68A243]" />
+                    </div>
+                    <div>
+                      <p className="text-xs text-muted-foreground">Contacto</p>
+                      <p className="font-medium text-foreground">
+                        {company.contactName}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                <Button
+                  className="w-full mt-6 bg-[#F5891F] hover:bg-[#F5891F]/90 text-white"
+                  onClick={() =>
+                    (window.location.href = `mailto:${company.email}`)
+                  }
+                >
+                  <Mail className="mr-2 h-4 w-4" />
+                  Contactar
+                </Button>
+              </CardContent>
+            </Card>
           </div>
 
-          <div className="p-8 sm:p-12 space-y-8">
-            <div>
-              <h2 className="text-xl font-semibold mb-3">Sobre la empresa</h2>
-              <p className="text-muted-foreground leading-relaxed text-lg">
-                {company.description}
-              </p>
-            </div>
+          {/* Right Main Content - Details */}
+          <div className="lg:col-span-2 space-y-4">
+            <Card
+              className="border-2 hover:border-[#68A243]/30 transition-colors animate-fade-in-up"
+              style={{ animationDelay: "0.1s" }}
+            >
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-[#143E29]">
+                  <FileText className="h-5 w-5 text-[#68A243]" />
+                  Sobre la empresa
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-muted-foreground leading-relaxed">
+                  {company.description}
+                </p>
+              </CardContent>
+            </Card>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-              <div className="space-y-4">
-                <h3 className="font-semibold text-lg">
+            <Card
+              className="border-2 hover:border-[#68A243]/30 transition-colors animate-fade-in-up"
+              style={{ animationDelay: "0.2s" }}
+            >
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-[#143E29]">
+                  <Mail className="h-5 w-5 text-[#68A243]" />
                   Información de contacto
-                </h3>
-
-                <div className="flex items-start gap-3">
-                  <Mail className="h-5 w-5 text-muted-foreground mt-0.5" />
-                  <div>
-                    <p className="text-sm text-muted-foreground">Email</p>
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="flex items-start gap-3 p-3 rounded-lg bg-muted/30 hover:bg-[#68A243]/5 transition-colors">
+                  <div className="p-2 rounded-lg bg-[#68A243]/10">
+                    <Mail className="h-4 w-4 text-[#68A243]" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs text-muted-foreground mb-1">Email</p>
                     <a
                       href={`mailto:${company.email}`}
-                      className="text-primary hover:underline"
+                      className="text-sm text-[#68A243] hover:text-[#143E29] font-medium break-all transition-colors"
                     >
                       {company.email}
                     </a>
                   </div>
                 </div>
 
-                <div className="flex items-start gap-3">
-                  <Phone className="h-5 w-5 text-muted-foreground mt-0.5" />
-                  <div>
-                    <p className="text-sm text-muted-foreground">Teléfono</p>
+                <div className="flex items-start gap-3 p-3 rounded-lg bg-muted/30 hover:bg-[#68A243]/5 transition-colors">
+                  <div className="p-2 rounded-lg bg-[#68A243]/10">
+                    <Phone className="h-4 w-4 text-[#68A243]" />
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-xs text-muted-foreground mb-1">
+                      Teléfono
+                    </p>
                     <a
                       href={`tel:${company.phone}`}
-                      className="text-primary hover:underline"
+                      className="text-sm text-[#68A243] hover:text-[#143E29] font-medium transition-colors"
                     >
                       {company.phone}
                     </a>
                   </div>
                 </div>
-              </div>
-
-              <div className="space-y-4">
-                <h3 className="font-semibold text-lg">Detalles</h3>
-
-                <div className="flex items-start gap-3">
-                  <MapPin className="h-5 w-5 text-muted-foreground mt-0.5" />
-                  <div>
-                    <p className="text-sm text-muted-foreground">Provincia</p>
-                    <p className="font-medium">{company.province}</p>
-                  </div>
-                </div>
-
-                <div className="flex items-start gap-3">
-                  <Building2 className="h-5 w-5 text-muted-foreground mt-0.5" />
-                  <div>
-                    <p className="text-sm text-muted-foreground">Contacto</p>
-                    <p className="font-medium">{company.contactName}</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div className="pt-6 border-t">
-              <Button
-                size="lg"
-                className="w-full sm:w-auto"
-                onClick={() =>
-                  (window.location.href = `mailto:${company.email}`)
-                }
-              >
-                <Mail className="mr-2 h-4 w-4" />
-                Contactar empresa
-              </Button>
-            </div>
+              </CardContent>
+            </Card>
           </div>
         </div>
       </div>
