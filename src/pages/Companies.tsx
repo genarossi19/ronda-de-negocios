@@ -2,13 +2,15 @@ import { useState, useEffect } from "react";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import CompanyCard from "../components/CompanyCard";
-import { useCompanies } from "../context/CompanyContext";
+
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { Skeleton } from "../components/ui/skeleton";
 import { Card, CardContent } from "../components/ui/card";
 import { Badge } from "../components/ui/badge";
 import { ArrowLeft, Search, Building2, TrendingUp } from "lucide-react";
+import { getCompanies } from "../api/CompaniesService";
+import type { CompanyType } from "../types/companies";
 
 function CompanyCardSkeleton() {
   return (
@@ -25,19 +27,34 @@ function CompanyCardSkeleton() {
 }
 
 export default function Companies() {
-  const { companies } = useCompanies();
+  const [companies, setCompanies] = useState<CompanyType[]>([]);
+
+  const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const timer = setTimeout(() => setIsLoading(false), 800);
-    return () => clearTimeout(timer);
+    const fetchCompanies = async () => {
+      try {
+        const data = await getCompanies(); // llama a tu API real
+        console.log(data);
+        setCompanies(data);
+      } catch (err) {
+        console.error(err);
+        setError("Error al cargar las empresas");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchCompanies();
   }, []);
 
   const filteredCompanies = companies.filter((company) =>
     company.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
-
+  if (isLoading) return <p>Cargando...</p>;
+  if (error) return <p>{error}</p>;
   return (
     <div className="min-h-screen">
       <Navbar />

@@ -1,9 +1,9 @@
 import { Card, CardContent } from "../components/ui/card";
-import type { Company } from "../context/CompanyContext";
+import type { CompanyType } from "../types/companies";
 import { Building2 } from "lucide-react";
 import { useNavigate } from "react-router";
 interface CompanyCardProps {
-  company: Company;
+  company: CompanyType;
 }
 
 export default function CompanyCard({ company }: CompanyCardProps) {

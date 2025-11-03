@@ -7,7 +7,7 @@ import dotenv from "dotenv";
 // Cargar variables del .env.development si corresponde
 dotenv.config({ path: ".env.development" }); // ajusta según el modo
 
-const allowNgrok = process.env.VITE_ALLOW_NGROK === "true";
+// const allowNgrok = process.env.VITE_ALLOW_NGROK === "true";
 
 export default defineConfig({
   plugins: [react(), tailwindcss()],
@@ -16,8 +16,18 @@ export default defineConfig({
       "@": path.resolve(__dirname, "./src"),
     },
   },
+  // server: {
+  //   host: true,
+  //   allowedHosts: allowNgrok ? true : undefined,
+  // },
   server: {
-    host: true,
-    allowedHosts: allowNgrok ? true : undefined,
+    proxy: {
+      "/api": {
+        target:
+          "https://script.google.com/macros/s/AKfycbz5JM8AwFD_Q2NFVGZhNcSIhZmCG2yFSjAdrN9Heese2PDAcV63FDmQ1iVo_5N5s6Md/exec",
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api/, ""),
+      },
+    },
   },
 });
