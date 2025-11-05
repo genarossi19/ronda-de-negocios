@@ -1,6 +1,6 @@
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
-import { useCompanies } from "../context/CompanyContext";
+
 import { Button } from "../components/ui/button";
 import {
   Card,
@@ -18,15 +18,63 @@ import {
   User,
   FileText,
 } from "lucide-react";
+import type { CompanyResponse } from "../types/Company";
+import { useEffect, useState } from "react";
+import { getCompanyById } from "../api/CompaniesService";
 
-interface CompanyDetailProps {
-  companyId: string | null;
-}
+import { useNavigate, useParams } from "react-router";
+export default function CompanyDetail() {
+  const initialCompany = {
+    id: 0,
+    razon_social: "",
+    cuit: "",
+    descripcion: "",
+    localidad: {
+      id: 0,
+      provincia: {
+        id: 0,
+        nombre: "",
+      },
+      nombre: "",
+    },
 
-export default function CompanyDetail({ companyId }: CompanyDetailProps) {
-  const { getCompany } = useCompanies();
-  const company = companyId ? getCompany(companyId) : null;
+    logo: "",
+    sector: {
+      id: 0,
+      nombre: "",
+    },
+  };
 
+  const { id } = useParams<{ id: string }>();
+  const [company, setCompany] = useState<CompanyResponse>(initialCompany);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!id) return;
+
+    const fetchCompany = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const data = await getCompanyById(Number(id));
+        setCompany(data);
+      } catch (err) {
+        setError("No se pudo obtener la empresa");
+        console.error(err.toString());
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchCompany();
+  }, [id]);
+
+  const navigate = useNavigate();
+
+  if (loading) return <p>Cargando...</p>;
+  if (error) return <p>{error}</p>;
+  if (!company) return <p>Empresa no encontrada</p>;
   if (!company) {
     return (
       <div className="min-h-screen">
@@ -34,8 +82,10 @@ export default function CompanyDetail({ companyId }: CompanyDetailProps) {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 pt-20">
           <Button
             variant="ghost"
-            onClick={() => (window.location.href = "#companies")}
-            className="mb-8 hover:bg-secondary/10 hover:text-secondary"
+            className="mb-6 text-white hover:bg-white/10"
+            onClick={() => {
+              navigate(-1);
+            }}
           >
             <ArrowLeft className="mr-2 h-4 w-4" />
             Volver a empresas
@@ -61,8 +111,10 @@ export default function CompanyDetail({ companyId }: CompanyDetailProps) {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <Button
             variant="ghost"
-            onClick={() => (window.location.href = "#companies")}
-            className="text-white hover:bg-white/10 hover:text-white"
+            className="mb-6 text-white hover:bg-white/10"
+            onClick={() => {
+              navigate(-1);
+            }}
           >
             <ArrowLeft className="mr-2 h-4 w-4" />
             Volver a empresas
@@ -80,17 +132,17 @@ export default function CompanyDetail({ companyId }: CompanyDetailProps) {
                   <div className="inline-block p-4 bg-gradient-to-br from-[#143E29] to-[#1a5236] rounded-xl">
                     <img
                       src={company.logo || "/placeholder.svg"}
-                      alt={company.name}
+                      alt={company.razon_social}
                       className="h-20 w-20 object-contain"
                     />
                   </div>
                   <div>
                     <h1 className="text-2xl font-bold text-[#143E29] mb-2 text-balance">
-                      {company.name}
+                      {company.razon_social}
                     </h1>
                     <Badge className="bg-[#68A243] hover:bg-[#68A243]/90 text-white">
                       <Building2 className="h-3 w-3 mr-1" />
-                      {company.sector}
+                      {company.sector.nombre}
                     </Badge>
                   </div>
                 </div>
@@ -103,7 +155,7 @@ export default function CompanyDetail({ companyId }: CompanyDetailProps) {
                     <div>
                       <p className="text-xs text-muted-foreground">Provincia</p>
                       <p className="font-medium text-foreground">
-                        {company.province}
+                        {company.localidad.provincia.nombre}
                       </p>
                     </div>
                   </div>
@@ -112,16 +164,16 @@ export default function CompanyDetail({ companyId }: CompanyDetailProps) {
                     <div className="p-2 rounded-lg bg-[#68A243]/10">
                       <User className="h-4 w-4 text-[#68A243]" />
                     </div>
-                    <div>
+                    {/* <div>
                       <p className="text-xs text-muted-foreground">Contacto</p>
                       <p className="font-medium text-foreground">
-                        {company.contactName}
+                        {company.}
                       </p>
-                    </div>
+                    </div> */}
                   </div>
                 </div>
 
-                <Button
+                {/* <Button
                   className="w-full mt-6 bg-[#F5891F] hover:bg-[#F5891F]/90 text-white"
                   onClick={() =>
                     (window.location.href = `mailto:${company.email}`)
@@ -129,7 +181,7 @@ export default function CompanyDetail({ companyId }: CompanyDetailProps) {
                 >
                   <Mail className="mr-2 h-4 w-4" />
                   Contactar
-                </Button>
+                </Button> */}
               </CardContent>
             </Card>
           </div>
@@ -148,7 +200,7 @@ export default function CompanyDetail({ companyId }: CompanyDetailProps) {
               </CardHeader>
               <CardContent>
                 <p className="text-muted-foreground leading-relaxed">
-                  {company.description}
+                  {company.descripcion}
                 </p>
               </CardContent>
             </Card>
@@ -168,7 +220,7 @@ export default function CompanyDetail({ companyId }: CompanyDetailProps) {
                   <div className="p-2 rounded-lg bg-[#68A243]/10">
                     <Mail className="h-4 w-4 text-[#68A243]" />
                   </div>
-                  <div className="flex-1 min-w-0">
+                  {/* <div className="flex-1 min-w-0">
                     <p className="text-xs text-muted-foreground mb-1">Email</p>
                     <a
                       href={`mailto:${company.email}`}
@@ -176,14 +228,14 @@ export default function CompanyDetail({ companyId }: CompanyDetailProps) {
                     >
                       {company.email}
                     </a>
-                  </div>
+                  </div> */}
                 </div>
 
-                <div className="flex items-start gap-3 p-3 rounded-lg bg-muted/30 hover:bg-[#68A243]/5 transition-colors">
+                {/* <div className="flex items-start gap-3 p-3 rounded-lg bg-muted/30 hover:bg-[#68A243]/5 transition-colors">
                   <div className="p-2 rounded-lg bg-[#68A243]/10">
                     <Phone className="h-4 w-4 text-[#68A243]" />
                   </div>
-                  <div className="flex-1">
+                  {/* <div className="flex-1">
                     <p className="text-xs text-muted-foreground mb-1">
                       Teléfono
                     </p>
@@ -194,7 +246,7 @@ export default function CompanyDetail({ companyId }: CompanyDetailProps) {
                       {company.phone}
                     </a>
                   </div>
-                </div>
+                </div> */}
               </CardContent>
             </Card>
           </div>

@@ -1,12 +1,14 @@
-import type { CompanyType } from "../types/companies";
+import type { CompanyResponse } from "../types/Company";
 import api from "../lib/axios";
 
 export const getCompanies = async () => {
-  const { data } = await api.get("/companies"); // /api se agrega automáticamente por el proxy
+  const { data } = await api.get("/empresas-public"); // /api se agrega automáticamente por el proxy
   return data;
 };
 
-export const getCompany = async (id: number): Promise<CompanyType> => {
-  const { data } = await api.get("/", { params: { id } });
+export const getCompanyById = async (
+  id: number | string
+): Promise<CompanyResponse> => {
+  const { data } = await api.get(`/empresas-public/${id}`);
   return data;
 };

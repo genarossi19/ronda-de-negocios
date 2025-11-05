@@ -10,7 +10,8 @@ import { Card, CardContent } from "../components/ui/card";
 import { Badge } from "../components/ui/badge";
 import { ArrowLeft, Search, Building2, TrendingUp } from "lucide-react";
 import { getCompanies } from "../api/CompaniesService";
-import type { CompanyType } from "../types/companies";
+import type { CompanyResponse } from "../types/Company";
+import { Link, useNavigate } from "react-router";
 
 function CompanyCardSkeleton() {
   return (
@@ -27,7 +28,7 @@ function CompanyCardSkeleton() {
 }
 
 export default function Companies() {
-  const [companies, setCompanies] = useState<CompanyType[]>([]);
+  const [companies, setCompanies] = useState<CompanyResponse[]>([]);
 
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
@@ -37,7 +38,6 @@ export default function Companies() {
     const fetchCompanies = async () => {
       try {
         const data = await getCompanies(); // llama a tu API real
-        console.log(data);
         setCompanies(data);
       } catch (err) {
         console.error(err);
@@ -50,8 +50,10 @@ export default function Companies() {
     fetchCompanies();
   }, []);
 
+  const navigate = useNavigate();
+
   const filteredCompanies = companies.filter((company) =>
-    company.name.toLowerCase().includes(searchQuery.toLowerCase())
+    company.razon_social.toLowerCase().includes(searchQuery.toLowerCase())
   );
   if (isLoading) return <p>Cargando...</p>;
   if (error) return <p>{error}</p>;
@@ -63,8 +65,10 @@ export default function Companies() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <Button
             variant="ghost"
-            onClick={() => (window.location.href = "#landing")}
             className="mb-6 text-white hover:bg-white/10"
+            onClick={() => {
+              navigate(-1);
+            }}
           >
             <ArrowLeft className="mr-2 h-4 w-4" />
             Volver al inicio
