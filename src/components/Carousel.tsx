@@ -1,34 +1,66 @@
-import { useCompanies } from "../context/CompanyContext";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
+import { getCompanies } from "../api/CompaniesService";
+import type { CompanyResponse } from "../types/Company";
 
 export default function Carousel() {
-  const { companies } = useCompanies();
+  const [companies, setCompanies] = useState<CompanyResponse[]>([]);
+  const [duplicatedCompanies, setDuplicatedCompanies] = useState<
+    CompanyResponse[]
+  >([]);
   const scrollRef = useRef<HTMLDivElement>(null);
 
+  // Traer empresas desde la API
+  useEffect(() => {
+    const fetchCompanies = async () => {
+      try {
+        const data = await getCompanies();
+        setCompanies(data);
+      } catch (error) {
+        console.error(error);
+      }
+    };
+    fetchCompanies();
+  }, []);
+
+  // Duplicar dinámicamente hasta llenar al menos 2 veces el contenedor
+  useEffect(() => {
+    if (!companies.length || !scrollRef.current) return;
+
+    const containerWidth = scrollRef.current.offsetWidth;
+    let temp: CompanyResponse[] = [];
+    let totalWidth = 0;
+
+    const itemWidth = 32 + 8; // w-32 + gap-8 (aprox)
+    while (totalWidth < containerWidth * 2) {
+      temp = [...temp, ...companies];
+      totalWidth += companies.length * itemWidth;
+    }
+
+    setDuplicatedCompanies(temp);
+  }, [companies]);
+
+  // Scroll automático
   useEffect(() => {
     const scrollContainer = scrollRef.current;
-    if (!scrollContainer) return;
+    if (!scrollContainer || !duplicatedCompanies.length) return;
 
-    let scrollAmount = 0;
     const scrollStep = 1;
-    const scrollInterval = 30;
+    let scrollAmount = 0;
 
     const scroll = () => {
-      if (scrollContainer) {
-        scrollAmount += scrollStep;
-        scrollContainer.scrollLeft = scrollAmount;
+      scrollAmount += scrollStep;
+      scrollContainer.scrollLeft = scrollAmount;
 
-        if (scrollAmount >= scrollContainer.scrollWidth / 2) {
-          scrollAmount = 0;
-        }
+      // Reiniciar al llegar a la mitad
+      if (scrollAmount >= scrollContainer.scrollWidth / 2) {
+        scrollAmount = 0;
+        scrollContainer.scrollLeft = 0;
       }
     };
 
-    const interval = setInterval(scroll, scrollInterval);
+    const interval = setInterval(scroll, 20);
     return () => clearInterval(interval);
-  }, [companies]);
-
-  const duplicatedCompanies = [...companies, ...companies, ...companies];
+  }, [duplicatedCompanies]);
 
   return (
     <div className="relative overflow-hidden">
@@ -43,12 +75,12 @@ export default function Carousel() {
         {duplicatedCompanies.map((company, index) => (
           <div
             key={`${company.id}-${index}`}
-            className="flex-shrink-0 w-32 h-32 bg-card rounded-xl border flex items-center justify-center p-4 hover:shadow-md transition-shadow"
+            className="flex-shrink-0 w-32 h-32 bg-gray-200 rounded-xl border flex items-center justify-center p-4 hover:shadow-md transition-shadow"
           >
             <img
               src={company.logo || "/placeholder.svg"}
-              alt={company.name}
-              className="w-full h-full object-contain"
+              alt={company.razon_social}
+              className="w-full h-full object-cover"
             />
           </div>
         ))}
