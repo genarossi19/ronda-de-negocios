@@ -14,7 +14,7 @@ import {
 } from "lucide-react";
 
 import { TextAnimate } from "../components/ui/text-animate";
-import { useNavigate } from "react-router";
+import { Link, useNavigate } from "react-router";
 export default function Landing() {
   const navigate = useNavigate();
 
@@ -110,11 +110,7 @@ export default function Landing() {
             </p>
 
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-              <a
-                href="https://forms.gle/qBi7m8FHxooiSZSMA"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
+              <Link to="/register" rel="noopener noreferrer">
                 <Button
                   size="lg"
                   className="bg-secondary hover:bg-secondary/90 text-white text-lg px-8 py-6 group"
@@ -122,7 +118,7 @@ export default function Landing() {
                   Inscribir mi empresa
                   <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
                 </Button>
-              </a>
+              </Link>
 
               <Button
                 size="lg"

@@ -88,7 +88,7 @@ export default function Navbar() {
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-20">
-          <a href="#landing" className="flex items-center gap-3 group">
+          <Link to="/" className="flex items-center gap-3 group">
             <div className="bg-secondary p-2.5 rounded-lg transition-transform group-hover:scale-105">
               <Building2 className="h-7 w-7 text-white" />
             </div>
@@ -104,7 +104,7 @@ export default function Navbar() {
                 Trenque Lauquen 2025
               </span>
             </div>
-          </a>
+          </Link>
 
           <div className="hidden md:flex items-center gap-8">
             <Link to={"/companies"}>
@@ -117,14 +117,14 @@ export default function Navbar() {
               </Button>
             </Link>
 
-            <Button
-              className="bg-secondary hover:bg-secondary/90 text-white font-bold text-base  transition-all"
-              size={"lg"}
-            >
-              <a href="https://forms.gle/qBi7m8FHxooiSZSMA" target="_blank">
+            <Link to={"/register"}>
+              <Button
+                className="bg-secondary hover:bg-secondary/90 text-white font-bold text-base  transition-all"
+                size={"lg"}
+              >
                 Inscribirse ahora
-              </a>
-            </Button>
+              </Button>
+            </Link>
           </div>
 
           <div className="md:hidden">

@@ -25,6 +25,7 @@ import {
   SelectValue,
 } from "../components/ui/select";
 import { Card, CardContent } from "../components/ui/card";
+import { useNavigate } from "react-router";
 
 const SECTORS = [
   "Tecnología",
@@ -156,13 +157,18 @@ export default function RegistrationForm() {
     }
   };
 
+  const navigate = useNavigate();
+
   return (
     <div className="min-h-screen bg-background">
       <div className="bg-primary text-primary-foreground border-b">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <Button
             variant="ghost"
-            className="text-primary-foreground hover:bg-primary-foreground/10"
+            className="mb-6 text-white hover:bg-white/10"
+            onClick={() => {
+              navigate(-1);
+            }}
           >
             <ArrowLeft className="mr-2 h-4 w-4" />
             Volver
