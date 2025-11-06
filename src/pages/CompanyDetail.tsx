@@ -1,5 +1,5 @@
 import Navbar from "../components/Navbar";
-import Footer from "../components/Footer";
+import Footer from "../layout/Footer";
 
 import { Button } from "../components/ui/button";
 import {
@@ -72,7 +72,6 @@ export default function CompanyDetail() {
 
   const navigate = useNavigate();
 
-  if (loading) return <p>Cargando...</p>;
   if (error) return <p>{error}</p>;
   if (!company) return <p>Empresa no encontrada</p>;
   if (!company) {

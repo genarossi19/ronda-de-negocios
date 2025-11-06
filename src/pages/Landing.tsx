@@ -1,5 +1,5 @@
 import Navbar from "../components/Navbar";
-import Footer from "../components/Footer";
+import Footer from "../layout/Footer";
 import Carousel from "../components/Carousel";
 import { Button } from "../components/ui/button";
 import {
@@ -223,9 +223,7 @@ export default function Landing() {
             size="lg"
             className="bg-secondary hover:bg-accent text-white text-lg px-8 py-6 group"
           >
-            <a href="https://forms.gle/qBi7m8FHxooiSZSMA" target="_blank">
-              Inscribir mi empresa ahora
-            </a>
+            <Link to="/register">Inscribir mi empresa ahora</Link>
 
             <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
           </Button>

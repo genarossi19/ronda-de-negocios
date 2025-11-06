@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import Navbar from "../components/Navbar";
-import Footer from "../components/Footer";
+import Footer from "../layout/Footer";
 import CompanyCard from "../components/CompanyCard";
 
 import { Button } from "../components/ui/button";
@@ -55,31 +55,29 @@ export default function Companies() {
   const filteredCompanies = companies.filter((company) =>
     company.razon_social.toLowerCase().includes(searchQuery.toLowerCase())
   );
-  if (isLoading) return <p>Cargando...</p>;
+
   if (error) return <p>{error}</p>;
   return (
     <div className="min-h-screen">
       <Navbar />
 
-      <div className="bg-gradient-to-br from-[#143E29] to-[#1a5236] text-white pt-24 pb-12">
+      <div className="bg-gradient-to-br from-[#143E29] to-[#1a5236] text-white pt-12 pb-6">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <Button
             variant="ghost"
-            className="mb-6 text-white hover:bg-white/10"
-            onClick={() => {
-              navigate(-1);
-            }}
+            className="mb-4 text-white hover:bg-white/10"
+            onClick={() => navigate(-1)}
           >
             <ArrowLeft className="mr-2 h-4 w-4" />
             Volver al inicio
           </Button>
 
-          <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-6 mb-8">
+          <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4 mb-4">
             <div>
-              <h1 className="text-4xl sm:text-5xl font-bold mb-3">
+              <h1 className="text-3xl sm:text-4xl font-semibold mb-1">
                 Empresas Inscriptas
               </h1>
-              <p className="text-lg text-white/80 leading-relaxed max-w-2xl">
+              <p className="text-base text-white/80 max-w-xl">
                 Conocé todas las empresas que participarán en la Ronda de
                 Negocios
               </p>
@@ -88,16 +86,16 @@ export default function Companies() {
             <div className="flex gap-2">
               <Badge
                 variant="secondary"
-                className="bg-[#68A243]/90 hover:bg-[#68A243] text-white px-3 py-1 text-sm font-medium"
+                className="bg-[#68A243]/90 hover:bg-[#68A243] text-white px-2.5 py-0.5 text-xs font-medium"
               >
-                <Building2 className="mr-1.5 h-3.5 w-3.5" />
+                <Building2 className="mr-1 h-3 w-3" />
                 {companies.length} Empresas
               </Badge>
               <Badge
                 variant="outline"
-                className="border-white/30 text-white px-3 py-1 text-sm font-medium"
+                className="border-white/30 text-white px-2.5 py-0.5 text-xs font-medium"
               >
-                <TrendingUp className="mr-1.5 h-3.5 w-3.5" />
+                <TrendingUp className="mr-1 h-3 w-3" />
                 Activas
               </Badge>
             </div>

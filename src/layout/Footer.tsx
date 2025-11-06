@@ -39,13 +39,12 @@ export default function Footer() {
                 </Link>
               </li>
               <li>
-                <a
-                  href="https://forms.gle/qBi7m8FHxooiSZSMA"
-                  target="_blank"
+                <Link
+                  to="/register"
                   className="text-gray-300 hover:text-accent transition-colors"
                 >
                   Inscribirse
-                </a>
+                </Link>
               </li>
             </ul>
           </div>
@@ -89,7 +88,9 @@ export default function Footer() {
                 <div className="w-px h-8 bg-white/20 hidden sm:block"></div>
                 <div className="flex flex-col text-xs text-gray-300/80 tracking-wide">
                   <span>Municipio de Trenque Lauquen</span>
-                  <span className="text-gray-400/60">Oficina de Empleo</span>
+                  <span className="text-gray-400/60">
+                    Subsecretaria de Producción
+                  </span>
                 </div>
               </div>
             </div>
@@ -104,14 +105,16 @@ export default function Footer() {
                 {new Date().getFullYear()}
               </p>
               <span className="hidden sm:inline text-gray-400/60">•</span>
-              <p className="text-xs text-gray-300/80">info@rondanegocios.com</p>
+              <p className="text-xs text-gray-300/80">
+                oficinaempleotrenque@gmail.com
+              </p>
             </div>
 
             {/* Derecha - Sello o frase */}
             <div className="flex items-center">
               <div className="bg-white/10 backdrop-blur-sm rounded-full px-3 py-1 border border-white/20">
                 <p className="text-xs font-semibold text-gray-100 tracking-wider">
-                  Trenque Lauquen
+                  Oficina de Empleo
                 </p>
               </div>
             </div>
