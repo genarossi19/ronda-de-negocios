@@ -61,20 +61,11 @@ export default function Companies() {
     <div className="min-h-screen">
       <Navbar />
 
-      <div className="bg-gradient-to-br from-[#143E29] to-[#1a5236] text-white pt-12 pb-6">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <Button
-            variant="ghost"
-            className="mb-4 text-white hover:bg-white/10"
-            onClick={() => navigate(-1)}
-          >
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Volver al inicio
-          </Button>
-
+      <div className="bg-gradient-to-br from-[#143E29] to-[#1a5236] text-white pt-8 pb-4">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-12">
           <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4 mb-4">
             <div>
-              <h1 className="text-3xl sm:text-4xl font-semibold mb-1">
+              <h1 className="text-3xl sm:text-4xl font-semibold mb-1 mt-4">
                 Empresas Inscriptas
               </h1>
               <p className="text-base text-white/80 max-w-xl">

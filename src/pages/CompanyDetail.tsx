@@ -106,17 +106,15 @@ export default function CompanyDetail() {
     <div className="min-h-screen">
       <Navbar />
 
-      <div className="pt-20 bg-gradient-to-br from-[#143E29] to-[#1a5236]">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+      <div className=" pt-12">
+        <div className="max-w-7xl mx-auto   px-4 sm:px-6 lg:px-8 mt-12">
           <Button
             variant="ghost"
-            className="mb-6 text-white hover:bg-white/10"
-            onClick={() => {
-              navigate(-1);
-            }}
+            onClick={() => navigate(-1)}
+            className="hover:bg-gray-100  hover:text-primary text-foreground"
           >
             <ArrowLeft className="mr-2 h-4 w-4" />
-            Volver a empresas
+            Volver
           </Button>
         </div>
       </div>
@@ -163,24 +161,24 @@ export default function CompanyDetail() {
                     <div className="p-2 rounded-lg bg-[#68A243]/10">
                       <User className="h-4 w-4 text-[#68A243]" />
                     </div>
-                    {/* <div>
+                    <div>
                       <p className="text-xs text-muted-foreground">Contacto</p>
                       <p className="font-medium text-foreground">
-                        {company.}
+                        {company.contactName || "Sin contacto"}
                       </p>
-                    </div> */}
+                    </div>
                   </div>
                 </div>
 
-                {/* <Button
-                  className="w-full mt-6 bg-[#F5891F] hover:bg-[#F5891F]/90 text-white"
+                <Button
+                  className="w-full mt-6 bg-primary hover:bg-[#F5891F]/90 text-white"
                   onClick={() =>
                     (window.location.href = `mailto:${company.email}`)
                   }
                 >
                   <Mail className="mr-2 h-4 w-4" />
                   Contactar
-                </Button> */}
+                </Button>
               </CardContent>
             </Card>
           </div>
@@ -199,7 +197,7 @@ export default function CompanyDetail() {
               </CardHeader>
               <CardContent>
                 <p className="text-muted-foreground leading-relaxed">
-                  {company.descripcion}
+                  {company.descripcion || "Sin descripción"}
                 </p>
               </CardContent>
             </Card>
@@ -219,22 +217,22 @@ export default function CompanyDetail() {
                   <div className="p-2 rounded-lg bg-[#68A243]/10">
                     <Mail className="h-4 w-4 text-[#68A243]" />
                   </div>
-                  {/* <div className="flex-1 min-w-0">
+                  <div className="flex-1 min-w-0">
                     <p className="text-xs text-muted-foreground mb-1">Email</p>
                     <a
                       href={`mailto:${company.email}`}
                       className="text-sm text-[#68A243] hover:text-[#143E29] font-medium break-all transition-colors"
                     >
-                      {company.email}
+                      {company.email || "Sin email"}
                     </a>
-                  </div> */}
+                  </div>
                 </div>
 
-                {/* <div className="flex items-start gap-3 p-3 rounded-lg bg-muted/30 hover:bg-[#68A243]/5 transition-colors">
+                <div className="flex items-start gap-3 p-3 rounded-lg bg-muted/30 hover:bg-[#68A243]/5 transition-colors">
                   <div className="p-2 rounded-lg bg-[#68A243]/10">
                     <Phone className="h-4 w-4 text-[#68A243]" />
                   </div>
-                  {/* <div className="flex-1">
+                  <div className="flex-1">
                     <p className="text-xs text-muted-foreground mb-1">
                       Teléfono
                     </p>
@@ -242,10 +240,10 @@ export default function CompanyDetail() {
                       href={`tel:${company.phone}`}
                       className="text-sm text-[#68A243] hover:text-[#143E29] font-medium transition-colors"
                     >
-                      {company.phone}
+                      {company.phone || "Sin teléfono"}
                     </a>
                   </div>
-                </div> */}
+                </div>
               </CardContent>
             </Card>
           </div>

@@ -68,7 +68,7 @@ export default function Navbar() {
 
   const navStyles =
     theme === "light"
-      ? "bg-primary text-white"
+      ? "bg-primary/80 text-white"
       : "bg-white/95 backdrop-blur-sm text-gray-900 border-b border-gray-200 shadow-sm";
 
   const logoTextStyles = theme === "light" ? "text-white" : "text-primary";
