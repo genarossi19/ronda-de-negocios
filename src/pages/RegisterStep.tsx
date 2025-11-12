@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useActionState, useEffect, useState } from "react";
 import {
   ArrowLeft,
   Calendar,
@@ -26,19 +26,10 @@ import {
 } from "../components/ui/select";
 import { Card, CardContent } from "../components/ui/card";
 import { useNavigate } from "react-router";
-
-const SECTORS = [
-  "Tecnología",
-  "Manufactura",
-  "Servicios",
-  "Comercio",
-  "Agropecuario",
-  "Construcción",
-  "Educación",
-  "Salud",
-  "Turismo",
-  "Otro",
-];
+import type { GenericType } from "../types/GenericType";
+import Navbar from "../components/Navbar";
+import { getSectors } from "../api/SectorService";
+import type { CompanyType } from "../types/Company";
 
 const PROVINCES = [
   { id: 1, name: "Buenos Aires" },
@@ -61,37 +52,53 @@ const STEPS = [
 ];
 
 export default function RegistrationForm() {
-  const [currentStep, setCurrentStep] = useState(1);
-  const [formData, setFormData] = useState({
+  const initialData: CompanyType = {
+    id: 0,
+    email: "",
+    nombre_contacto: "",
+    apellido_contacto: "",
+    password: "",
+    password2: "",
     razon_social: "",
     cuit: "",
     email_empresa: "",
-    province: "",
-    localidad: "",
-    description: "",
-    sector: "",
-    nombre_contacto: "",
-    apellido_contacto: "",
     telefono_contacto: "",
-    email: "",
-    password: "",
-    password2: "",
+    descripcion: "",
+    direccion: "",
     logo: null,
-  });
+    localidad: 0,
+    sector: 0,
+  };
+  const [sectorList, setSectorList] = useState<GenericType[]>([]);
+  const [currentStep, setCurrentStep] = useState(1);
+  const [formData, setFormData] = useState<CompanyType>(initialData);
+  const [previewLogo, setPreviewLogo] = useState<string | null>(null);
 
+  useEffect(() => {
+    const fetchSector = async () => {
+      try {
+        const sector = await getSectors();
+        setSectorList(sector);
+        console.log(sector);
+      } catch (error) {
+        console.error(error);
+      }
+    };
+    fetchSector();
+  }, []);
+
+  const [showPrev, setShowPrev] = useState(false);
   const handleSubmit = () => {
     console.log("Form submitted:", formData);
+    setShowPrev(true);
   };
 
-  const handleImageUpload = (e) => {
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setFormData({ ...formData, logo: reader.result });
-      };
-      reader.readAsDataURL(file);
-    }
+    if (!file) return;
+
+    setFormData({ ...formData, logo: file }); // guardamos el File para enviar al backend
+    setPreviewLogo(URL.createObjectURL(file)); // guardamos la URL para vista previa
   };
 
   const isStepComplete = () => {
@@ -100,12 +107,10 @@ export default function RegistrationForm() {
         return (
           formData.razon_social.trim() !== "" &&
           formData.cuit.trim() !== "" &&
-          formData.email_empresa.trim() !== "" &&
-          formData.province &&
-          formData.localidad
+          formData.email_empresa.trim() !== ""
         );
       case 2:
-        return formData.description.trim() !== "" && formData.sector !== "";
+        return formData.descripcion.trim() !== "" && formData.sector !== 0;
       case 3:
         return (
           formData.nombre_contacto.trim() !== "" &&
@@ -161,14 +166,13 @@ export default function RegistrationForm() {
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="bg-primary text-primary-foreground border-b">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+      <Navbar />
+      <div className=" pt-12">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 mt-12">
           <Button
             variant="ghost"
-            className="mb-6 text-white hover:bg-white/10"
-            onClick={() => {
-              navigate(-1);
-            }}
+            onClick={() => navigate(-1)}
+            className="hover:bg-gray-100  hover:text-primary text-foreground"
           >
             <ArrowLeft className="mr-2 h-4 w-4" />
             Volver
@@ -350,7 +354,7 @@ export default function RegistrationForm() {
                       <div className="flex flex-col sm:flex-row gap-4">
                         <div className="flex-1 space-y-2">
                           <Label htmlFor="province">Provincia *</Label>
-                          <Select
+                          {/* <Select
                             value={formData.province}
                             onValueChange={(value) =>
                               setFormData({
@@ -370,7 +374,7 @@ export default function RegistrationForm() {
                                 </SelectItem>
                               ))}
                             </SelectContent>
-                          </Select>
+                          </Select> */}
                         </div>
 
                         <div className="flex-1 space-y-2">
@@ -380,7 +384,7 @@ export default function RegistrationForm() {
                             onValueChange={(value) =>
                               setFormData({ ...formData, localidad: value })
                             }
-                            disabled={!formData.province}
+                            // disabled={!formData.province}
                           >
                             <SelectTrigger className="h-11 w-full">
                               <SelectValue placeholder="Seleccioná una localidad" />
@@ -424,11 +428,11 @@ export default function RegistrationForm() {
                         </Label>
                         <Textarea
                           id="description"
-                          value={formData.description}
+                          value={formData.descripcion}
                           onChange={(e) =>
                             setFormData({
                               ...formData,
-                              description: e.target.value,
+                              descripcion: e.target.value,
                             })
                           }
                           placeholder="Contanos brevemente sobre tu empresa, sus servicios y qué te gustaría lograr en la ronda de negocios"
@@ -440,18 +444,25 @@ export default function RegistrationForm() {
                       <div className="space-y-2">
                         <Label htmlFor="sector">Sector de la empresa *</Label>
                         <Select
-                          value={formData.sector}
+                          value={
+                            formData.sector
+                              ? formData.sector.toString()
+                              : undefined
+                          }
                           onValueChange={(value) =>
-                            setFormData({ ...formData, sector: value })
+                            setFormData({ ...formData, sector: Number(value) })
                           }
                         >
                           <SelectTrigger className="h-11">
                             <SelectValue placeholder="Seleccioná un sector" />
                           </SelectTrigger>
                           <SelectContent>
-                            {SECTORS.map((sector) => (
-                              <SelectItem key={sector} value={sector}>
-                                {sector}
+                            {sectorList.map((sector) => (
+                              <SelectItem
+                                key={sector.id}
+                                value={sector.id.toString()}
+                              >
+                                {sector.nombre}
                               </SelectItem>
                             ))}
                           </SelectContent>
@@ -588,7 +599,7 @@ export default function RegistrationForm() {
                       {formData.logo && (
                         <div className="flex justify-center p-4 bg-muted/30 rounded-lg">
                           <img
-                            src={formData.logo}
+                            src={previewLogo!}
                             alt="Logo preview"
                             className="max-h-32 object-contain"
                           />
@@ -686,6 +697,14 @@ export default function RegistrationForm() {
                 </div>
               </CardContent>
             </Card>
+            {showPrev && (
+              <pre className="mt-6 p-4 bg-gray-100 rounded max-h-96 overflow-auto">
+                {JSON.stringify(formData, null, 2)}
+              </pre>
+            )}
+            <pre className="mt-6 p-4 bg-gray-100 rounded max-h-96 overflow-auto">
+              {JSON.stringify(formData, null, 2)}
+            </pre>
           </div>
         </div>
       </div>

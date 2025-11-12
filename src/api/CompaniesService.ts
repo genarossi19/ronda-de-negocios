@@ -2,7 +2,7 @@ import type { CompanyResponse, CompanyType } from "../types/Company";
 import api from "../lib/axios";
 
 export const getCompanies = async () => {
-  const { data } = await api.get("/empresas-public"); // /api se agrega automáticamente por el proxy
+  const { data } = await api.get("/empresas-public");
   return data;
 };
 
