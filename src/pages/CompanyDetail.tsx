@@ -17,12 +17,15 @@ import {
   Building2,
   User,
   FileText,
+  RefreshCw,
+  AlertCircle,
 } from "lucide-react";
 import type { CompanyResponse } from "../types/Company";
 import { useEffect, useState } from "react";
 import { getCompanyById } from "../api/CompaniesService";
 
 import { useNavigate, useParams } from "react-router";
+import { Skeleton } from "../components/ui/skeleton";
 export default function CompanyDetail() {
   const initialCompany = {
     id: 0,
@@ -61,7 +64,7 @@ export default function CompanyDetail() {
         setCompany(data);
       } catch (err) {
         setError("No se pudo obtener la empresa");
-        console.error(err.toString());
+        console.error(err);
       } finally {
         setLoading(false);
       }
@@ -72,8 +75,93 @@ export default function CompanyDetail() {
 
   const navigate = useNavigate();
 
-  if (error) return <p>{error}</p>;
-  if (!company) return <p>Empresa no encontrada</p>;
+  if (error)
+    return (
+      <div className="min-h-screen">
+        <Navbar />
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 pt-20">
+          <Button
+            variant="ghost"
+            className="mb-6 text-white hover:bg-white/10"
+            onClick={() => {
+              navigate(-1);
+            }}
+          >
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Volver a empresas
+          </Button>
+          <div className="text-center py-20">
+            <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-red-50 mb-4">
+              <AlertCircle className="h-10 w-10 text-red-500" />
+            </div>
+            <h3 className="text-xl font-semibold mb-2 text-[#143E29]">
+              Lo sentimos
+            </h3>
+            <p className="text-muted-foreground mb-6 max-w-md mx-auto">
+              {error}
+            </p>
+            <Button
+              onClick={() => window.location.reload()}
+              className="bg-[#68A243] hover:bg-[#143E29] text-white"
+            >
+              <RefreshCw className="mr-2 h-4 w-4" />
+              Intentar nuevamente
+            </Button>
+          </div>
+        </div>
+        <Footer />
+      </div>
+    );
+
+  if (loading) {
+    return (
+      <div className="min-h-screen">
+        <Navbar />
+        <div className="pt-20 bg-gradient-to-br from-[#143E29] to-[#1a5236]"></div>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className="lg:col-span-1 space-y-4">
+              <Card>
+                <CardContent className="pt-6">
+                  <div className="text-center space-y-4">
+                    <Skeleton className="h-28 w-28 rounded-xl mx-auto" />
+                    <Skeleton className="h-8 w-3/4 mx-auto" />
+                    <Skeleton className="h-6 w-1/2 mx-auto" />
+                  </div>
+                  <div className="mt-6 pt-6 border-t space-y-3">
+                    <Skeleton className="h-12 w-full" />
+                    <Skeleton className="h-12 w-full" />
+                  </div>
+                  <Skeleton className="h-12 w-full mt-6" />
+                </CardContent>
+              </Card>
+            </div>
+            <div className="lg:col-span-2 space-y-4">
+              <Card>
+                <CardHeader>
+                  <Skeleton className="h-6 w-48" />
+                </CardHeader>
+                <CardContent>
+                  <Skeleton className="h-20 w-full" />
+                </CardContent>
+              </Card>
+              <Card>
+                <CardHeader>
+                  <Skeleton className="h-6 w-56" />
+                </CardHeader>
+                <CardContent className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <Skeleton className="h-20 w-full" />
+                  <Skeleton className="h-20 w-full" />
+                </CardContent>
+              </Card>
+            </div>
+          </div>
+        </div>
+        <Footer />
+      </div>
+    );
+  }
+
   if (!company) {
     return (
       <div className="min-h-screen">

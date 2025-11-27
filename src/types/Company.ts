@@ -1,7 +1,7 @@
 import type { GenericType } from "./GenericType";
 import type { Localidad } from "./Localidad";
 
-export interface CompanyType {
+export interface Company {
   id: number;
   email: string;
   nombre_contacto: string;

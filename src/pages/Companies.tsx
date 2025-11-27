@@ -8,10 +8,18 @@ import { Input } from "../components/ui/input";
 import { Skeleton } from "../components/ui/skeleton";
 import { Card, CardContent } from "../components/ui/card";
 import { Badge } from "../components/ui/badge";
-import { ArrowLeft, Search, Building2, TrendingUp } from "lucide-react";
+import {
+  Search,
+  Building2,
+  TrendingUp,
+  AlertCircle,
+  RefreshCw,
+} from "lucide-react";
 import { getCompanies } from "../api/CompaniesService";
 import type { CompanyResponse } from "../types/Company";
-import { Link, useNavigate } from "react-router";
+import { useNavigate } from "react-router";
+
+import { useAuth } from "../context/AuthContext";
 
 function CompanyCardSkeleton() {
   return (
@@ -28,6 +36,7 @@ function CompanyCardSkeleton() {
 }
 
 export default function Companies() {
+  const { isAuthenticated } = useAuth();
   const [companies, setCompanies] = useState<CompanyResponse[]>([]);
 
   const [error, setError] = useState<string | null>(null);
@@ -41,7 +50,7 @@ export default function Companies() {
         setCompanies(data);
       } catch (err) {
         console.error(err);
-        setError("Error al cargar las empresas");
+        setError("No se pudieron obtener las empresas.");
       } finally {
         setIsLoading(false);
       }
@@ -56,7 +65,7 @@ export default function Companies() {
     company.razon_social.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  if (error) return <p>{error}</p>;
+  // if (error) return <p>{error}</p>;
   return (
     <div className="min-h-screen">
       <Navbar />
@@ -115,7 +124,26 @@ export default function Companies() {
           )}
         </div>
 
-        {isLoading ? (
+        {error ? (
+          <div className="text-center py-20">
+            <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-red-50 mb-4">
+              <AlertCircle className="h-10 w-10 text-red-500" />
+            </div>
+            <h3 className="text-xl font-semibold mb-2 text-[#143E29]">
+              Lo sentimos
+            </h3>
+            <p className="text-muted-foreground mb-6 max-w-md mx-auto">
+              {error}
+            </p>
+            <Button
+              onClick={() => window.location.reload()}
+              className="bg-[#68A243] hover:bg-[#143E29] text-white"
+            >
+              <RefreshCw className="mr-2 h-4 w-4" />
+              Intentar nuevamente
+            </Button>
+          </div>
+        ) : isLoading ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {[...Array(6)].map((_, i) => (
               <CompanyCardSkeleton key={i} />
@@ -130,7 +158,10 @@ export default function Companies() {
                   className="animate-fade-in-up"
                   style={{ animationDelay: `${index * 50}ms` }}
                 >
-                  <CompanyCard company={company} />
+                  <CompanyCard
+                    company={company}
+                    // onClick={!isAuthenticated ? () => handleCompanyClick(company) : undefined}
+                  />
                 </div>
               ))}
             </div>

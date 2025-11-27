@@ -1,18 +1,31 @@
-"use client";
-
 import { Button } from "../components/ui/button";
-import { Building2, Menu, X, Calendar, MapPin, Clock } from "lucide-react";
+import {
+  Building2,
+  Menu,
+  X,
+  Calendar,
+  MapPin,
+  Clock,
+  User,
+  LogOut,
+  Settings,
+} from "lucide-react";
 import { Sheet, SheetContent, SheetTrigger } from "../components/ui/sheet";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "../components/ui/dropdown-menu";
+import { Avatar, AvatarFallback } from "../components/ui/avatar";
 import { useState, useEffect, useRef } from "react";
+import { useAuth } from "../context/AuthContext";
 import { Link } from "react-router";
 
-type NavbarVariant = "default" | "solid";
-
-interface NavbarProps {
-  variant?: NavbarVariant | boolean;
-}
-
 export default function Navbar() {
+  const { user, isAuthenticated, logout } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
   const [isVisible, setIsVisible] = useState(true);
   const [theme, setTheme] = useState<"light" | "dark">("light");
@@ -68,17 +81,28 @@ export default function Navbar() {
 
   const navStyles =
     theme === "light"
-      ? "bg-primary/80 text-white"
+      ? "bg-[#143E29] text-white"
       : "bg-white/95 backdrop-blur-sm text-gray-900 border-b border-gray-200 shadow-sm";
 
-  const logoTextStyles = theme === "light" ? "text-white" : "text-primary";
+  const logoTextStyles = theme === "light" ? "text-white" : "text-[#143E29]";
   const logoSubtextStyles =
-    theme === "light" ? "text-gray-200" : "text-secondary";
+    theme === "light" ? "text-gray-200" : "text-[#68A243]";
   const linkStyles =
     theme === "light"
-      ? "text-gray-100 hover:text-white"
-      : "text-gray-700 hover:text-white";
-  const mobileButtonStyles = theme === "light" ? "text-white" : "text-primary";
+      ? "text-gray-100 hover:text-[#F5891F]"
+      : "text-gray-700 hover:text-[#68A243]";
+  const mobileButtonStyles =
+    theme === "light" ? "text-white" : "text-[#143E29]";
+
+  const getUserInitials = () => {
+    if (!user?.companyName) return "U";
+    return user.companyName
+      .split(" ")
+      .map((word) => word[0])
+      .join("")
+      .toUpperCase()
+      .slice(0, 2);
+  };
 
   return (
     <nav
@@ -89,7 +113,7 @@ export default function Navbar() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-20">
           <Link to="/" className="flex items-center gap-3 group">
-            <div className="bg-secondary p-2.5 rounded-lg transition-transform group-hover:scale-105">
+            <div className="bg-[#68A243] p-2.5 rounded-lg transition-transform group-hover:scale-105">
               <Building2 className="h-7 w-7 text-white" />
             </div>
             <div className="flex flex-col">
@@ -109,22 +133,98 @@ export default function Navbar() {
           <div className="hidden md:flex items-center gap-8">
             <Link to={"/companies"}>
               <Button
-                size={"lg"}
-                variant={"ghost"}
                 className={`text-base font-semibold transition-colors duration-500 ${linkStyles}`}
               >
                 Empresas Participantes
               </Button>
             </Link>
 
-            <Link to={"/register"}>
-              <Button
-                className="bg-secondary hover:bg-secondary/90 text-white font-bold text-base  transition-all"
-                size={"lg"}
-              >
-                Inscribirse ahora
-              </Button>
-            </Link>
+            {isAuthenticated && (
+              <>
+                <Link to={"/turnos"}>
+                  <Button
+                    className={`text-base font-semibold transition-colors duration-500 ${linkStyles}`}
+                  >
+                    Mis Turnos
+                  </Button>
+                </Link>
+                <Link to={"/reuniones"}>
+                  <Button
+                    className={`text-base font-semibold transition-colors duration-500 ${linkStyles}`}
+                  >
+                    Historial
+                  </Button>
+                </Link>
+              </>
+            )}
+
+            {isAuthenticated ? (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    className="flex items-center gap-2 hover:bg-[#68A243]/10"
+                  >
+                    <Avatar className="h-9 w-9 bg-[#68A243] border-2 border-[#68A243]/20">
+                      <AvatarFallback className="bg-[#68A243] text-white font-semibold text-sm">
+                        {getUserInitials()}
+                      </AvatarFallback>
+                    </Avatar>
+                    <span
+                      className={`font-semibold ${
+                        theme === "light" ? "text-white" : "text-[#143E29]"
+                      }`}
+                    >
+                      {user?.companyName}
+                    </span>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-56">
+                  <DropdownMenuLabel>
+                    <div className="flex flex-col space-y-1">
+                      <p className="text-sm font-medium">{user?.companyName}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {user?.email}
+                      </p>
+                    </div>
+                  </DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem
+                    onClick={() => (window.location.href = "#profile")}
+                  >
+                    <User className="mr-2 h-4 w-4" />
+                    <span>Mi Perfil</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    onClick={() => (window.location.href = "#settings")}
+                  >
+                    <Settings className="mr-2 h-4 w-4" />
+                    <span>Configuración</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={logout} className="text-red-600">
+                    <LogOut className="mr-2 h-4 w-4" />
+                    <span>Cerrar sesión</span>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            ) : (
+              <>
+                <Link to={"/login"}>
+                  <Button
+                    variant="ghost"
+                    className={`font-semibold transition-colors duration-500 ${linkStyles}`}
+                  >
+                    Iniciar sesión
+                  </Button>
+                </Link>
+                <Link to={"/register"}>
+                  <Button className="bg-[#F5891F] hover:bg-[#F5891F]/90 text-white font-bold text-base px-8 py-6 transition-all">
+                    Inscribirse Ahora
+                  </Button>
+                </Link>
+              </>
+            )}
           </div>
 
           <div className="md:hidden">
@@ -141,12 +241,12 @@ export default function Navbar() {
 
               <SheetContent
                 side="right"
-                className="w-full sm:w-96 p-0 bg-primary border-l-2 border-secondary"
+                className="w-full sm:w-96 p-0 bg-[#143E29] border-l-2 border-[#68A243]"
               >
                 <div className="flex flex-col h-full">
-                  <div className="flex justify-between items-center p-6 border-b border-primary/80">
+                  <div className="flex justify-between items-center p-6 border-b border-[#143E29]/80">
                     <div className="flex items-center gap-3">
-                      <div className="bg-secondary p-2 rounded-lg">
+                      <div className="bg-[#68A243] p-2 rounded-lg">
                         <Building2 className="h-6 w-6 text-white" />
                       </div>
                       <div>
@@ -162,19 +262,37 @@ export default function Navbar() {
                       variant="ghost"
                       size="icon"
                       onClick={() => setIsOpen(false)}
-                      className="text-white hover:bg-primary/80"
+                      className="text-white hover:bg-[#143E29]/80"
                     >
                       <X className="h-6 w-6" />
                     </Button>
                   </div>
 
-                  <div className="p-6 bg-primary/80 border-b border-primary/60">
+                  {isAuthenticated && (
+                    <div className="p-6 bg-[#143E29]/80 border-b border-[#143E29]/60">
+                      <div className="flex items-center gap-3 mb-4">
+                        <Avatar className="h-12 w-12 bg-[#68A243] border-2 border-[#68A243]/20">
+                          <AvatarFallback className="bg-[#68A243] text-white font-semibold">
+                            {getUserInitials()}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div>
+                          <p className="text-white font-semibold">
+                            {user?.companyName}
+                          </p>
+                          <p className="text-sm text-gray-300">{user?.email}</p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="p-6 bg-[#143E29]/80 border-b border-[#143E29]/60">
                     <h3 className="text-sm font-semibold text-gray-300 uppercase tracking-wide mb-4">
                       Información del Evento
                     </h3>
                     <div className="space-y-3">
                       <div className="flex items-start gap-3 text-white">
-                        <Calendar className="h-5 w-5 text-secondary mt-0.5 flex-shrink-0" />
+                        <Calendar className="h-5 w-5 text-[#68A243] mt-0.5 flex-shrink-0" />
                         <div>
                           <p className="text-sm text-gray-300">Fecha</p>
                           <p className="font-semibold">21 de Octubre, 2025</p>
@@ -182,7 +300,7 @@ export default function Navbar() {
                       </div>
 
                       <div className="flex items-start gap-3 text-white">
-                        <MapPin className="h-5 w-5 text-secondary mt-0.5 flex-shrink-0" />
+                        <MapPin className="h-5 w-5 text-[#68A243] mt-0.5 flex-shrink-0" />
                         <div>
                           <p className="text-sm text-gray-300">Ubicación</p>
                           <p className="font-semibold">
@@ -192,7 +310,7 @@ export default function Navbar() {
                       </div>
 
                       <div className="flex items-start gap-3 text-white">
-                        <Clock className="h-5 w-5 text-secondary mt-0.5 flex-shrink-0" />
+                        <Clock className="h-5 w-5 text-[#68A243] mt-0.5 flex-shrink-0" />
                         <div>
                           <p className="text-sm text-gray-300">Horario</p>
                           <p className="font-semibold">9:00 AM - 6:00 PM</p>
@@ -206,44 +324,128 @@ export default function Navbar() {
                       Navegación
                     </h3>
                     <div className="space-y-2">
-                      <button
-                        onClick={(e) => {
-                          e.preventDefault();
-                          window.location.href = "#landing";
-                          setIsOpen(false);
-                        }}
-                        className="w-full text-left px-4 py-3 text-white font-semibold text-lg hover:bg-primary/80 rounded-lg transition-colors"
-                      >
-                        Inicio
-                      </button>
+                      <Link to={"/"}>
+                        <button
+                          onClick={() => {
+                            setIsOpen(false);
+                          }}
+                          className="w-full text-left px-4 py-3 text-white font-semibold text-lg hover:bg-[#143E29]/80 rounded-lg transition-colors"
+                        >
+                          Inicio
+                        </button>
+                      </Link>
+                      <Link to={"/companies"}>
+                        <button
+                          onClick={() => {
+                            setIsOpen(false);
+                          }}
+                          className="w-full text-left px-4 py-3 text-white font-semibold text-lg hover:bg-[#143E29]/80 rounded-lg transition-colors"
+                        >
+                          Empresas Participantes
+                        </button>
+                      </Link>
 
-                      <button
-                        onClick={(e) => {
-                          e.preventDefault();
-                          window.location.href = "#companies";
-                          setIsOpen(false);
-                        }}
-                        className="w-full text-left px-4 py-3 text-white font-semibold text-lg hover:bg-primary/80 rounded-lg transition-colors"
-                      >
-                        Empresas Participantes
-                      </button>
+                      {isAuthenticated && (
+                        <>
+                          <Link to={"/turnos"}>
+                            <button
+                              onClick={() => {
+                                setIsOpen(false);
+                              }}
+                              className="w-full text-left px-4 py-3 text-white font-semibold text-lg hover:bg-[#143E29]/80 rounded-lg transition-colors"
+                            >
+                              Mis Turnos
+                            </button>
+                          </Link>
+                          <Link to={"/reuniones"}>
+                            <button
+                              onClick={() => {
+                                setIsOpen(false);
+                              }}
+                              className="w-full text-left px-4 py-3 text-white font-semibold text-lg hover:bg-[#143E29]/80 rounded-lg transition-colors"
+                            >
+                              Historial de Reuniones
+                            </button>
+                          </Link>
+                          <Link to={"/perfil"}>
+                            <button
+                              onClick={() => {
+                                setIsOpen(false);
+                              }}
+                              className="w-full text-left px-4 py-3 text-white font-semibold text-lg hover:bg-[#143E29]/80 rounded-lg transition-colors"
+                            >
+                              Mi Perfil
+                            </button>
+                          </Link>
+                          <Link to={"/configuracion"}>
+                            <button
+                              onClick={() => {
+                                setIsOpen(false);
+                              }}
+                              className="w-full text-left px-4 py-3 text-white font-semibold text-lg hover:bg-[#143E29]/80 rounded-lg transition-colors"
+                            >
+                              Configuración
+                            </button>
+                          </Link>
+                          <Link to={"/representantes"}>
+                            <button
+                              onClick={() => {
+                                setIsOpen(false);
+                              }}
+                              className="w-full text-left px-4 py-3 text-white font-semibold text-lg hover:bg-[#143E29]/80 rounded-lg transition-colors"
+                            >
+                              Representantes
+                            </button>
+                          </Link>
+                          {/* </CHANGE> */}
+                        </>
+                      )}
                     </div>
                   </div>
 
-                  <div className="p-6 border-t border-primary/60">
-                    <Button
-                      onClick={(e) => {
-                        e.preventDefault();
-                        window.location.href = "#register";
-                        setIsOpen(false);
-                      }}
-                      className="w-full bg-secondary hover:bg-secondary/90 text-white font-bold text-lg py-6"
-                    >
-                      Inscribirse Ahora
-                    </Button>
-                    <p className="text-center text-gray-300 text-sm mt-3">
-                      Asegurá tu lugar en el evento
-                    </p>
+                  <div className="p-6 border-t border-[#143E29]/60">
+                    {isAuthenticated ? (
+                      <Button
+                        onClick={() => {
+                          logout();
+                          setIsOpen(false);
+                        }}
+                        variant="outline"
+                        className="w-full border-red-500 text-red-500 hover:bg-red-500 hover:text-white font-bold text-lg py-6"
+                      >
+                        <LogOut className="mr-2 h-5 w-5" />
+                        Cerrar sesión
+                      </Button>
+                    ) : (
+                      <div className="space-y-3">
+                        <Link to={"/login"}>
+                          <Button
+                            onClick={() => {
+                              setIsOpen(false);
+                            }}
+                            variant="outline"
+                            className="w-full border-white text-white hover:bg-white hover:text-[#143E29] font-bold text-lg py-6"
+                          >
+                            Iniciar sesión
+                          </Button>
+                        </Link>
+                        <Link to={"/register"}>
+                          <Button
+                            onClick={() => {
+                              setIsOpen(false);
+                            }}
+                            className="w-full bg-[#F5891F] hover:bg-[#F5891F]/90 text-white font-bold text-lg py-6"
+                          >
+                            Inscribirse Ahora
+                          </Button>
+                        </Link>
+                      </div>
+                    )}
+                    {!isAuthenticated && (
+                      <p className="text-center text-gray-300 text-sm mt-3">
+                        Asegurá tu lugar en el evento
+                      </p>
+                    )}
                   </div>
                 </div>
               </SheetContent>

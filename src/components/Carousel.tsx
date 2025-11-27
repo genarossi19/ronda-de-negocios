@@ -1,9 +1,10 @@
 import { useEffect, useRef, useState } from "react";
 import { getCompanies } from "../api/CompaniesService";
 import type { CompanyResponse } from "../types/Company";
-
+import { Skeleton } from "./ui/skeleton";
 export default function Carousel() {
   const [companies, setCompanies] = useState<CompanyResponse[]>([]);
+  const [loading, isLoading] = useState(false);
   const [duplicatedCompanies, setDuplicatedCompanies] = useState<
     CompanyResponse[]
   >([]);
@@ -13,7 +14,9 @@ export default function Carousel() {
   useEffect(() => {
     const fetchCompanies = async () => {
       try {
+        isLoading(true);
         const data = await getCompanies();
+        isLoading(false);
         setCompanies(data);
       } catch (error) {
         console.error(error);
@@ -72,18 +75,25 @@ export default function Carousel() {
         className="flex gap-8 overflow-x-hidden py-8"
         style={{ scrollBehavior: "auto" }}
       >
-        {duplicatedCompanies.map((company, index) => (
-          <div
-            key={`${company.id}-${index}`}
-            className="flex-shrink-0 w-32 h-32 bg-gray-200 rounded-xl border flex items-center justify-center p-4 hover:shadow-md transition-shadow"
-          >
-            <img
-              src={company.logo || "/placeholder.svg"}
-              alt={company.razon_social}
-              className="w-full h-full object-cover"
-            />
-          </div>
-        ))}
+        {loading
+          ? Array.from({ length: 10 }).map((_, index) => (
+              <Skeleton
+                key={index}
+                className="flex-shrink-0 w-32 h-32 bg-gray-200 rounded-xl border flex items-center justify-center p-4 hover:shadow-md transition-shadow"
+              />
+            ))
+          : duplicatedCompanies.map((company, index) => (
+              <div
+                key={`${company.id}-${index}`}
+                className="flex-shrink-0 w-32 h-32 bg-gray-200 rounded-xl border flex items-center justify-center p-4 hover:shadow-md transition-shadow"
+              >
+                <img
+                  src={company.logo || "/placeholder.svg"}
+                  alt={company.razon_social}
+                  className="w-full h-full object-cover"
+                />
+              </div>
+            ))}
       </div>
     </div>
   );
