@@ -6,7 +6,7 @@ import {
   DialogDescription,
 } from "../components/ui/dialog";
 import { Badge } from "../components/ui/badge";
-import type { CompanyResponse as Company } from "../types/Company";
+import type { CompanyResponse as Company } from "../types/Empresa";
 import { Building2, MapPin, FileText } from "lucide-react";
 
 interface PublicCompanyModalProps {

@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
-import { getCompanies } from "../api/CompaniesService";
-import type { CompanyResponse } from "../types/Company";
+import { getCompanies } from "../api/EmpresaService";
+import type { CompanyResponse } from "../types/Empresa";
 import { Skeleton } from "./ui/skeleton";
 export default function Carousel() {
   const [companies, setCompanies] = useState<CompanyResponse[]>([]);

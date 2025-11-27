@@ -20,9 +20,9 @@ import {
   RefreshCw,
   AlertCircle,
 } from "lucide-react";
-import type { CompanyResponse } from "../types/Company";
+import type { EmpresaResponse } from "../types/Empresa";
 import { useEffect, useState } from "react";
-import { getCompanyById } from "../api/CompaniesService";
+import { getCompanyById } from "../api/EmpresaService";
 
 import { useNavigate, useParams } from "react-router";
 import { Skeleton } from "../components/ui/skeleton";
@@ -49,7 +49,7 @@ export default function CompanyDetail() {
   };
 
   const { id } = useParams<{ id: string }>();
-  const [company, setCompany] = useState<CompanyResponse>(initialCompany);
+  const [company, setCompany] = useState<EmpresaResponse>(initialCompany);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 

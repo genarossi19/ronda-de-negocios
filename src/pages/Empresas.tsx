@@ -15,8 +15,8 @@ import {
   AlertCircle,
   RefreshCw,
 } from "lucide-react";
-import { getCompanies } from "../api/CompaniesService";
-import type { CompanyResponse } from "../types/Company";
+import { getCompanies } from "../api/EmpresaService";
+import type { EmpresaResponse } from "../types/Empresa";
 import { useNavigate } from "react-router";
 
 import { useAuth } from "../context/AuthContext";
@@ -37,7 +37,7 @@ function CompanyCardSkeleton() {
 
 export default function Companies() {
   const { isAuthenticated } = useAuth();
-  const [companies, setCompanies] = useState<CompanyResponse[]>([]);
+  const [companies, setCompanies] = useState<EmpresaResponse[]>([]);
 
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");

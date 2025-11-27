@@ -1,7 +1,7 @@
 import { CompanyProvider } from "../src/context/CompanyContext";
 import Landing from "../src/pages/Landing";
-import Companies from "../src/pages/Companies";
-import CompanyDetail from "../src/pages/CompanyDetail";
+import Empresas from "./pages/Empresas";
+import EmpresasDetail from "./pages/EmpresasDetail";
 import { Routes, Route } from "react-router";
 import Register from "./pages/RegisterStep";
 import Shifts from "./pages/Shifts";
@@ -19,8 +19,8 @@ export default function App() {
             <Routes>
               <Route path="/login" element={<Login />} />
               <Route path="/" element={<Landing />} />
-              <Route path="/companies" element={<Companies />} />
-              <Route path="/companies/:id" element={<CompanyDetail />} />
+              <Route path="/companies" element={<Empresas />} />
+              <Route path="/companies/:id" element={<EmpresasDetail />} />
               <Route path="/register" element={<Register />} />
               <Route path="/turnos" element={<Shifts />} />
               <Route path="/mesas" element={<Tables shiftId={"1"} />} />

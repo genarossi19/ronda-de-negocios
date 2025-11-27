@@ -29,7 +29,7 @@ import { useNavigate } from "react-router";
 import type { GenericType } from "../types/GenericType";
 import Navbar from "../components/Navbar";
 import { getSectors } from "../api/SectorService";
-import type { CompanyType } from "../types/Company";
+import type { CompanyType } from "../types/Empresa";
 
 const PROVINCES = [
   { id: 1, name: "Buenos Aires" },

@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, type ReactNode } from "react";
-import type { CompanyResponse, Company } from "../types/Company";
+import type { CompanyResponse, Company } from "../types/Empresa";
 
 // export interface Company {
 //   id: string;

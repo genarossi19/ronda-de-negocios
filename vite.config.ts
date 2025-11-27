@@ -20,14 +20,5 @@ export default defineConfig({
   //   host: true,
   //   allowedHosts: allowNgrok ? true : undefined,
   // },
-  server: {
-    proxy: {
-      "/api": {
-        target:
-          "https://script.google.com/macros/s/AKfycbz5JM8AwFD_Q2NFVGZhNcSIhZmCG2yFSjAdrN9Heese2PDAcV63FDmQ1iVo_5N5s6Md/exec",
-        changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/api/, ""),
-      },
-    },
-  },
+  server: {},
 });
