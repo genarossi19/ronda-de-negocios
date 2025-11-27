@@ -1,0 +1,253 @@
+import { useState } from "react";
+import Navbar from "../components/Navbar";
+import Footer from "../layout/Footer";
+import { Button } from "../components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "../components/ui/card";
+import { Badge } from "../components/ui/badge";
+import { Calendar, Clock, Users, ArrowRight } from "lucide-react";
+import { useBooking } from "../context/BookingContext";
+import { useAuth } from "../context/AuthContext";
+import { HelpTutorial } from "../components/HelpTutorial";
+import { Link } from "react-router";
+
+export default function Shifts() {
+  const { shifts } = useBooking();
+  const { isAuthenticated } = useAuth();
+  const [selectedDate] = useState("2025-10-21");
+
+  const filteredShifts = shifts.filter((shift) => shift.date === selectedDate);
+
+  const getStatusBadge = (status: string) => {
+    switch (status) {
+      case "available":
+        return (
+          <Badge className="bg-[#68A243] hover:bg-[#68A243]/90">
+            Disponible
+          </Badge>
+        );
+      case "full":
+        return <Badge variant="destructive">Completo</Badge>;
+      case "finished":
+        return <Badge variant="secondary">Finalizado</Badge>;
+      default:
+        return null;
+    }
+  };
+
+  const formatDate = (dateStr: string) => {
+    const date = new Date(dateStr + "T00:00:00");
+    return date.toLocaleDateString("es-AR", {
+      weekday: "long",
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    });
+  };
+
+  const tutorialSteps = [
+    {
+      title: "Bienvenido a los Turnos",
+      description:
+        "En esta sección podés ver todos los turnos disponibles para la ronda de negocios. Cada turno tiene mesas donde podrás reunirte 1 a 1 con otras empresas.",
+      icon: <Calendar className="h-16 w-16 text-[#68A243]" />,
+    },
+    {
+      title: "Información del Turno",
+      description:
+        "Cada tarjeta muestra el horario del turno, la cantidad de mesas disponibles y el porcentaje de ocupación. Los turnos con estado 'Disponible' tienen mesas libres para reservar.",
+      icon: <Clock className="h-16 w-16 text-[#68A243]" />,
+    },
+    {
+      title: "Ver Mesas Disponibles",
+      description:
+        "Hacé click en 'Ver Mesas Disponibles' para acceder a la vista de mesas del turno. Allí podrás elegir una mesa libre o unirte a una donde ya hay otra empresa esperando.",
+      icon: <ArrowRight className="h-16 w-16 text-[#68A243]" />,
+    },
+    {
+      title: "Estado de Ocupación",
+      description:
+        "La barra de progreso te muestra visualmente qué tan ocupado está cada turno. Cuanto más llena la barra, menos mesas disponibles hay. Los turnos con estado 'Completo' no admiten más reservas.",
+      icon: <Users className="h-16 w-16 text-[#68A243]" />,
+    },
+  ];
+
+  if (!isAuthenticated) {
+    return (
+      <>
+        <Navbar />
+        <div className="min-h-screen bg-gray-50 pt-20">
+          <div className="max-w-4xl mx-auto px-4 py-16">
+            <Card className="text-center">
+              <CardHeader>
+                <CardTitle className="text-2xl text-[#143E29]">
+                  Acceso Restringido
+                </CardTitle>
+                <CardDescription>
+                  Debes iniciar sesión para ver y reservar turnos
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Link to={"/login"}>
+                  <Button className="bg-[#68A243] hover:bg-[#68A243]/90 text-white">
+                    Iniciar Sesión
+                  </Button>
+                </Link>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+        <Footer />
+      </>
+    );
+  }
+
+  return (
+    <>
+      <Navbar />
+      <div className="min-h-screen bg-gray-50 pt-20">
+        <div className="bg-gradient-to-br from-[#143E29] to-[#143E29]/90 text-white py-12">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex items-center justify-between">
+              <div>
+                <h1 className="text-4xl font-bold mb-2">Turnos Disponibles</h1>
+                <p className="text-gray-200 text-lg">
+                  Seleccioná un turno y elegí tu mesa para la ronda de negocios
+                </p>
+              </div>
+              <div className="hidden md:block">
+                <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 border border-white/20">
+                  <div className="flex items-center gap-2 text-sm mb-2">
+                    <Calendar className="h-4 w-4 text-[#68A243]" />
+                    <span className="font-semibold">Fecha del Evento</span>
+                  </div>
+                  <p className="text-xl font-bold">
+                    {formatDate(selectedDate)}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+          {filteredShifts.length === 0 ? (
+            <Card>
+              <CardHeader>
+                <CardTitle>No hay turnos disponibles</CardTitle>
+                <CardDescription>
+                  No se encontraron turnos para la fecha seleccionada
+                </CardDescription>
+              </CardHeader>
+            </Card>
+          ) : (
+            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-2">
+              {filteredShifts.map((shift, index) => (
+                <Card
+                  key={shift.id}
+                  className="hover:shadow-lg transition-all duration-300 border-2 hover:border-[#68A243]/30"
+                  style={{
+                    animation: `fadeInUp 0.5s ease-out ${index * 0.1}s both`,
+                  }}
+                >
+                  <CardHeader>
+                    <div className="flex items-start justify-between">
+                      <div>
+                        <CardTitle className="text-2xl text-[#143E29] mb-1">
+                          Turno {shift.id}
+                        </CardTitle>
+                        <CardDescription className="text-base">
+                          Ronda de negocios - Reuniones 1 a 1
+                        </CardDescription>
+                      </div>
+                      {getStatusBadge(shift.status)}
+                    </div>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="space-y-3">
+                      <div className="flex items-center gap-3 text-gray-700">
+                        <div className="bg-[#68A243]/10 p-2 rounded-lg">
+                          <Clock className="h-5 w-5 text-[#68A243]" />
+                        </div>
+                        <div>
+                          <p className="text-sm text-gray-500">Horario</p>
+                          <p className="font-semibold text-lg">
+                            {shift.startTime} - {shift.endTime}
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-3 text-gray-700">
+                        <div className="bg-[#68A243]/10 p-2 rounded-lg">
+                          <Users className="h-5 w-5 text-[#68A243]" />
+                        </div>
+                        <div>
+                          <p className="text-sm text-gray-500">
+                            Mesas Disponibles
+                          </p>
+                          <p className="font-semibold text-lg">
+                            {shift.availableTables} de {shift.totalTables}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="pt-2">
+                      <div className="flex justify-between text-sm mb-2">
+                        <span className="text-gray-600">Ocupación</span>
+                        <span className="font-semibold text-[#143E29]">
+                          {Math.round(
+                            ((shift.totalTables - shift.availableTables) /
+                              shift.totalTables) *
+                              100
+                          )}
+                          %
+                        </span>
+                      </div>
+                      <div className="w-full bg-gray-200 rounded-full h-2">
+                        <div
+                          className="bg-[#68A243] h-2 rounded-full transition-all duration-500"
+                          style={{
+                            width: `${
+                              ((shift.totalTables - shift.availableTables) /
+                                shift.totalTables) *
+                              100
+                            }%`,
+                          }}
+                        />
+                      </div>
+                    </div>
+
+                    <Button
+                      onClick={() =>
+                        (window.location.href = `#tables-${shift.id}`)
+                      }
+                      disabled={shift.status === "full"}
+                      className="w-full bg-[#68A243] hover:bg-[#68A243]/90 text-white font-semibold py-6 text-base disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {shift.status === "full" ? (
+                        "Turno Completo"
+                      ) : (
+                        <>
+                          Ver Mesas Disponibles
+                          <ArrowRight className="ml-2 h-5 w-5" />
+                        </>
+                      )}
+                    </Button>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+      <HelpTutorial title="Guía de Turnos" steps={tutorialSteps} />
+      <Footer />
+    </>
+  );
+}
