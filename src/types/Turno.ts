@@ -19,3 +19,8 @@ export interface TurnoWrite {
 }
 
 export type TurnoUpdate = Partial<Omit<TurnoResponse, "id">> & { id: number };
+
+export interface TurnoEditar {
+  estado?: "activo" | "finalizado";
+  cant_mesas?: number;
+}
