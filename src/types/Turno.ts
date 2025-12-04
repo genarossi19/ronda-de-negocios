@@ -1,12 +1,12 @@
 export interface TurnoResponse {
   id: number;
   fecha?: string;
-  mesas_ocupadas?: string;
+  mesas_ocupadas: number;
   hora_inicio: string;
   hora_fin: string;
   cant_mesas: number;
   mesas_max_empresa?: number;
-  estado: "activo" | "finalizado";
+  estado: "activo" | "finalizado" | "full";
   evento: number;
 }
 

@@ -1,21 +1,10 @@
 import { Button } from "../components/ui/button";
-import {
-  Building2,
-  Menu,
-  X,
-  Calendar,
-  MapPin,
-  Clock,
-  User,
-  LogOut,
-  Settings,
-} from "lucide-react";
+import { Building2, Menu, X, LogOut, Settings } from "lucide-react";
 import { Sheet, SheetContent, SheetTrigger } from "../components/ui/sheet";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "../components/ui/dropdown-menu";
@@ -25,7 +14,7 @@ import { useAuth } from "../context/AuthContext";
 import { Link } from "react-router";
 
 export default function Navbar() {
-  const { user, isAuthenticated, logout } = useAuth();
+  const { user, isAuthenticated, logout, isAdmin } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
   const [isVisible, setIsVisible] = useState(true);
   const [theme, setTheme] = useState<"light" | "dark">("light");
@@ -79,20 +68,11 @@ export default function Navbar() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  const navStyles =
-    theme === "light"
-      ? "bg-[#143E29] text-white"
-      : "bg-white/95 backdrop-blur-sm text-gray-900 border-b border-gray-200 shadow-sm";
+  const isDarkTheme = theme === "light";
 
-  const logoTextStyles = theme === "light" ? "text-white" : "text-[#143E29]";
-  const logoSubtextStyles =
-    theme === "light" ? "text-gray-200" : "text-[#68A243]";
-  const linkStyles =
-    theme === "light"
-      ? "text-gray-100 hover:text-[#F5891F]"
-      : "text-gray-700 hover:text-[#68A243]";
-  const mobileButtonStyles =
-    theme === "light" ? "text-white" : "text-[#143E29]";
+  const navClasses = isDarkTheme
+    ? "bg-gradient-to-r from-[#143E29] via-[#1a5032] to-[#143E29] shadow-lg shadow-black/10"
+    : "bg-white border-b border-gray-100 shadow-sm";
 
   const getUserInitials = () => {
     if (!user?.companyName) return "U";
@@ -104,352 +84,389 @@ export default function Navbar() {
       .slice(0, 2);
   };
 
+  const renderNavLinks = () => {
+    if (isAdmin) {
+      return (
+        <>
+          <Link
+            to="/panel-administrador"
+            className="px-4 py-2 text-sm font-medium rounded-lg transition-all duration-300 hover:bg-white/10 backdrop-blur-sm"
+            style={{ color: isDarkTheme ? "white" : "#143E29" }}
+          >
+            Panel Admin
+          </Link>
+          <Link
+            to="/empresas"
+            className="px-4 py-2 text-sm font-medium rounded-lg transition-all duration-300 hover:bg-white/10 backdrop-blur-sm"
+            style={{ color: isDarkTheme ? "white" : "#143E29" }}
+          >
+            Empresas
+          </Link>
+          <Link
+            to="/turnos"
+            className="px-4 py-2 text-sm font-medium rounded-lg transition-all duration-300 hover:bg-white/10 backdrop-blur-sm"
+            style={{ color: isDarkTheme ? "white" : "#143E29" }}
+          >
+            Turnos
+          </Link>
+          <Link
+            to="/historial"
+            className="px-4 py-2 text-sm font-medium rounded-lg transition-all duration-300 hover:bg-white/10 backdrop-blur-sm"
+            style={{ color: isDarkTheme ? "white" : "#143E29" }}
+          >
+            Historial
+          </Link>
+        </>
+      );
+    }
+
+    if (isAuthenticated) {
+      return (
+        <>
+          <Link
+            to="/empresas"
+            className="px-4 py-2 text-sm font-medium rounded-lg transition-all duration-300 hover:bg-white/10 backdrop-blur-sm"
+            style={{ color: isDarkTheme ? "white" : "#143E29" }}
+          >
+            Empresas
+          </Link>
+          <Link
+            to="/turnos"
+            className="px-4 py-2 text-sm font-medium rounded-lg transition-all duration-300 hover:bg-white/10 backdrop-blur-sm"
+            style={{ color: isDarkTheme ? "white" : "#143E29" }}
+          >
+            Turnos
+          </Link>
+          <Link
+            to="/historial"
+            className="px-4 py-2 text-sm font-medium rounded-lg transition-all duration-300 hover:bg-white/10 backdrop-blur-sm"
+            style={{ color: isDarkTheme ? "white" : "#143E29" }}
+          >
+            Historial
+          </Link>
+        </>
+      );
+    }
+
+    return (
+      <Link
+        to="/empresas"
+        className="px-4 py-2 text-sm font-medium rounded-lg transition-all duration-300 hover:bg-white/10 backdrop-blur-sm"
+        style={{ color: isDarkTheme ? "white" : "#143E29" }}
+      >
+        Empresas Participantes
+      </Link>
+    );
+  };
+
   return (
     <nav
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ease-in-out ${
+      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ease-in-out backdrop-blur-md border-b ${
         isVisible ? "translate-y-0" : "-translate-y-full"
-      } ${navStyles}`}
+      } ${navClasses} ${isDarkTheme ? "border-[#1a5032]" : "border-gray-100"}`}
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-20">
-          <Link to="/" className="flex items-center gap-3 group">
-            <div className="bg-[#68A243] p-2.5 rounded-lg transition-transform group-hover:scale-105">
-              <Building2 className="h-7 w-7 text-white" />
+        <div className="flex items-center justify-between h-16">
+          {/* Logo */}
+          <Link to="/" className="flex items-center gap-3 group flex-shrink-0">
+            <div
+              className={`p-2 rounded-xl transition-all duration-300 group-hover:scale-110 ${
+                isDarkTheme
+                  ? "bg-[#68A243] shadow-lg shadow-[#68A243]/30"
+                  : "bg-gradient-to-br from-[#68A243] to-[#5a9139]"
+              }`}
+            >
+              <Building2 className="h-6 w-6 text-white" />
             </div>
-            <div className="flex flex-col">
+            <div className="flex flex-col leading-tight">
               <span
-                className={`font-bold text-xl leading-tight transition-colors duration-500 ${logoTextStyles}`}
+                className={`font-bold text-base transition-colors duration-300 ${
+                  isDarkTheme ? "text-white" : "text-[#143E29]"
+                }`}
               >
                 Ronda de Negocios
               </span>
               <span
-                className={`text-sm font-medium transition-colors duration-500 ${logoSubtextStyles}`}
+                className={`text-xs font-medium transition-colors duration-300 ${
+                  isDarkTheme ? "text-[#68A243]" : "text-[#68A243]/70"
+                }`}
               >
-                Trenque Lauquen 2025
+                Trenque Lauquen {new Date().getFullYear()}
               </span>
             </div>
           </Link>
 
-          <div className="hidden md:flex items-center gap-8">
-            <Link to={"/companies"}>
-              <Button
-                className={`text-base font-semibold transition-colors duration-500 ${linkStyles}`}
-              >
-                Empresas Participantes
-              </Button>
-            </Link>
+          {/* Centro - Navigation Links (Desktop) */}
+          <div className="hidden lg:flex items-center gap-1">
+            {renderNavLinks()}
+          </div>
 
-            {isAuthenticated && (
-              <>
-                <Link to={"/turnos"}>
-                  <Button
-                    className={`text-base font-semibold transition-colors duration-500 ${linkStyles}`}
-                  >
-                    Mis Turnos
-                  </Button>
-                </Link>
-                <Link to={"/reuniones"}>
-                  <Button
-                    className={`text-base font-semibold transition-colors duration-500 ${linkStyles}`}
-                  >
-                    Historial
-                  </Button>
-                </Link>
-              </>
-            )}
-
+          {/* Derecha - User Section */}
+          <div className="flex items-center gap-3">
             {isAuthenticated ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    className="flex items-center gap-2 hover:bg-[#68A243]/10"
+                  <button
+                    className={`flex items-center gap-2.5 px-3 py-1.5 rounded-lg transition-all duration-300 ${
+                      isDarkTheme ? "hover:bg-white/10" : "hover:bg-gray-100"
+                    }`}
                   >
-                    <Avatar className="h-9 w-9 bg-[#68A243] border-2 border-[#68A243]/20">
-                      <AvatarFallback className="bg-[#68A243] text-white font-semibold text-sm">
+                    <Avatar
+                      className={`h-8 w-8 border-2 ${
+                        isDarkTheme
+                          ? "border-[#68A243] bg-[#68A243]/20"
+                          : "border-[#68A243]/30 bg-[#68A243]/10"
+                      }`}
+                    >
+                      <AvatarFallback
+                        className={`font-semibold text-sm ${
+                          isDarkTheme
+                            ? "bg-[#68A243] text-white"
+                            : "bg-[#68A243]/80 text-white"
+                        }`}
+                      >
                         {getUserInitials()}
                       </AvatarFallback>
                     </Avatar>
                     <span
-                      className={`font-semibold ${
-                        theme === "light" ? "text-white" : "text-[#143E29]"
+                      className={`hidden sm:inline text-sm font-semibold max-w-[120px] truncate transition-colors duration-300 ${
+                        isDarkTheme ? "text-white" : "text-[#143E29]"
                       }`}
                     >
                       {user?.companyName}
                     </span>
-                  </Button>
+                  </button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-56">
-                  <DropdownMenuLabel>
-                    <div className="flex flex-col space-y-1">
-                      <p className="text-sm font-medium">{user?.companyName}</p>
-                      <p className="text-xs text-muted-foreground">
-                        {user?.email}
-                      </p>
-                    </div>
-                  </DropdownMenuLabel>
+                <DropdownMenuContent align="end" className="w-48 mt-2">
+                  <div className="px-2 py-1.5">
+                    <p className="text-sm font-semibold text-gray-900">
+                      {user?.companyName}
+                    </p>
+                    <p className="text-xs text-gray-500">{user?.email}</p>
+                  </div>
+                  <DropdownMenuSeparator />
+                  <Link to="/perfil">
+                    <DropdownMenuItem className="cursor-pointer">
+                      <span className="text-sm">Mi Perfil</span>
+                    </DropdownMenuItem>
+                  </Link>
+                  <Link to="/configuracion">
+                    <DropdownMenuItem className="cursor-pointer">
+                      <Settings className="mr-2 h-4 w-4" />
+                      <span className="text-sm">Configuración</span>
+                    </DropdownMenuItem>
+                  </Link>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem
-                    onClick={() => (window.location.href = "#profile")}
+                    onClick={logout}
+                    className="text-red-600 cursor-pointer"
                   >
-                    <User className="mr-2 h-4 w-4" />
-                    <span>Mi Perfil</span>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem
-                    onClick={() => (window.location.href = "#settings")}
-                  >
-                    <Settings className="mr-2 h-4 w-4" />
-                    <span>Configuración</span>
-                  </DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={logout} className="text-red-600">
                     <LogOut className="mr-2 h-4 w-4" />
-                    <span>Cerrar sesión</span>
+                    <span className="text-sm">Cerrar sesión</span>
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
             ) : (
-              <>
-                <Link to={"/login"}>
+              <div className="flex items-center gap-2">
+                <Link to="/login">
                   <Button
                     variant="ghost"
-                    className={`font-semibold transition-colors duration-500 ${linkStyles}`}
+                    size="sm"
+                    className={`hidden sm:inline-flex text-sm font-medium transition-colors duration-300 ${
+                      isDarkTheme
+                        ? "text-white hover:bg-white/10"
+                        : "text-[#143E29] hover:bg-gray-100"
+                    }`}
                   >
                     Iniciar sesión
                   </Button>
                 </Link>
-                <Link to={"/register"}>
-                  <Button className="bg-[#F5891F] hover:bg-[#F5891F]/90 text-white font-bold text-base px-8 py-6 transition-all">
-                    Inscribirse Ahora
+                <Link to="/register">
+                  <Button
+                    size="sm"
+                    className="bg-[#68A243] hover:bg-[#5a9139] text-white font-semibold text-sm shadow-lg shadow-[#68A243]/30 transition-all duration-300 hover:shadow-[#68A243]/40"
+                  >
+                    Inscribirse
                   </Button>
                 </Link>
-              </>
+              </div>
             )}
-          </div>
 
-          <div className="md:hidden">
-            <Sheet open={isOpen} onOpenChange={setIsOpen}>
-              <SheetTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className={`transition-colors duration-500 ${mobileButtonStyles}`}
-                >
-                  <Menu className="h-7 w-7" />
-                </Button>
-              </SheetTrigger>
-
-              <SheetContent
-                side="right"
-                className="w-full sm:w-96 p-0 bg-[#143E29] border-l-2 border-[#68A243]"
-              >
-                <div className="flex flex-col h-full">
-                  <div className="flex justify-between items-center p-6 border-b border-[#143E29]/80">
-                    <div className="flex items-center gap-3">
-                      <div className="bg-[#68A243] p-2 rounded-lg">
-                        <Building2 className="h-6 w-6 text-white" />
-                      </div>
-                      <div>
-                        <h2 className="text-xl font-bold text-white">
+            {/* Mobile Menu Button */}
+            <div className="lg:hidden">
+              <Sheet open={isOpen} onOpenChange={setIsOpen}>
+                <SheetTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className={`transition-colors duration-300 ${
+                      isDarkTheme
+                        ? "text-white hover:bg-white/10"
+                        : "text-[#143E29] hover:bg-gray-100"
+                    }`}
+                  >
+                    <Menu className="h-5 w-5" />
+                  </Button>
+                </SheetTrigger>
+                <SheetContent side="right" className="w-64 p-0 bg-white">
+                  <div className="flex flex-col h-full">
+                    {/* Header */}
+                    <div className="flex justify-between items-center p-6 border-b border-gray-100 bg-gradient-to-r from-[#143E29] to-[#1a5032]">
+                      <div className="flex items-center gap-2">
+                        <div className="bg-[#68A243] p-1.5 rounded-lg">
+                          <Building2 className="h-5 w-5 text-white" />
+                        </div>
+                        <span className="font-bold text-white text-sm">
                           Ronda de Negocios
-                        </h2>
-                        <p className="text-sm text-gray-300">
-                          Trenque Lauquen 2025
-                        </p>
+                        </span>
                       </div>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => setIsOpen(false)}
+                        className="text-white hover:bg-white/10"
+                      >
+                        <X className="h-5 w-5" />
+                      </Button>
                     </div>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => setIsOpen(false)}
-                      className="text-white hover:bg-[#143E29]/80"
-                    >
-                      <X className="h-6 w-6" />
-                    </Button>
-                  </div>
 
-                  {isAuthenticated && (
-                    <div className="p-6 bg-[#143E29]/80 border-b border-[#143E29]/60">
-                      <div className="flex items-center gap-3 mb-4">
-                        <Avatar className="h-12 w-12 bg-[#68A243] border-2 border-[#68A243]/20">
-                          <AvatarFallback className="bg-[#68A243] text-white font-semibold">
-                            {getUserInitials()}
-                          </AvatarFallback>
-                        </Avatar>
-                        <div>
-                          <p className="text-white font-semibold">
-                            {user?.companyName}
-                          </p>
-                          <p className="text-sm text-gray-300">{user?.email}</p>
+                    {/* User Info (if authenticated) */}
+                    {isAuthenticated && (
+                      <div className="p-4 border-b border-gray-100 bg-gray-50">
+                        <div className="flex items-center gap-3">
+                          <Avatar className="h-10 w-10 bg-[#68A243] border-2 border-[#68A243]/20">
+                            <AvatarFallback className="bg-[#68A243] text-white font-semibold text-sm">
+                              {getUserInitials()}
+                            </AvatarFallback>
+                          </Avatar>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-semibold text-gray-900 truncate">
+                              {user?.companyName}
+                            </p>
+                            <p className="text-xs text-gray-500 truncate">
+                              {user?.email}
+                            </p>
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  )}
+                    )}
 
-                  <div className="p-6 bg-[#143E29]/80 border-b border-[#143E29]/60">
-                    <h3 className="text-sm font-semibold text-gray-300 uppercase tracking-wide mb-4">
-                      Información del Evento
-                    </h3>
-                    <div className="space-y-3">
-                      <div className="flex items-start gap-3 text-white">
-                        <Calendar className="h-5 w-5 text-[#68A243] mt-0.5 flex-shrink-0" />
-                        <div>
-                          <p className="text-sm text-gray-300">Fecha</p>
-                          <p className="font-semibold">21 de Octubre, 2025</p>
-                        </div>
-                      </div>
+                    {/* Menu Items */}
+                    <div className="flex-1 p-4 space-y-1 overflow-y-auto">
+                      {isAdmin && (
+                        <>
+                          <Link to="/panel-administrador">
+                            <button
+                              onClick={() => setIsOpen(false)}
+                              className="w-full text-left px-4 py-2.5 text-sm font-medium text-gray-900 hover:bg-gray-100 rounded-lg transition-colors duration-200"
+                            >
+                              Panel Admin
+                            </button>
+                          </Link>
+                        </>
+                      )}
 
-                      <div className="flex items-start gap-3 text-white">
-                        <MapPin className="h-5 w-5 text-[#68A243] mt-0.5 flex-shrink-0" />
-                        <div>
-                          <p className="text-sm text-gray-300">Ubicación</p>
-                          <p className="font-semibold">
-                            Polo Científico Tecnológico
-                          </p>
-                        </div>
-                      </div>
+                      {!isAdmin && (
+                        <Link to="/empresas">
+                          <button
+                            onClick={() => setIsOpen(false)}
+                            className="w-full text-left px-4 py-2.5 text-sm font-medium text-gray-900 hover:bg-gray-100 rounded-lg transition-colors duration-200"
+                          >
+                            Empresas
+                          </button>
+                        </Link>
+                      )}
 
-                      <div className="flex items-start gap-3 text-white">
-                        <Clock className="h-5 w-5 text-[#68A243] mt-0.5 flex-shrink-0" />
-                        <div>
-                          <p className="text-sm text-gray-300">Horario</p>
-                          <p className="font-semibold">9:00 AM - 6:00 PM</p>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="flex-1 p-6">
-                    <h3 className="text-sm font-semibold text-gray-300 uppercase tracking-wide mb-4">
-                      Navegación
-                    </h3>
-                    <div className="space-y-2">
-                      <Link to={"/"}>
-                        <button
-                          onClick={() => {
-                            setIsOpen(false);
-                          }}
-                          className="w-full text-left px-4 py-3 text-white font-semibold text-lg hover:bg-[#143E29]/80 rounded-lg transition-colors"
-                        >
-                          Inicio
-                        </button>
-                      </Link>
-                      <Link to={"/companies"}>
-                        <button
-                          onClick={() => {
-                            setIsOpen(false);
-                          }}
-                          className="w-full text-left px-4 py-3 text-white font-semibold text-lg hover:bg-[#143E29]/80 rounded-lg transition-colors"
-                        >
-                          Empresas Participantes
-                        </button>
-                      </Link>
+                      {isAdmin && (
+                        <>
+                          <Link to="/empresas">
+                            <button
+                              onClick={() => setIsOpen(false)}
+                              className="w-full text-left px-4 py-2.5 text-sm font-medium text-gray-900 hover:bg-gray-100 rounded-lg transition-colors duration-200"
+                            >
+                              Empresas
+                            </button>
+                          </Link>
+                        </>
+                      )}
 
                       {isAuthenticated && (
                         <>
-                          <Link to={"/turnos"}>
+                          <Link to="/turnos">
                             <button
-                              onClick={() => {
-                                setIsOpen(false);
-                              }}
-                              className="w-full text-left px-4 py-3 text-white font-semibold text-lg hover:bg-[#143E29]/80 rounded-lg transition-colors"
+                              onClick={() => setIsOpen(false)}
+                              className="w-full text-left px-4 py-2.5 text-sm font-medium text-gray-900 hover:bg-gray-100 rounded-lg transition-colors duration-200"
                             >
-                              Mis Turnos
+                              {isAdmin ? "Turnos" : "Mis Turnos"}
                             </button>
                           </Link>
-                          <Link to={"/reuniones"}>
+                          <Link to="/historial">
                             <button
-                              onClick={() => {
-                                setIsOpen(false);
-                              }}
-                              className="w-full text-left px-4 py-3 text-white font-semibold text-lg hover:bg-[#143E29]/80 rounded-lg transition-colors"
+                              onClick={() => setIsOpen(false)}
+                              className="w-full text-left px-4 py-2.5 text-sm font-medium text-gray-900 hover:bg-gray-100 rounded-lg transition-colors duration-200"
                             >
-                              Historial de Reuniones
+                              Historial
                             </button>
                           </Link>
-                          <Link to={"/perfil"}>
+                          <Link to="/perfil">
                             <button
-                              onClick={() => {
-                                setIsOpen(false);
-                              }}
-                              className="w-full text-left px-4 py-3 text-white font-semibold text-lg hover:bg-[#143E29]/80 rounded-lg transition-colors"
+                              onClick={() => setIsOpen(false)}
+                              className="w-full text-left px-4 py-2.5 text-sm font-medium text-gray-900 hover:bg-gray-100 rounded-lg transition-colors duration-200"
                             >
                               Mi Perfil
                             </button>
                           </Link>
-                          <Link to={"/configuracion"}>
+                          <Link to="/configuracion">
                             <button
-                              onClick={() => {
-                                setIsOpen(false);
-                              }}
-                              className="w-full text-left px-4 py-3 text-white font-semibold text-lg hover:bg-[#143E29]/80 rounded-lg transition-colors"
+                              onClick={() => setIsOpen(false)}
+                              className="w-full text-left px-4 py-2.5 text-sm font-medium text-gray-900 hover:bg-gray-100 rounded-lg transition-colors duration-200"
                             >
                               Configuración
                             </button>
                           </Link>
-                          <Link to={"/representantes"}>
-                            <button
-                              onClick={() => {
-                                setIsOpen(false);
-                              }}
-                              className="w-full text-left px-4 py-3 text-white font-semibold text-lg hover:bg-[#143E29]/80 rounded-lg transition-colors"
+                        </>
+                      )}
+                    </div>
+
+                    {/* Footer */}
+                    <div className="p-4 border-t border-gray-100 bg-gray-50 space-y-2">
+                      {isAuthenticated ? (
+                        <Button
+                          onClick={() => {
+                            logout();
+                            setIsOpen(false);
+                          }}
+                          className="w-full bg-red-600 hover:bg-red-700 text-white font-semibold text-sm"
+                        >
+                          <LogOut className="mr-2 h-4 w-4" />
+                          Cerrar sesión
+                        </Button>
+                      ) : (
+                        <>
+                          <Link to="/login" className="block">
+                            <Button
+                              onClick={() => setIsOpen(false)}
+                              variant="outline"
+                              className="w-full text-gray-900 border-gray-300 font-semibold text-sm"
                             >
-                              Representantes
-                            </button>
+                              Iniciar sesión
+                            </Button>
                           </Link>
-                          {/* </CHANGE> */}
+                          <Link to="/register" className="block">
+                            <Button
+                              onClick={() => setIsOpen(false)}
+                              className="w-full bg-[#68A243] hover:bg-[#5a9139] text-white font-semibold text-sm"
+                            >
+                              Inscribirse
+                            </Button>
+                          </Link>
                         </>
                       )}
                     </div>
                   </div>
-
-                  <div className="p-6 border-t border-[#143E29]/60">
-                    {isAuthenticated ? (
-                      <Button
-                        onClick={() => {
-                          logout();
-                          setIsOpen(false);
-                        }}
-                        variant="outline"
-                        className="w-full border-red-500 text-red-500 hover:bg-red-500 hover:text-white font-bold text-lg py-6"
-                      >
-                        <LogOut className="mr-2 h-5 w-5" />
-                        Cerrar sesión
-                      </Button>
-                    ) : (
-                      <div className="space-y-3">
-                        <Link to={"/login"}>
-                          <Button
-                            onClick={() => {
-                              setIsOpen(false);
-                            }}
-                            variant="outline"
-                            className="w-full border-white text-white hover:bg-white hover:text-[#143E29] font-bold text-lg py-6"
-                          >
-                            Iniciar sesión
-                          </Button>
-                        </Link>
-                        <Link to={"/register"}>
-                          <Button
-                            onClick={() => {
-                              setIsOpen(false);
-                            }}
-                            className="w-full bg-[#F5891F] hover:bg-[#F5891F]/90 text-white font-bold text-lg py-6"
-                          >
-                            Inscribirse Ahora
-                          </Button>
-                        </Link>
-                      </div>
-                    )}
-                    {!isAuthenticated && (
-                      <p className="text-center text-gray-300 text-sm mt-3">
-                        Asegurá tu lugar en el evento
-                      </p>
-                    )}
-                  </div>
-                </div>
-              </SheetContent>
-            </Sheet>
+                </SheetContent>
+              </Sheet>
+            </div>
           </div>
         </div>
       </div>

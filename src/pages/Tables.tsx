@@ -27,10 +27,8 @@ import {
   Search,
   Check,
 } from "lucide-react";
-import { useBooking } from "../context/BookingContext";
 import { useAuth } from "../context/AuthContext";
-import { useCompanies } from "../context/CompanyContext";
-import { Avatar, AvatarFallback, AvatarImage } from "../components/ui/avatar";
+import { Avatar, AvatarFallback } from "../components/ui/avatar";
 import {
   Command,
   CommandEmpty,
@@ -46,17 +44,26 @@ import {
 } from "../components/ui/popover";
 import { cn } from "../lib/utils";
 import { HelpTutorial } from "../components/HelpTutorial";
+import { useParams, useNavigate } from "react-router";
+import { getMesasByTurnoId } from "../api/MesaService";
+import type { MesaResponse } from "../types/Mesa";
 
-interface TablesProps {
-  shiftId: string | null;
+interface TableUIData {
+  id: number;
+  number: number;
+  status: "empty" | "partial" | "full";
+  asientos: MesaResponse["asientos"];
 }
 
-export default function Tables({ shiftId }: TablesProps) {
-  const { getShift, bookTable } = useBooking();
+export default function Tables() {
+  const { id: turnoId } = useParams<{ id: string }>();
+  const navigate = useNavigate();
   const { user } = useAuth();
-  const { getCompany } = useCompanies();
-  const [shift, setShift] = useState(getShift(shiftId || ""));
-  const [selectedTable, setSelectedTable] = useState<string | null>(null);
+
+  const [tables, setTables] = useState<TableUIData[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [selectedTable, setSelectedTable] = useState<TableUIData | null>(null);
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
   const [bookingSuccess, setBookingSuccess] = useState(false);
   const [selectedRepresentative, setSelectedRepresentative] =
@@ -106,13 +113,71 @@ export default function Tables({ shiftId }: TablesProps) {
     },
   ];
 
+  // Cargar mesas desde la API
   useEffect(() => {
-    if (shiftId) {
-      setShift(getShift(shiftId));
-    }
-  }, [shiftId, getShift]);
+    const loadTables = async () => {
+      if (!turnoId) {
+        setError("No se especificó un turno");
+        setLoading(false);
+        return;
+      }
 
-  if (!shift) {
+      try {
+        setLoading(true);
+        const mesasData: MesaResponse[] = await getMesasByTurnoId(
+          parseInt(turnoId)
+        );
+
+        // Transformar datos de API al formato de UI
+        const transformedTables: TableUIData[] = mesasData.map((mesa) => {
+          // Determinar status basado en cantidad de asientos
+          let status: "empty" | "partial" | "full" = "empty";
+          if (mesa.asientos.length === 1) {
+            status = "partial";
+          } else if (mesa.asientos.length >= 2) {
+            status = "full";
+          }
+
+          return {
+            id: mesa.id,
+            number: mesa.num_mesa,
+            status,
+            asientos: mesa.asientos,
+          };
+        });
+
+        setTables(transformedTables);
+        setError(null);
+      } catch (err) {
+        console.error("Error cargando mesas:", err);
+        setError("Error al cargar las mesas");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadTables();
+  }, [turnoId]);
+
+  if (loading) {
+    return (
+      <>
+        <Navbar />
+        <div className="min-h-screen bg-gray-50 pt-20 flex items-center justify-center">
+          <Card className="w-96">
+            <CardHeader>
+              <CardTitle className="text-[#143E29]">
+                Cargando mesas...
+              </CardTitle>
+            </CardHeader>
+          </Card>
+        </div>
+        <Footer />
+      </>
+    );
+  }
+
+  if (error || !turnoId) {
     return (
       <>
         <Navbar />
@@ -121,13 +186,17 @@ export default function Tables({ shiftId }: TablesProps) {
             <Card>
               <CardHeader>
                 <CardTitle className="text-[#143E29]">
-                  Turno no encontrado
+                  {error || "Turno no encontrado"}
                 </CardTitle>
-                <CardDescription>El turno que buscás no existe</CardDescription>
+                <CardDescription>
+                  {error
+                    ? "Intenta nuevamente más tarde"
+                    : "El turno que buscás no existe"}
+                </CardDescription>
               </CardHeader>
               <CardContent>
                 <Button
-                  onClick={() => (window.location.href = "#shifts")}
+                  onClick={() => navigate("/turnos")}
                   className="bg-[#68A243] hover:bg-[#68A243]/90 text-white"
                 >
                   <ArrowLeft className="mr-2 h-4 w-4" />
@@ -142,9 +211,9 @@ export default function Tables({ shiftId }: TablesProps) {
     );
   }
 
-  const handleTableClick = (tableId: string, status: string) => {
-    if (status === "full") return;
-    setSelectedTable(tableId);
+  const handleTableClick = (table: TableUIData) => {
+    if (table.status === "full") return;
+    setSelectedTable(table);
     setSelectedRepresentative("");
     setShowConfirmDialog(true);
   };
@@ -152,30 +221,18 @@ export default function Tables({ shiftId }: TablesProps) {
   const handleConfirmBooking = () => {
     if (!selectedTable || !user?.id || !selectedRepresentative) return;
 
-    const success = bookTable(
-      shift.id,
-      selectedTable,
-      user.id,
-      selectedRepresentative
-    );
+    // TODO: Implementar lógica de booking cuando la API esté lista
+    // Por ahora solo mostramos éxito
+    setBookingSuccess(true);
+    setShowConfirmDialog(false);
+    setSelectedRepresentative("");
 
-    if (success) {
-      setBookingSuccess(true);
-      setShowConfirmDialog(false);
-      setSelectedRepresentative("");
-      // Refresh shift data
-      setShift(getShift(shift.id));
-
-      setTimeout(() => {
-        setBookingSuccess(false);
-      }, 3000);
-    }
+    setTimeout(() => {
+      setBookingSuccess(false);
+    }, 3000);
   };
 
-  const selectedTableData = shift.tables.find((t) => t.id === selectedTable);
-  const selectedTableCompany = selectedTableData?.companies[0]
-    ? getCompany(selectedTableData.companies[0])
-    : null;
+  // Para mostrar la empresa anfitriona en el dialog
 
   return (
     <>
@@ -185,7 +242,7 @@ export default function Tables({ shiftId }: TablesProps) {
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <Button
               variant="ghost"
-              onClick={() => (window.location.href = "#shifts")}
+              onClick={() => navigate("/shifts")}
               className="text-white hover:bg-white/10 mb-4"
             >
               <ArrowLeft className="mr-2 h-4 w-4" />
@@ -194,19 +251,17 @@ export default function Tables({ shiftId }: TablesProps) {
 
             <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
               <div>
-                <h1 className="text-3xl font-bold mb-2">Turno {shift.id}</h1>
+                <h1 className="text-3xl font-bold mb-2">Turno {turnoId}</h1>
                 <div className="flex flex-wrap items-center gap-4 text-gray-200">
                   <div className="flex items-center gap-2">
                     <Clock className="h-4 w-4" />
-                    <span>
-                      {shift.startTime} - {shift.endTime}
-                    </span>
+                    <span>Mesas disponibles</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <Users className="h-4 w-4" />
                     <span>
-                      {shift.availableTables} mesas disponibles de{" "}
-                      {shift.totalTables}
+                      {tables.filter((t) => t.status !== "full").length} mesas
+                      libres de {tables.length}
                     </span>
                   </div>
                 </div>
@@ -262,15 +317,18 @@ export default function Tables({ shiftId }: TablesProps) {
             </h2>
 
             <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4 max-w-5xl mx-auto">
-              {shift.tables.map((table, index) => {
-                const company = table.companies[0]
-                  ? getCompany(table.companies[0])
-                  : null;
+              {tables.map((table, index) => {
+                const hostName =
+                  table.status === "partial" && table.asientos[0]
+                    ? `${table.asientos[0].representante_nombre || ""} ${
+                        table.asientos[0].representante_apellido || ""
+                      }`.trim()
+                    : null;
 
                 return (
                   <button
                     key={table.id}
-                    onClick={() => handleTableClick(table.id, table.status)}
+                    onClick={() => handleTableClick(table)}
                     disabled={table.status === "full"}
                     className={`
                       relative aspect-square rounded-lg border-2 transition-all duration-300
@@ -292,19 +350,15 @@ export default function Tables({ shiftId }: TablesProps) {
                         {table.number}
                       </p>
 
-                      {table.status === "partial" && company ? (
+                      {table.status === "partial" && hostName ? (
                         <div className="flex flex-col items-center gap-1">
-                          <Avatar className="h-8 w-8 border border-[#68A243]">
-                            <AvatarImage
-                              src={company.logo || "/placeholder.svg"}
-                              alt={company.name}
-                            />
-                            <AvatarFallback className="bg-[#68A243] text-white text-xs">
-                              {company.name.substring(0, 2).toUpperCase()}
-                            </AvatarFallback>
-                          </Avatar>
-                          <p className="text-xs text-gray-600 line-clamp-1">
-                            {company.name}
+                          <div className="h-8 w-8 rounded-full bg-[#68A243] flex items-center justify-center text-white text-xs font-bold border border-white">
+                            {table.asientos[0]?.empresa_nombre
+                              ?.substring(0, 1)
+                              .toUpperCase()}
+                          </div>
+                          <p className="text-xs text-gray-600 line-clamp-1 max-w-full">
+                            {hostName}
                           </p>
                         </div>
                       ) : table.status === "full" ? (
@@ -327,46 +381,41 @@ export default function Tables({ shiftId }: TablesProps) {
                 Confirmar Reserva
               </DialogTitle>
               <DialogDescription>
-                {selectedTableData?.status === "partial" &&
-                selectedTableCompany ? (
+                {selectedTable?.status === "partial" &&
+                selectedTable.asientos[0] ? (
                   <>
-                    Te vas a unir a la mesa {selectedTableData.number} donde
-                    está esperando:
+                    Te vas a unir a la mesa {selectedTable.number} donde está
+                    esperando: {selectedTable.asientos[0].empresa_nombre}
                   </>
                 ) : (
                   <>
-                    Vas a reservar la mesa {selectedTableData?.number}. Otra
-                    empresa podrá unirse a tu mesa.
+                    Vas a reservar la mesa {selectedTable?.number}. Otra empresa
+                    podrá unirse a tu mesa.
                   </>
                 )}
               </DialogDescription>
             </DialogHeader>
 
-            {selectedTableData?.status === "partial" &&
-              selectedTableCompany && (
+            {selectedTable?.status === "partial" &&
+              selectedTable.asientos[0] && (
                 <Card className="border-[#68A243]/30">
                   <CardContent className="pt-6">
                     <div className="flex items-center gap-4">
-                      <Avatar className="h-16 w-16 border-2 border-[#68A243]">
-                        <AvatarImage
-                          src={selectedTableCompany.logo || "/placeholder.svg"}
-                          alt={selectedTableCompany.name}
-                        />
-                        <AvatarFallback className="bg-[#68A243] text-white font-bold">
-                          {selectedTableCompany.name
-                            .substring(0, 2)
-                            .toUpperCase()}
-                        </AvatarFallback>
-                      </Avatar>
+                      <div className="h-16 w-16 rounded-full bg-[#68A243] flex items-center justify-center text-white text-lg font-bold">
+                        {selectedTable.asientos[0].empresa_nombre
+                          ?.substring(0, 1)
+                          .toUpperCase()}
+                      </div>
                       <div className="flex-1">
                         <h4 className="font-bold text-[#143E29]">
-                          {selectedTableCompany.name}
+                          {selectedTable.asientos[0].empresa_nombre}
                         </h4>
                         <p className="text-sm text-gray-600">
-                          {selectedTableCompany.sector}
+                          Rep: {selectedTable.asientos[0].representante_nombre}{" "}
+                          {selectedTable.asientos[0].representante_apellido}
                         </p>
                         <Badge className="mt-1 bg-[#68A243]/10 text-[#68A243] hover:bg-[#68A243]/20">
-                          {selectedTableCompany.province}
+                          Anfitrión
                         </Badge>
                       </div>
                     </div>
@@ -460,7 +509,7 @@ export default function Tables({ shiftId }: TablesProps) {
                 <div className="text-sm text-amber-600 bg-amber-50 p-3 rounded-lg border border-amber-200">
                   No tenés representantes.{" "}
                   <button
-                    onClick={() => (window.location.href = "#representatives")}
+                    onClick={() => navigate("/representatives")}
                     className="font-semibold underline hover:text-amber-700"
                   >
                     Agregá uno aquí

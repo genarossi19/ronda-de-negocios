@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Navbar from "../components/Navbar";
 import Footer from "../layout/Footer";
 import { Button } from "../components/ui/button";
@@ -11,17 +11,33 @@ import {
 } from "../components/ui/card";
 import { Badge } from "../components/ui/badge";
 import { Calendar, Clock, Users, ArrowRight } from "lucide-react";
-import { useBooking } from "../context/BookingContext";
 import { useAuth } from "../context/AuthContext";
 import { HelpTutorial } from "../components/HelpTutorial";
-import { Link } from "react-router";
-
+import { Link, useNavigate } from "react-router";
+import { getTurnoByEventoId } from "../api/TurnoService";
+import type { TurnoResponse } from "../types/Turno";
 export default function Shifts() {
-  const { shifts } = useBooking();
+  const navigate = useNavigate();
+  // const { shifts } = useBooking();
+  const [shifts, setShifts] = useState<TurnoResponse[]>([]);
   const { isAuthenticated } = useAuth();
-  const [selectedDate] = useState("2025-10-21");
+  // const [selectedDate] = useState("2025-11-19");
 
-  const filteredShifts = shifts.filter((shift) => shift.date === selectedDate);
+  useEffect(() => {
+    const fetchTurno = async () => {
+      try {
+        const data = await getTurnoByEventoId(1);
+        console.log(data);
+        setShifts(data);
+      } catch (error) {
+        console.error(error);
+      }
+    };
+    fetchTurno();
+  }, []);
+
+  // const filteredShifts = shifts.filter((shift) => shift.fecha === selectedDate);
+  const filteredShifts = shifts;
 
   const getStatusBadge = (status: string) => {
     switch (status) {
@@ -127,7 +143,8 @@ export default function Shifts() {
                     <span className="font-semibold">Fecha del Evento</span>
                   </div>
                   <p className="text-xl font-bold">
-                    {formatDate(selectedDate)}
+                    {/* {formatDate(selectedDate)} */}
+                    colocar fecha
                   </p>
                 </div>
               </div>
@@ -165,7 +182,7 @@ export default function Shifts() {
                           Ronda de negocios - Reuniones 1 a 1
                         </CardDescription>
                       </div>
-                      {getStatusBadge(shift.status)}
+                      {getStatusBadge(shift.estado)}
                     </div>
                   </CardHeader>
                   <CardContent className="space-y-4">
@@ -177,7 +194,7 @@ export default function Shifts() {
                         <div>
                           <p className="text-sm text-gray-500">Horario</p>
                           <p className="font-semibold text-lg">
-                            {shift.startTime} - {shift.endTime}
+                            {shift.hora_inicio} - {shift.hora_fin}
                           </p>
                         </div>
                       </div>
@@ -191,7 +208,8 @@ export default function Shifts() {
                             Mesas Disponibles
                           </p>
                           <p className="font-semibold text-lg">
-                            {shift.availableTables} de {shift.totalTables}
+                            {shift.cant_mesas - shift.mesas_ocupadas} de{" "}
+                            {shift.cant_mesas}
                           </p>
                         </div>
                       </div>
@@ -202,8 +220,9 @@ export default function Shifts() {
                         <span className="text-gray-600">Ocupación</span>
                         <span className="font-semibold text-[#143E29]">
                           {Math.round(
-                            ((shift.totalTables - shift.availableTables) /
-                              shift.totalTables) *
+                            ((shift.cant_mesas -
+                              (shift.cant_mesas - shift.mesas_ocupadas)) /
+                              shift.cant_mesas) *
                               100
                           )}
                           %
@@ -214,8 +233,9 @@ export default function Shifts() {
                           className="bg-[#68A243] h-2 rounded-full transition-all duration-500"
                           style={{
                             width: `${
-                              ((shift.totalTables - shift.availableTables) /
-                                shift.totalTables) *
+                              ((shift.cant_mesas -
+                                (shift.cant_mesas - shift.mesas_ocupadas)) /
+                                shift.cant_mesas) *
                               100
                             }%`,
                           }}
@@ -224,13 +244,11 @@ export default function Shifts() {
                     </div>
 
                     <Button
-                      onClick={() =>
-                        (window.location.href = `#tables-${shift.id}`)
-                      }
-                      disabled={shift.status === "full"}
+                      onClick={() => navigate(`/mesas/${shift.id}`)}
+                      disabled={shift.estado === "full"}
                       className="w-full bg-[#68A243] hover:bg-[#68A243]/90 text-white font-semibold py-6 text-base disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                      {shift.status === "full" ? (
+                      {shift.estado === "full" ? (
                         "Turno Completo"
                       ) : (
                         <>

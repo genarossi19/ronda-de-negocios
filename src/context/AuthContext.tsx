@@ -1,3 +1,5 @@
+"use client";
+
 import { createContext, useContext, useState, type ReactNode } from "react";
 
 export interface Representative {
@@ -13,21 +15,21 @@ export interface User {
   email: string;
   companyName: string;
   representatives: Representative[];
+  isAdmin?: boolean;
 }
-// </CHANGE>
 
 interface AuthContextType {
   user: User | null;
   login: (user: User) => void;
   logout: () => void;
   isAuthenticated: boolean;
+  isAdmin: boolean;
   addRepresentative: (representative: Omit<Representative, "id">) => void;
   updateRepresentative: (
     id: string,
     representative: Partial<Representative>
   ) => void;
   deleteRepresentative: (id: string) => void;
-  // </CHANGE>
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -80,7 +82,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       representatives: user.representatives.filter((rep) => rep.id !== id),
     });
   };
-  // </CHANGE>
 
   return (
     <AuthContext.Provider
@@ -89,6 +90,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         login,
         logout,
         isAuthenticated: !!user,
+        isAdmin: !!user?.isAdmin,
         addRepresentative,
         updateRepresentative,
         deleteRepresentative,
