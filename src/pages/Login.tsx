@@ -19,7 +19,7 @@ import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
 import Navbar from "../components/Navbar";
-import { useAuth } from "../context/AuthContext";
+import { useAuth } from "../hooks/useAuth";
 import { Link, useNavigate } from "react-router";
 import { motion as m } from "motion/react";
 
@@ -36,40 +36,26 @@ export default function Login() {
 
   const navigate = useNavigate();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
     setIsLoading(true);
 
-    setTimeout(() => {
-      if (formData.email && formData.password) {
-        login({
-          id: "1",
-          email: formData.email,
-          companyName: "TechSolutions SA",
-          representatives: [
-            {
-              id: "rep1",
-              name: "María González",
-              email: "maria@techsolutions.com",
-              phone: "+54 11 1234-5678",
-              position: "Gerente Comercial",
-            },
-            {
-              id: "rep2",
-              name: "Juan Pérez",
-              email: "juan@techsolutions.com",
-              phone: "+54 11 8765-4321",
-              position: "Director de Ventas",
-            },
-          ],
-        });
-        navigate("/empresas");
-      } else {
+    try {
+      if (!formData.email || !formData.password) {
         setError("Por favor completá todos los campos");
         setIsLoading(false);
+        return;
       }
-    }, 800);
+
+      await login(formData.email, formData.password);
+      navigate("/empresas");
+    } catch (err) {
+      const errorMessage =
+        err instanceof Error ? err.message : "Error al iniciar sesión";
+      setError(errorMessage);
+      setIsLoading(false);
+    }
   };
 
   const containerVariants = {

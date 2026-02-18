@@ -10,6 +10,7 @@ import { AuthProvider } from "./context/AuthContext";
 import Login from "./pages/Login";
 import Tables from "./pages/Tables";
 import Test from "./pages/Test";
+import { ProtectedRoute } from "./components/ProtectedRoute";
 
 export default function App() {
   return (
@@ -23,8 +24,22 @@ export default function App() {
               <Route path="/empresas" element={<Empresas />} />
               <Route path="/empresas/:id" element={<EmpresasDetail />} />
               <Route path="/register" element={<Register />} />
-              <Route path="/turnos" element={<Shifts />} />
-              <Route path="/mesas/:id" element={<Tables />} />
+              <Route
+                path="/turnos"
+                element={
+                  <ProtectedRoute>
+                    <Shifts />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/mesas/:id"
+                element={
+                  <ProtectedRoute>
+                    <Tables />
+                  </ProtectedRoute>
+                }
+              />
               <Route path="/test" element={<Test />} />
             </Routes>
           </div>

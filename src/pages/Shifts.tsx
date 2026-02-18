@@ -11,16 +11,17 @@ import {
 } from "../components/ui/card";
 import { Badge } from "../components/ui/badge";
 import { Calendar, Clock, Users, ArrowRight } from "lucide-react";
-import { useAuth } from "../context/AuthContext";
+import { useCurrentUser } from "../hooks/useCurrentUser";
 import { HelpTutorial } from "../components/HelpTutorial";
 import { Link, useNavigate } from "react-router";
 import { getTurnoByEventoId } from "../api/TurnoService";
 import type { TurnoResponse } from "../types/Turno";
+
 export default function Shifts() {
   const navigate = useNavigate();
   // const { shifts } = useBooking();
   const [shifts, setShifts] = useState<TurnoResponse[]>([]);
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated } = useCurrentUser();
   // const [selectedDate] = useState("2025-11-19");
 
   useEffect(() => {
@@ -223,7 +224,7 @@ export default function Shifts() {
                             ((shift.cant_mesas -
                               (shift.cant_mesas - shift.mesas_ocupadas)) /
                               shift.cant_mesas) *
-                              100
+                              100,
                           )}
                           %
                         </span>

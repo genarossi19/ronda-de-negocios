@@ -10,15 +10,19 @@ import {
 } from "../components/ui/dropdown-menu";
 import { Avatar, AvatarFallback } from "../components/ui/avatar";
 import { useState, useEffect, useRef } from "react";
-import { useAuth } from "../context/AuthContext";
-import { Link } from "react-router";
+import { useAuth } from "../hooks/useAuth";
+import { useCurrentUser } from "../hooks/useCurrentUser";
+import { Link, useNavigate } from "react-router";
 
 export default function Navbar() {
-  const { user, isAuthenticated, logout, isAdmin } = useAuth();
+  const { user, isAuthenticated } = useCurrentUser();
+  const { logout } = useAuth();
+  const navigate = useNavigate();
   const [isOpen, setIsOpen] = useState(false);
   const [isVisible, setIsVisible] = useState(true);
   const [theme, setTheme] = useState<"light" | "dark">("light");
   const lastScrollY = useRef(0);
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
   useEffect(() => {
     const sections = document.querySelectorAll("[data-navbar-theme]");
@@ -28,7 +32,7 @@ export default function Navbar() {
         entries.forEach((entry) => {
           if (entry.isIntersecting) {
             const sectionTheme = entry.target.getAttribute(
-              "data-navbar-theme"
+              "data-navbar-theme",
             ) as "light" | "dark";
             setTheme(sectionTheme);
           }
@@ -37,7 +41,7 @@ export default function Navbar() {
       {
         threshold: 0.3,
         rootMargin: "-80px 0px 0px 0px",
-      }
+      },
     );
 
     sections.forEach((section) => observer.observe(section));
@@ -75,14 +79,16 @@ export default function Navbar() {
     : "bg-white border-b border-gray-100 shadow-sm";
 
   const getUserInitials = () => {
-    if (!user?.companyName) return "U";
-    return user.companyName
+    if (!user?.razon_social) return "U";
+    return user.razon_social
       .split(" ")
       .map((word) => word[0])
       .join("")
       .toUpperCase()
       .slice(0, 2);
   };
+
+  const isAdmin = user?.is_superuser || false;
 
   const renderNavLinks = () => {
     if (isAdmin) {
@@ -204,10 +210,13 @@ export default function Navbar() {
           {/* Derecha - User Section */}
           <div className="flex items-center gap-3">
             {isAuthenticated ? (
-              <DropdownMenu>
+              <DropdownMenu
+                open={isDropdownOpen}
+                onOpenChange={setIsDropdownOpen}
+              >
                 <DropdownMenuTrigger asChild>
                   <button
-                    className={`flex items-center gap-2.5 px-3 py-1.5 rounded-lg transition-all duration-300 ${
+                    className={`flex items-center gap-2.5 px-3 py-1.5 rounded-lg transition-all duration-300 cursor-pointer ${
                       isDarkTheme ? "hover:bg-white/10" : "hover:bg-gray-100"
                     }`}
                   >
@@ -233,16 +242,18 @@ export default function Navbar() {
                         isDarkTheme ? "text-white" : "text-[#143E29]"
                       }`}
                     >
-                      {user?.companyName}
+                      {user?.razon_social}
                     </span>
                   </button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-48 mt-2">
+                <DropdownMenuContent align="end" className="w-56">
                   <div className="px-2 py-1.5">
                     <p className="text-sm font-semibold text-gray-900">
-                      {user?.companyName}
+                      {user?.razon_social}
                     </p>
-                    <p className="text-xs text-gray-500">{user?.email}</p>
+                    <p className="text-xs text-gray-500">
+                      Empresa ID: {user?.empresa_id}
+                    </p>
                   </div>
                   <DropdownMenuSeparator />
                   <Link to="/perfil">
@@ -258,7 +269,10 @@ export default function Navbar() {
                   </Link>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem
-                    onClick={logout}
+                    onClick={() => {
+                      logout();
+                      navigate("/");
+                    }}
                     className="text-red-600 cursor-pointer"
                   >
                     <LogOut className="mr-2 h-4 w-4" />
@@ -341,10 +355,10 @@ export default function Navbar() {
                           </Avatar>
                           <div className="flex-1 min-w-0">
                             <p className="text-sm font-semibold text-gray-900 truncate">
-                              {user?.companyName}
+                              {user?.razon_social}
                             </p>
                             <p className="text-xs text-gray-500 truncate">
-                              {user?.email}
+                              ID: {user?.empresa_id}
                             </p>
                           </div>
                         </div>
@@ -435,6 +449,7 @@ export default function Navbar() {
                           onClick={() => {
                             logout();
                             setIsOpen(false);
+                            navigate("/");
                           }}
                           className="w-full bg-red-600 hover:bg-red-700 text-white font-semibold text-sm"
                         >
