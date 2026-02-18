@@ -1,3 +1,4 @@
+import { useState } from "react";
 import Navbar from "../components/Navbar";
 import Footer from "../layout/Footer";
 import Carousel from "../components/Carousel";
@@ -17,6 +18,7 @@ import { TextAnimate } from "../components/ui/text-animate";
 import { Link, useNavigate } from "react-router";
 export default function Landing() {
   const navigate = useNavigate();
+  const [companyCount, setCompanyCount] = useState(0);
 
   const handleViewCompanies = () => {
     navigate("/companies");
@@ -141,10 +143,12 @@ export default function Landing() {
               Empresas Participantes
             </h2>
             <p className="text-lg text-muted-foreground">
-              Más de 50 empresas ya confirmaron su participación
+              {companyCount > 0
+                ? `${companyCount} empresa${companyCount !== 1 ? "s" : ""} ya confirm${companyCount !== 1 ? "aron" : "ó"} su participación`
+                : "Cargando empresas..."}
             </p>
           </div>
-          <Carousel />
+          <Carousel onCompaniesLoaded={setCompanyCount} />
         </div>
       </section>
 

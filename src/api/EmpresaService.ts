@@ -14,6 +14,6 @@ export const getCompanyById = async (
 };
 
 export const createCompany = async (company: EmpresaWrite) => {
-  const { data } = await api.post("/empresas-public/register/", company);
+  const { data } = await api.post("/empresas/registro", company);
   return data;
 };
