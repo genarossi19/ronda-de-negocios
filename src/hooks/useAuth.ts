@@ -1,5 +1,5 @@
+import { useEffect, useCallback } from "react";
 import Cookies from "js-cookie";
-import { useCallback } from "react";
 import { login as loginService } from "../api/LoginService";
 import { useUserStore, type User } from "../store/userStore";
 
@@ -31,7 +31,46 @@ const decodeToken = (token: string): DecodedToken | null => {
 };
 
 export const useAuth = () => {
-  const { setUser, clearUser } = useUserStore();
+  const { user, setUser, clearUser, isAuthenticated } = useUserStore();
+
+  // Sincronizar token de cookies con el store al cargar
+  useEffect(() => {
+    // Solo ejecutar si aún no está autenticado
+    if (isAuthenticated) return;
+
+    const token = Cookies.get(TOKEN_COOKIE_NAME);
+
+    if (!token) {
+      clearUser();
+      return;
+    }
+
+    // Decodificar y validar el token
+    const decoded = decodeToken(token);
+
+    if (!decoded) {
+      clearUser();
+      Cookies.remove(TOKEN_COOKIE_NAME);
+      return;
+    }
+
+    // Verificar que el token no haya expirado
+    const now = Date.now() / 1000;
+    if (decoded.exp <= now) {
+      clearUser();
+      Cookies.remove(TOKEN_COOKIE_NAME);
+      return;
+    }
+
+    // Token válido, establecer usuario en el store
+    setUser({
+      user_id: decoded.user_id,
+      empresa_id: decoded.empresa_id,
+      razon_social: decoded.razon_social,
+      is_superuser: decoded.is_superuser,
+      token_type: decoded.token_type,
+    });
+  }, [isAuthenticated, setUser, clearUser]);
 
   const getToken = useCallback(() => {
     return Cookies.get(TOKEN_COOKIE_NAME) || null;
@@ -85,7 +124,7 @@ export const useAuth = () => {
     Cookies.remove(TOKEN_COOKIE_NAME);
   }, [clearUser]);
 
-  const isAuthenticated = useCallback(() => {
+  const checkIsAuthenticated = useCallback(() => {
     const token = getToken();
     if (!token) return false;
 
@@ -98,9 +137,10 @@ export const useAuth = () => {
   }, [getToken]);
 
   return {
+    user,
     login,
     logout,
     getToken,
-    isAuthenticated,
+    isAuthenticated: checkIsAuthenticated,
   };
 };

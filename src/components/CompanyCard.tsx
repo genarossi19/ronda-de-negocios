@@ -1,15 +1,17 @@
 import { Card } from "../components/ui/card";
 import type { EmpresaResponse } from "../types/Empresa";
 import { Building2 } from "lucide-react";
-import { useNavigate } from "react-router";
+
 interface CompanyCardProps {
   company: EmpresaResponse;
+  onClick?: (company: EmpresaResponse) => void;
 }
 
-export default function CompanyCard({ company }: CompanyCardProps) {
-  const navigate = useNavigate();
+export default function CompanyCard({ company, onClick }: CompanyCardProps) {
   const handleClick = () => {
-    navigate(`/empresas/${company.id}`);
+    if (onClick) {
+      onClick(company);
+    }
   };
 
   return (

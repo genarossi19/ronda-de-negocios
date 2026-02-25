@@ -2,6 +2,8 @@ import { useEffect, useRef, useState } from "react";
 import { getCompanies } from "../api/EmpresaService";
 import type { EmpresaResponse } from "../types/Empresa";
 import { Skeleton } from "./ui/skeleton";
+import { AlertCircle, RotateCcw } from "lucide-react";
+import { Button } from "./ui/button";
 
 interface CarouselProps {
   onCompaniesLoaded?: (count: number) => void;
@@ -14,6 +16,7 @@ interface ImageAspectRatio {
 export default function Carousel({ onCompaniesLoaded }: CarouselProps) {
   const [companies, setCompanies] = useState<EmpresaResponse[]>([]);
   const [loading, isLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [duplicatedCompanies, setDuplicatedCompanies] = useState<
     EmpresaResponse[]
   >([]);
@@ -27,12 +30,17 @@ export default function Carousel({ onCompaniesLoaded }: CarouselProps) {
     const fetchCompanies = async () => {
       try {
         isLoading(true);
+        setError(null);
         const data = await getCompanies();
         isLoading(false);
         setCompanies(data);
         onCompaniesLoaded?.(data.length);
       } catch (error) {
+        isLoading(false);
         console.error(error);
+        setError(
+          "No pudimos cargar las empresas en este momento. Por favor, intenta más tarde.",
+        );
       }
     };
     fetchCompanies();
@@ -100,8 +108,48 @@ export default function Carousel({ onCompaniesLoaded }: CarouselProps) {
     }));
   };
 
+  // Reintentar cargar empresas
+  const handleRetry = () => {
+    const fetchCompanies = async () => {
+      try {
+        isLoading(true);
+        setError(null);
+        const data = await getCompanies();
+        isLoading(false);
+        setCompanies(data);
+        onCompaniesLoaded?.(data.length);
+      } catch (error) {
+        isLoading(false);
+        console.error(error);
+        setError(
+          "No pudimos cargar las empresas en este momento. Por favor, intenta más tarde.",
+        );
+      }
+    };
+    fetchCompanies();
+  };
+
   return (
     <div className="relative overflow-hidden">
+      {/* Error State */}
+      {error && (
+        <div className="mb-6 flex items-start gap-4 rounded-lg border border-red-200 bg-red-50 p-4">
+          <AlertCircle className="h-5 w-5 text-red-600 flex-shrink-0 mt-0.5" />
+          <div className="flex-1">
+            <p className="text-sm font-medium text-red-900">{error}</p>
+          </div>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleRetry}
+            className="flex-shrink-0 border-red-200 text-red-600 hover:bg-red-100 hover:text-red-700"
+          >
+            <RotateCcw className="h-4 w-4 mr-1" />
+            Reintentar
+          </Button>
+        </div>
+      )}
+
       <div className="absolute left-0 top-0 bottom-0 w-20 bg-gradient-to-r from-background to-transparent z-10" />
       <div className="absolute right-0 top-0 bottom-0 w-20 bg-gradient-to-l from-background to-transparent z-10" />
 

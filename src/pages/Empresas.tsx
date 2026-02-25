@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import Navbar from "../components/Navbar";
 import Footer from "../layout/Footer";
 import CompanyCard from "../components/CompanyCard";
+import CompanyModal from "../components/CompanyModal";
 
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
@@ -17,7 +18,6 @@ import {
 } from "lucide-react";
 import { getCompanies } from "../api/EmpresaService";
 import type { EmpresaResponse } from "../types/Empresa";
-import { useNavigate } from "react-router";
 
 import { useAuth } from "../context/AuthContext";
 
@@ -43,6 +43,10 @@ export default function Companies() {
   const [searchQuery, setSearchQuery] = useState("");
   const [isLoading, setIsLoading] = useState(true);
 
+  const [selectedCompany, setSelectedCompany] =
+    useState<EmpresaResponse | null>(null);
+  const [modalOpen, setModalOpen] = useState(false);
+
   useEffect(() => {
     const fetchCompanies = async () => {
       try {
@@ -59,13 +63,15 @@ export default function Companies() {
     fetchCompanies();
   }, []);
 
-  const navigate = useNavigate();
-
   const filteredCompanies = companies.filter((company) =>
-    company.razon_social.toLowerCase().includes(searchQuery.toLowerCase())
+    company.razon_social.toLowerCase().includes(searchQuery.toLowerCase()),
   );
 
-  // if (error) return <p>{error}</p>;
+  const handleCompanyClick = (company: EmpresaResponse) => {
+    setSelectedCompany(company);
+    setModalOpen(true);
+  };
+
   return (
     <div className="min-h-screen">
       <Navbar />
@@ -158,10 +164,7 @@ export default function Companies() {
                   className="animate-fade-in-up"
                   style={{ animationDelay: `${index * 50}ms` }}
                 >
-                  <CompanyCard
-                    company={company}
-                    // onClick={!isAuthenticated ? () => handleCompanyClick(company) : undefined}
-                  />
+                  <CompanyCard company={company} onClick={handleCompanyClick} />
                 </div>
               ))}
             </div>
@@ -186,6 +189,13 @@ export default function Companies() {
           </>
         )}
       </div>
+
+      <CompanyModal
+        company={selectedCompany}
+        open={modalOpen}
+        onOpenChange={setModalOpen}
+        isAuthenticated={isAuthenticated}
+      />
 
       <Footer />
     </div>
