@@ -11,37 +11,49 @@ import Login from "./pages/Login";
 import Tables from "./pages/Tables";
 import Test from "./pages/Test";
 import { ProtectedRoute } from "./components/ProtectedRoute";
+import { useAuth } from "./hooks/useAuth";
+
+function AppRoutes() {
+  useAuth();
+
+  return (
+    <Routes>
+      <Route path="/login" element={<Login />} />
+      <Route path="/" element={<Landing />} />
+      <Route path="/empresas" element={<Empresas />} />
+      <Route path="/empresas/:id" element={<EmpresasDetail />} />
+      <Route path="/register" element={<Register />} />
+      <Route
+        path="/turnos"
+        element={
+          <ProtectedRoute>
+            <Shifts />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/mesas/:id"
+        element={
+          <ProtectedRoute>
+            <Tables />
+          </ProtectedRoute>
+        }
+      />
+      <Route path="/test" element={<Test />} />
+    </Routes>
+  );
+}
 
 export default function App() {
   return (
     <AuthProvider>
       <BookingProvider>
         <CompanyProvider>
-          <div className="min-h-screen bg-background">
-            <Routes>
-              <Route path="/login" element={<Login />} />
-              <Route path="/" element={<Landing />} />
-              <Route path="/empresas" element={<Empresas />} />
-              <Route path="/empresas/:id" element={<EmpresasDetail />} />
-              <Route path="/register" element={<Register />} />
-              <Route
-                path="/turnos"
-                element={
-                  <ProtectedRoute>
-                    <Shifts />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/mesas/:id"
-                element={
-                  <ProtectedRoute>
-                    <Tables />
-                  </ProtectedRoute>
-                }
-              />
-              <Route path="/test" element={<Test />} />
-            </Routes>
+          {/* Quitamos el bg-background de aquí si ya lo pusiste en el CSS del body.
+             Si lo dejas aquí, el padding del body siempre mostrará el color de "atrás".
+          */}
+          <div className="min-h-screen">
+            <AppRoutes />
           </div>
         </CompanyProvider>
       </BookingProvider>

@@ -1,32 +1,15 @@
-import { useState, useEffect } from "react";
-
-import { getTurnoByEventoId } from "../api/TurnoService";
-import type { TurnoResponse } from "../types/Turno";
+import React from "react";
+import Navbar from "../components/Navbar";
 const Test = () => {
-  const [turno, setTurno] = useState<TurnoResponse[]>([]);
-
-  useEffect(() => {
-    const fetchTurno = async () => {
-      try {
-        const data = await getTurnoByEventoId(2);
-        console.log(data);
-        setTurno(data);
-      } catch (error) {
-        console.error(error);
-      }
-    };
-    fetchTurno();
-  }, []);
-
   return (
-    <ul>
-      <h1>Turnos</h1>
-      {turno.length > 0 ? (
-        turno.map((turno) => <li key={turno.id}>{turno.hora_inicio}</li>)
-      ) : (
-        <p>No hay turnos en ese evento</p>
-      )}
-    </ul>
+    /* Cambiamos h-screen por min-h-[150vh] para forzar el scroll */
+    <div className="min-h-[150vh] w-full bg-primary">
+      <Navbar />
+      <div className="p-10 text-white text-4xl">
+        Ahora sí debería haber scroll... Prueba a abrir un modal o dropdown
+        aquí.
+      </div>
+    </div>
   );
 };
 

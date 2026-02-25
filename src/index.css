@@ -3,14 +3,17 @@
 
 @custom-variant dark (&:is(.dark *));
 
-/* Prevenir layout shift cuando aparecen modales o dropdowns */
-html {
-  scrollbar-gutter: stable;
-  overflow-y: scroll;
-}
+@layer base {
+  /* Ocultar para Chrome, Safari y Opera */
+  ::-webkit-scrollbar {
+    display: none;
+  }
 
-body {
-  overflow-x: hidden;
+  /* Ocultar para Firefox y IE/Edge */
+  html {
+    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none; /* IE y Edge */
+  }
 }
 
 :root {
@@ -110,6 +113,13 @@ body {
   }
   body {
     @apply bg-background text-foreground;
+  }
+}
+
+@layer base {
+  html {
+    /* Mantiene el espacio del scrollbar para evitar el salto */
+    scrollbar-gutter: stable;
   }
 }
 
