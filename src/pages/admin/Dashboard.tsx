@@ -22,11 +22,11 @@ import { useEffect } from "react";
 export default function AdminDashboard() {
   const { isAdmin } = useAuth();
 
-  useEffect(() => {
-    if (!isAdmin) {
-      window.location.href = "#landing";
-    }
-  }, [isAdmin]);
+  // useEffect(() => {
+  //   if (!isAdmin) {
+  //     window.location.href = "#landing";
+  //   }
+  // }, [isAdmin]);
 
   const stats = [
     {
@@ -84,7 +84,7 @@ export default function AdminDashboard() {
     },
   ];
 
-  if (!isAdmin) return null;
+  // if (!isAdmin) return null;
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-white to-[#68A243]/5">

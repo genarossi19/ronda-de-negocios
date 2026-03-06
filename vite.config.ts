@@ -7,8 +7,6 @@ import dotenv from "dotenv";
 // Cargar variables del .env.development si corresponde
 dotenv.config({ path: ".env.development" }); // ajusta según el modo
 
-// const allowNgrok = process.env.VITE_ALLOW_NGROK === "true";
-
 export default defineConfig({
   plugins: [react(), tailwindcss()],
   resolve: {
@@ -16,9 +14,19 @@ export default defineConfig({
       "@": path.resolve(__dirname, "./src"),
     },
   },
-  // server: {
-  //   host: true,
-  //   allowedHosts: allowNgrok ? true : undefined,
-  // },
-  server: {},
+  server: {
+    proxy: {
+      "/api": {
+        target: "https://incomprehensive-nedra-subthoracic.ngrok-free.dev",
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api/, ""),
+        // Aquí añadimos el header para que el proxy lo envíe al backend
+        configure: (proxy) => {
+          proxy.on("proxyReq", (proxyReq) => {
+            proxyReq.setHeader("ngrok-skip-browser-warning", "true");
+          });
+        },
+      },
+    },
+  },
 });

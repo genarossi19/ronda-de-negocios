@@ -12,6 +12,7 @@ import Tables from "./pages/Tables";
 import Test from "./pages/Test";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 import { useAuth } from "./hooks/useAuth";
+import Dashboard from "./pages/admin/Dashboard";
 
 function AppRoutes() {
   useAuth();
@@ -36,6 +37,14 @@ function AppRoutes() {
         element={
           <ProtectedRoute>
             <Tables />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/panel-administrador"
+        element={
+          <ProtectedRoute>
+            <Dashboard />
           </ProtectedRoute>
         }
       />
