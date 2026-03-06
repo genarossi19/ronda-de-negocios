@@ -10,7 +10,8 @@ import {
   CardTitle,
 } from "../components/ui/card";
 import { Badge } from "../components/ui/badge";
-import { Calendar, Clock, Users, ArrowRight } from "lucide-react";
+import { Skeleton } from "../components/ui/skeleton";
+import { Calendar, Clock, Users, ArrowRight, AlertCircle } from "lucide-react";
 import { useCurrentUser } from "../hooks/useCurrentUser";
 import { HelpTutorial } from "../components/HelpTutorial";
 import { Link, useNavigate } from "react-router";
@@ -19,25 +20,30 @@ import type { TurnoResponse } from "../types/Turno";
 
 export default function Shifts() {
   const navigate = useNavigate();
-  // const { shifts } = useBooking();
   const [shifts, setShifts] = useState<TurnoResponse[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const { isAuthenticated } = useCurrentUser();
-  // const [selectedDate] = useState("2025-11-19");
 
   useEffect(() => {
     const fetchTurno = async () => {
       try {
+        setLoading(true);
+        setError(null);
         const data = await getTurnoByEventoId(1);
-        console.log(data);
         setShifts(data);
-      } catch (error) {
-        console.error(error);
+      } catch (err) {
+        console.error(err);
+        setError(
+          "No se pudieron cargar los turnos. Intentá de nuevo más tarde.",
+        );
+      } finally {
+        setLoading(false);
       }
     };
     fetchTurno();
   }, []);
 
-  // const filteredShifts = shifts.filter((shift) => shift.fecha === selectedDate);
   const filteredShifts = shifts;
 
   const getStatusBadge = (status: string) => {
@@ -154,12 +160,75 @@ export default function Shifts() {
         </div>
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-          {filteredShifts.length === 0 ? (
+          {loading ? (
+            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-2">
+              {[...Array(4)].map((_, i) => (
+                <Card key={i} className="border-2">
+                  <CardHeader>
+                    <div className="flex items-start justify-between">
+                      <div className="space-y-2">
+                        <Skeleton className="h-7 w-28" />
+                        <Skeleton className="h-4 w-48" />
+                      </div>
+                      <Skeleton className="h-6 w-20 rounded-full" />
+                    </div>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="space-y-3">
+                      <div className="flex items-center gap-3">
+                        <Skeleton className="h-9 w-9 rounded-lg" />
+                        <div className="space-y-1">
+                          <Skeleton className="h-3 w-16" />
+                          <Skeleton className="h-5 w-32" />
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <Skeleton className="h-9 w-9 rounded-lg" />
+                        <div className="space-y-1">
+                          <Skeleton className="h-3 w-16" />
+                          <Skeleton className="h-5 w-24" />
+                        </div>
+                      </div>
+                    </div>
+                    <div className="pt-2 space-y-2">
+                      <div className="flex justify-between">
+                        <Skeleton className="h-4 w-16" />
+                        <Skeleton className="h-4 w-10" />
+                      </div>
+                      <Skeleton className="h-2 w-full rounded-full" />
+                    </div>
+                    <Skeleton className="h-12 w-full rounded-md" />
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          ) : error ? (
+            <Card className="border-destructive/50 bg-destructive/5">
+              <CardHeader>
+                <div className="flex items-center gap-3">
+                  <AlertCircle className="h-6 w-6 text-destructive" />
+                  <CardTitle className="text-destructive">
+                    Error al cargar los turnos
+                  </CardTitle>
+                </div>
+                <CardDescription>{error}</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Button
+                  variant="outline"
+                  onClick={() => window.location.reload()}
+                  className="border-destructive/50 text-destructive hover:bg-destructive/10"
+                >
+                  Reintentar
+                </Button>
+              </CardContent>
+            </Card>
+          ) : filteredShifts.length === 0 ? (
             <Card>
               <CardHeader>
                 <CardTitle>No hay turnos disponibles</CardTitle>
                 <CardDescription>
-                  No se encontraron turnos para la fecha seleccionada
+                  No se encontraron turnos para este evento
                 </CardDescription>
               </CardHeader>
             </Card>
