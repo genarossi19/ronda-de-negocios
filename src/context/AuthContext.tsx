@@ -27,7 +27,7 @@ interface AuthContextType {
   addRepresentative: (representative: Omit<Representative, "id">) => void;
   updateRepresentative: (
     id: string,
-    representative: Partial<Representative>
+    representative: Partial<Representative>,
   ) => void;
   deleteRepresentative: (id: string) => void;
 }
@@ -43,7 +43,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const logout = () => {
     setUser(null);
-    window.location.href = "#landing";
+    window.location.href = "/";
   };
 
   const addRepresentative = (representative: Omit<Representative, "id">) => {
@@ -62,14 +62,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const updateRepresentative = (
     id: string,
-    updates: Partial<Representative>
+    updates: Partial<Representative>,
   ) => {
     if (!user) return;
 
     setUser({
       ...user,
       representatives: user.representatives.map((rep) =>
-        rep.id === id ? { ...rep, ...updates } : rep
+        rep.id === id ? { ...rep, ...updates } : rep,
       ),
     });
   };

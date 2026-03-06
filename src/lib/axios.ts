@@ -1,4 +1,7 @@
 import axios from "axios";
+import Cookies from "js-cookie";
+
+const TOKEN_COOKIE_NAME = "token";
 
 const api = axios.create({
   baseURL: "https://incomprehensive-nedra-subthoracic.ngrok-free.dev",
@@ -10,10 +13,21 @@ const api = axios.create({
   },
 });
 
+// Instancia pública sin interceptor de token (para endpoints abiertos como /empresas)
+export const publicApi = axios.create({
+  baseURL: "https://incomprehensive-nedra-subthoracic.ngrok-free.dev",
+  //baseURL: "http://100.100.34.104",
+  timeout: 20000,
+  headers: {
+    "Content-Type": "application/json",
+    "ngrok-skip-browser-warning": "true",
+  },
+});
+
 api.interceptors.request.use(
   (config) => {
-    const token =
-      "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzcyODEyNzYyLCJpYXQiOjE3NzI4MTI0NjIsImp0aSI6ImQ3NzdkYjgyNTM5YTQ2NTE5ODU5MmU3MGMxZmEwYTc0IiwidXNlcl9pZCI6NCwiZW1wcmVzYV9pZCI6NSwicmF6b25fc29jaWFsIjoiTXVuaWNpcGFsaWRhZCBkZSBUcmVucXVlIExhdXF1ZW4iLCJpc19zdXBlcnVzZXIiOnRydWV9.qVYCnI8WE9-Lw0ViFQBE4Jqca4MHyxLyBbuV2g3sAEM";
+    const token = Cookies.get(TOKEN_COOKIE_NAME);
+    console.log(token);
 
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
