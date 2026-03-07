@@ -261,7 +261,7 @@ export default function Navbar() {
                       <span className="text-sm">Mi Perfil</span>
                     </DropdownMenuItem>
                   </Link>
-                  <Link to="/configuracion">
+                  <Link to="/representantes">
                     <DropdownMenuItem className="cursor-pointer">
                       <User2Icon className="mr-2 h-4 w-4" />
                       <span className="text-sm">Representantes</span>

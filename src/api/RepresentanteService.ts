@@ -11,7 +11,7 @@ interface GetRepresentantesParams {
 }
 
 export async function getRepresentantes(
-  params: GetRepresentantesParams = {}
+  params: GetRepresentantesParams = {},
 ): Promise<RepresentanteResponse[]> {
   const query = new URLSearchParams();
 
@@ -20,18 +20,18 @@ export async function getRepresentantes(
   if (params.search) query.append("search", params.search);
 
   const { data } = await api.get<RepresentanteResponse[]>(
-    `/representantes?${query.toString()}`
+    `/representantes?${query.toString()}`,
   );
 
   return data;
 }
 
 export async function createRepresentante(
-  payload: RepresentanteWrite
+  payload: RepresentanteWrite,
 ): Promise<RepresentanteResponse> {
   const { data } = await api.post<RepresentanteResponse>(
-    "/representantes",
-    payload
+    "/representantes/",
+    payload,
   );
   return data;
 }

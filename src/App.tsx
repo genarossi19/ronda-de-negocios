@@ -13,6 +13,7 @@ import Test from "./pages/Test";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 import { useAuth } from "./hooks/useAuth";
 import Dashboard from "./pages/admin/Dashboard";
+import Representantes from "./pages/Representantes";
 import { Toaster } from "sonner";
 
 function AppRoutes() {
@@ -50,6 +51,14 @@ function AppRoutes() {
         }
       />
       <Route path="/test" element={<Test />} />
+      <Route
+        path="/representantes"
+        element={
+          <ProtectedRoute>
+            <Representantes />
+          </ProtectedRoute>
+        }
+      />
     </Routes>
   );
 }

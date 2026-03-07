@@ -14,7 +14,6 @@ export interface RepresentanteWrite {
   apellido: string;
   email: string;
   cargo: number;
-  telefono?: string;
 }
 
 export type RepresentanteUpdate = Partial<
