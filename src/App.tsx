@@ -13,6 +13,7 @@ import Test from "./pages/Test";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 import { useAuth } from "./hooks/useAuth";
 import Dashboard from "./pages/admin/Dashboard";
+import { Toaster } from "sonner";
 
 function AppRoutes() {
   useAuth();
@@ -64,6 +65,7 @@ export default function App() {
           <div className="min-h-screen">
             <AppRoutes />
           </div>
+          <Toaster richColors position="top-right" />
         </CompanyProvider>
       </BookingProvider>
     </AuthProvider>

@@ -125,7 +125,7 @@ export default function Tables() {
       try {
         setLoading(true);
         const mesasData: MesaResponse[] = await getMesasByTurnoId(
-          parseInt(turnoId)
+          parseInt(turnoId),
         );
 
         // Transformar datos de API al formato de UI
@@ -242,7 +242,7 @@ export default function Tables() {
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <Button
               variant="ghost"
-              onClick={() => navigate("/shifts")}
+              onClick={() => navigate("/turnos")}
               className="text-white hover:bg-white/10 mb-4"
             >
               <ArrowLeft className="mr-2 h-4 w-4" />
@@ -337,8 +337,8 @@ export default function Tables() {
                         table.status === "full"
                           ? "bg-gray-200 border-gray-400 opacity-50 cursor-not-allowed"
                           : table.status === "partial"
-                          ? "bg-[#68A243]/10 border-[#68A243] hover:bg-[#68A243]/20 hover:scale-105 cursor-pointer"
-                          : "bg-white border-gray-300 hover:border-[#68A243] hover:scale-105 cursor-pointer hover:shadow-lg"
+                            ? "bg-[#68A243]/10 border-[#68A243] hover:bg-[#68A243]/20 hover:scale-105 cursor-pointer"
+                            : "bg-white border-gray-300 hover:border-[#68A243] hover:scale-105 cursor-pointer hover:shadow-lg"
                       }
                     `}
                     style={{
@@ -445,7 +445,7 @@ export default function Tables() {
                     >
                       {selectedRepresentative
                         ? user.representatives.find(
-                            (rep) => rep.id === selectedRepresentative
+                            (rep) => rep.id === selectedRepresentative,
                           )?.name
                         : "Buscá y seleccioná un representante"}
                       <Search className="ml-2 h-4 w-4 shrink-0 opacity-50" />
@@ -495,7 +495,7 @@ export default function Tables() {
                                   "ml-auto h-4 w-4 text-[#68A243]",
                                   selectedRepresentative === rep.id
                                     ? "opacity-100"
-                                    : "opacity-0"
+                                    : "opacity-0",
                                 )}
                               />
                             </CommandItem>
