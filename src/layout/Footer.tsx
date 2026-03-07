@@ -32,7 +32,7 @@ export default function Footer() {
               </li>
               <li>
                 <Link
-                  to="/companies"
+                  to="/empresas"
                   className="text-gray-300 hover:text-accent transition-colors"
                 >
                   Empresas

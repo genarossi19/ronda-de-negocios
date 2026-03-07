@@ -1,5 +1,5 @@
 import { Button } from "../components/ui/button";
-import { Building2, Menu, X, LogOut, Settings } from "lucide-react";
+import { Building2, Menu, X, LogOut, Settings, User2Icon } from "lucide-react";
 import { Sheet, SheetContent, SheetTrigger } from "../components/ui/sheet";
 import {
   DropdownMenu,
@@ -263,8 +263,8 @@ export default function Navbar() {
                   </Link>
                   <Link to="/configuracion">
                     <DropdownMenuItem className="cursor-pointer">
-                      <Settings className="mr-2 h-4 w-4" />
-                      <span className="text-sm">Configuración</span>
+                      <User2Icon className="mr-2 h-4 w-4" />
+                      <span className="text-sm">Representantes</span>
                     </DropdownMenuItem>
                   </Link>
                   <DropdownMenuSeparator />
