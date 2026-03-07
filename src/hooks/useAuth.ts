@@ -113,7 +113,17 @@ export const useAuth = () => {
       } catch (error) {
         clearUser();
         Cookies.remove(TOKEN_COOKIE_NAME);
-        throw error;
+        // Extraer mensaje específico del backend si existe
+        const axiosError = error as {
+          response?: { data?: { non_field_errors?: string[] } };
+        };
+        const backendMessage = axiosError.response?.data?.non_field_errors?.[0];
+        throw new Error(
+          backendMessage ??
+            (error instanceof Error
+              ? error.message
+              : "Error al iniciar sesión"),
+        );
       }
     },
     [setUser, clearUser],

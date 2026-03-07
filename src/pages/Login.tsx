@@ -32,6 +32,8 @@ export default function Login() {
     password: "",
   });
   const [error, setError] = useState("");
+  const [emailError, setEmailError] = useState("");
+  const [passwordError, setPasswordError] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [focusedField, setFocusedField] = useState<string | null>(null);
@@ -45,6 +47,8 @@ export default function Login() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
+    setEmailError("");
+    setPasswordError("");
     setIsLoading(true);
 
     try {
@@ -57,9 +61,15 @@ export default function Login() {
       await login(formData.email, formData.password);
       navigate("/empresas");
     } catch (err) {
-      const errorMessage =
+      const message =
         err instanceof Error ? err.message : "Error al iniciar sesión";
-      setError(errorMessage);
+      if (message === "Usuario no encontrado.") {
+        setEmailError(message);
+      } else if (message === "Credenciales inválidas.") {
+        setPasswordError(message);
+      } else {
+        setError(message);
+      }
       setIsLoading(false);
     }
   };
@@ -277,10 +287,20 @@ export default function Login() {
                       onFocus={() => setFocusedField("email")}
                       onBlur={() => setFocusedField(null)}
                       placeholder="tu@empresa.com"
-                      className="pl-12 h-12 border-2 border-gray-200 focus:border-[#68A243] focus:ring-0 transition-all duration-300 rounded-xl bg-gray-50 focus:bg-white font-medium"
+                      aria-invalid={!!emailError}
+                      className={`pl-12 h-12 border-2 focus:ring-0 transition-all duration-300 rounded-xl bg-gray-50 focus:bg-white font-medium ${
+                        emailError
+                          ? "border-red-500"
+                          : "border-gray-200 focus-visible:border-[#68A243]"
+                      }`}
                       required
                     />
                   </m.div>
+                  {emailError && (
+                    <p className="text-red-600 text-xs font-medium mt-1">
+                      {emailError}
+                    </p>
+                  )}
                 </m.div>
 
                 {/* Password Field */}
@@ -317,7 +337,12 @@ export default function Login() {
                       onFocus={() => setFocusedField("password")}
                       onBlur={() => setFocusedField(null)}
                       placeholder="••••••••"
-                      className="pl-12 pr-12 h-12 border-2 border-gray-200 focus:border-[#68A243] focus:ring-0 transition-all duration-300 rounded-xl bg-gray-50 focus:bg-white font-medium"
+                      aria-invalid={!!passwordError}
+                      className={`pl-12 pr-12 h-12 border-2 focus:ring-0 transition-all duration-300 rounded-xl bg-gray-50 focus:bg-white font-medium ${
+                        passwordError
+                          ? "border-red-500"
+                          : "border-gray-200 focus-visible:border-[#68A243]"
+                      }`}
                       required
                     />
                     <button
@@ -332,6 +357,11 @@ export default function Login() {
                       )}
                     </button>
                   </m.div>
+                  {passwordError && (
+                    <p className="text-red-600 text-xs font-medium mt-1">
+                      {passwordError}
+                    </p>
+                  )}
                 </m.div>
 
                 {/* Error Message */}
