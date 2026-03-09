@@ -701,9 +701,7 @@ export default function Tables() {
               )}
 
             <div className="space-y-2 mt-4">
-              <Label
-                className="flex items-center gap-2 text-[#143E29]"
-              >
+              <Label className="flex items-center gap-2 text-[#143E29]">
                 <User className="h-4 w-4 text-[#68A243]" />
                 Seleccioná el representante que asistirá
               </Label>
