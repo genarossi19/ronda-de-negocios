@@ -14,7 +14,7 @@ import { ProtectedRoute } from "./components/ProtectedRoute";
 import { useAuth } from "./hooks/useAuth";
 import Dashboard from "./pages/admin/Dashboard";
 import Representantes from "./pages/Representantes";
-import { Toaster } from "sonner";
+import { Toaster } from "./components/ui/sonner";
 
 function AppRoutes() {
   useAuth();

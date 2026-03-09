@@ -18,6 +18,8 @@ import {
   DialogTitle,
 } from "../components/ui/dialog";
 import { Label } from "../components/ui/label";
+import { Input } from "../components/ui/input";
+import { Skeleton } from "../components/ui/skeleton";
 import {
   ArrowLeft,
   Clock,
@@ -26,6 +28,7 @@ import {
   User,
   Search,
   Check,
+  Plus,
 } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import { Avatar, AvatarFallback } from "../components/ui/avatar";
@@ -46,7 +49,16 @@ import { cn } from "../lib/utils";
 import { HelpTutorial } from "../components/HelpTutorial";
 import { useParams, useNavigate } from "react-router";
 import { getMesasByTurnoId } from "../api/MesaService";
+import {
+  getRepresentantes,
+  createRepresentante,
+} from "../api/RepresentanteService";
 import type { MesaResponse } from "../types/Mesa";
+import type {
+  RepresentanteResponse,
+  RepresentanteWrite,
+} from "../types/Representante";
+import { toast } from "sonner";
 
 interface TableUIData {
   id: number;
@@ -70,6 +82,22 @@ export default function Tables() {
     useState<string>("");
   const [openRepresentativeSearch, setOpenRepresentativeSearch] =
     useState(false);
+  const [representatives, setRepresentatives] = useState<
+    RepresentanteResponse[]
+  >([]);
+  const [loadingRepresentatives, setLoadingRepresentatives] = useState(false);
+  const [showAddRepresentativeDialog, setShowAddRepresentativeDialog] =
+    useState(false);
+  const [newRepForm, setNewRepForm] = useState<RepresentanteWrite>({
+    nombre: "",
+    apellido: "",
+    email: "",
+    cargo: 0,
+  });
+  const [newRepErrors, setNewRepErrors] = useState<Partial<RepresentanteWrite>>(
+    {},
+  );
+  const [submittingNewRep, setSubmittingNewRep] = useState(false);
 
   const tutorialSteps = [
     {
@@ -163,21 +191,72 @@ export default function Tables() {
     return (
       <>
         <Navbar />
-        <div className="min-h-screen bg-gray-50 pt-20 flex items-center justify-center">
-          <Card className="w-96">
-            <CardHeader>
-              <CardTitle className="text-[#143E29]">
-                Cargando mesas...
-              </CardTitle>
-            </CardHeader>
-          </Card>
+        <div className="min-h-screen bg-gray-50 pt-8 pb-4">
+          <div className="bg-gradient-to-br from-[#143E29] to-[#143E29]/90 text-white py-8">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+              <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                <div>
+                  <h1 className="text-3xl font-bold mb-2">Turno {turnoId}</h1>
+                  <div className="flex flex-wrap items-center gap-4 text-gray-200">
+                    <div className="flex items-center gap-2">
+                      <Clock className="h-4 w-4" />
+                      <span>Cargando mesas...</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg">Leyenda</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="flex flex-wrap gap-6">
+                  <div className="flex items-center gap-2">
+                    <div className="w-12 h-12 bg-white border-2 border-gray-300 rounded-lg" />
+                    <span className="text-sm">Mesa Libre</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="w-12 h-12 bg-[#68A243]/10 border-2 border-[#68A243] rounded-lg" />
+                    <span className="text-sm">Mesa con 1 Empresa</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="w-12 h-12 bg-gray-200 border-2 border-gray-400 rounded-lg opacity-50" />
+                    <span className="text-sm">Mesa Completa</span>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-12">
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-8">
+              <h2 className="text-2xl font-bold text-[#143E29] mb-6 text-center">
+                Seleccioná tu Mesa
+              </h2>
+
+              <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4 max-w-5xl mx-auto">
+                {Array(12)
+                  .fill(0)
+                  .map((_, index) => (
+                    <Skeleton
+                      key={`skeleton-${index}`}
+                      className="aspect-square rounded-lg"
+                    />
+                  ))}
+              </div>
+            </div>
+          </div>
         </div>
         <Footer />
       </>
     );
   }
 
-  if (error || !turnoId) {
+  if (error) {
     return (
       <>
         <Navbar />
@@ -185,13 +264,9 @@ export default function Tables() {
           <div className="max-w-4xl mx-auto px-4 py-16">
             <Card>
               <CardHeader>
-                <CardTitle className="text-[#143E29]">
-                  {error || "Turno no encontrado"}
-                </CardTitle>
+                <CardTitle className="text-red-700">{error}</CardTitle>
                 <CardDescription>
-                  {error
-                    ? "Intenta nuevamente más tarde"
-                    : "El turno que buscás no existe"}
+                  Intenta nuevamente más tarde o vuelve a los turnos disponibles
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -211,11 +286,147 @@ export default function Tables() {
     );
   }
 
+  if (!turnoId) {
+    return (
+      <>
+        <Navbar />
+        <div className="min-h-screen bg-gray-50 pt-20">
+          <div className="max-w-4xl mx-auto px-4 py-16">
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-[#143E29]">
+                  Turno no encontrado
+                </CardTitle>
+                <CardDescription>El turno que buscás no existe</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Button
+                  onClick={() => navigate("/turnos")}
+                  className="bg-[#68A243] hover:bg-[#68A243]/90 text-white"
+                >
+                  <ArrowLeft className="mr-2 h-4 w-4" />
+                  Volver a Turnos
+                </Button>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+        <Footer />
+      </>
+    );
+  }
+
+  if (tables.length === 0) {
+    return (
+      <>
+        <Navbar />
+        <div className="min-h-screen bg-gray-50 pt-8 pb-4">
+          <div className="bg-gradient-to-br from-[#143E29] to-[#143E29]/90 text-white py-8">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+              <Button
+                variant="ghost"
+                onClick={() => navigate("/turnos")}
+                className="text-white hover:bg-white/10 mb-4"
+              >
+                <ArrowLeft className="mr-2 h-4 w-4" />
+                Volver a Turnos
+              </Button>
+
+              <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                <div>
+                  <h1 className="text-3xl font-bold mb-2">Turno {turnoId}</h1>
+                  <div className="flex flex-wrap items-center gap-4 text-gray-200">
+                    <div className="flex items-center gap-2">
+                      <Clock className="h-4 w-4" />
+                      <span>Mesas disponibles</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-[#143E29]">
+                  No hay mesas disponibles
+                </CardTitle>
+                <CardDescription>
+                  No hay mesas para este turno. Intenta con otro turno o vuelve
+                  más tarde.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Button
+                  onClick={() => navigate("/turnos")}
+                  className="bg-[#68A243] hover:bg-[#68A243]/90 text-white"
+                >
+                  <ArrowLeft className="mr-2 h-4 w-4" />
+                  Volver a Turnos
+                </Button>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+        <Footer />
+      </>
+    );
+  }
+
+  const loadRepresentatives = async () => {
+    try {
+      setLoadingRepresentatives(true);
+      const data = await getRepresentantes();
+      setRepresentatives(data);
+    } catch (err) {
+      console.error("Error cargando representantes:", err);
+      toast.error("No se pudieron cargar los representantes");
+    } finally {
+      setLoadingRepresentatives(false);
+    }
+  };
+
   const handleTableClick = (table: TableUIData) => {
     if (table.status === "full") return;
     setSelectedTable(table);
     setSelectedRepresentative("");
     setShowConfirmDialog(true);
+    loadRepresentatives();
+  };
+
+  const validateNewRep = (): boolean => {
+    const errors: Partial<RepresentanteWrite> = {};
+    if (!newRepForm.nombre.trim()) errors.nombre = "El nombre es requerido";
+    if (!newRepForm.apellido.trim())
+      errors.apellido = "El apellido es requerido";
+    if (!newRepForm.email.trim()) errors.email = "El email es requerido";
+    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(newRepForm.email))
+      errors.email = "El email no es válido";
+    if (!newRepForm.cargo) errors.cargo = 0;
+    setNewRepErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
+  const handleAddRepresentative = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!validateNewRep()) return;
+
+    setSubmittingNewRep(true);
+    try {
+      const nuevo = await createRepresentante(newRepForm);
+      setRepresentatives((prev) => [...prev, nuevo]);
+      setSelectedRepresentative(representatives.length.toString());
+      toast.success("Representante agregado correctamente");
+      setShowAddRepresentativeDialog(false);
+      setNewRepForm({ nombre: "", apellido: "", email: "", cargo: 0 });
+      setNewRepErrors({});
+    } catch (err) {
+      console.error("Error creando representante:", err);
+      toast.error("No se pudo agregar el representante. Intentá de nuevo.");
+    } finally {
+      setSubmittingNewRep(false);
+    }
   };
 
   const handleConfirmBooking = () => {
@@ -226,6 +437,7 @@ export default function Tables() {
     setBookingSuccess(true);
     setShowConfirmDialog(false);
     setSelectedRepresentative("");
+    setNewRepForm({ nombre: "", apellido: "", email: "", cargo: 0 });
 
     setTimeout(() => {
       setBookingSuccess(false);
@@ -431,7 +643,11 @@ export default function Tables() {
                 <User className="h-4 w-4 text-[#68A243]" />
                 Seleccioná el representante que asistirá
               </Label>
-              {user?.representatives && user.representatives.length > 0 ? (
+              {loadingRepresentatives ? (
+                <div className="text-sm text-gray-600 p-3 rounded-lg bg-gray-50">
+                  Cargando representantes...
+                </div>
+              ) : representatives && representatives.length > 0 ? (
                 <Popover
                   open={openRepresentativeSearch}
                   onOpenChange={setOpenRepresentativeSearch}
@@ -444,9 +660,9 @@ export default function Tables() {
                       className="w-full justify-between border-[#68A243]/20 hover:border-[#68A243] bg-transparent"
                     >
                       {selectedRepresentative
-                        ? user.representatives.find(
-                            (rep) => rep.id === selectedRepresentative,
-                          )?.name
+                        ? representatives[parseInt(selectedRepresentative)]
+                          ? `${representatives[parseInt(selectedRepresentative)]?.nombre} ${representatives[parseInt(selectedRepresentative)]?.apellido}`
+                          : "Buscá y seleccioná un representante"
                         : "Buscá y seleccioná un representante"}
                       <Search className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                     </Button>
@@ -462,12 +678,12 @@ export default function Tables() {
                           No se encontró ningún representante
                         </CommandEmpty>
                         <CommandGroup>
-                          {user.representatives.map((rep) => (
+                          {representatives.map((rep, idx) => (
                             <CommandItem
-                              key={rep.id}
-                              value={rep.name}
+                              key={idx}
+                              value={`${rep.nombre} ${rep.apellido}`}
                               onSelect={() => {
-                                setSelectedRepresentative(rep.id);
+                                setSelectedRepresentative(idx.toString());
                                 setOpenRepresentativeSearch(false);
                               }}
                               className="cursor-pointer"
@@ -475,25 +691,22 @@ export default function Tables() {
                               <div className="flex items-center gap-3 flex-1">
                                 <Avatar className="h-8 w-8 bg-[#68A243]">
                                   <AvatarFallback className="bg-[#68A243] text-white text-xs font-semibold">
-                                    {rep.name
-                                      .split(" ")
-                                      .map((word) => word[0])
-                                      .join("")
-                                      .toUpperCase()
-                                      .slice(0, 2)}
+                                    {`${rep.nombre[0]}${rep.apellido[0]}`.toUpperCase()}
                                   </AvatarFallback>
                                 </Avatar>
                                 <div className="flex-1">
-                                  <p className="font-medium">{rep.name}</p>
+                                  <p className="font-medium">
+                                    {rep.nombre} {rep.apellido}
+                                  </p>
                                   <p className="text-xs text-gray-500">
-                                    {rep.position}
+                                    {rep.email}
                                   </p>
                                 </div>
                               </div>
                               <Check
                                 className={cn(
                                   "ml-auto h-4 w-4 text-[#68A243]",
-                                  selectedRepresentative === rep.id
+                                  selectedRepresentative === idx.toString()
                                     ? "opacity-100"
                                     : "opacity-0",
                                 )}
@@ -507,15 +720,19 @@ export default function Tables() {
                 </Popover>
               ) : (
                 <div className="text-sm text-amber-600 bg-amber-50 p-3 rounded-lg border border-amber-200">
-                  No tenés representantes.{" "}
-                  <button
-                    onClick={() => navigate("/representatives")}
-                    className="font-semibold underline hover:text-amber-700"
-                  >
-                    Agregá uno aquí
-                  </button>
+                  No tenés representantes agregados.
                 </div>
               )}
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setShowAddRepresentativeDialog(true)}
+                className="w-full border-[#68A243]/20 hover:border-[#68A243] text-[#68A243]"
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Agregar nuevo representante
+              </Button>
             </div>
 
             <div className="flex gap-3 mt-4">
@@ -534,6 +751,141 @@ export default function Tables() {
                 Confirmar Reserva
               </Button>
             </div>
+          </DialogContent>
+        </Dialog>
+
+        <Dialog
+          open={showAddRepresentativeDialog}
+          onOpenChange={setShowAddRepresentativeDialog}
+        >
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle className="text-[#143E29]">
+                Agregar Representante
+              </DialogTitle>
+              <DialogDescription>
+                Agregá un nuevo representante de tu empresa para esta reunión
+              </DialogDescription>
+            </DialogHeader>
+
+            <form onSubmit={handleAddRepresentative} className="space-y-4">
+              <div>
+                <Label htmlFor="nombre" className="text-[#143E29]">
+                  Nombre *
+                </Label>
+                <Input
+                  id="nombre"
+                  name="nombre"
+                  value={newRepForm.nombre}
+                  onChange={(e) => {
+                    setNewRepForm({ ...newRepForm, nombre: e.target.value });
+                    setNewRepErrors({ ...newRepErrors, nombre: undefined });
+                  }}
+                  placeholder="Nombre"
+                  className={newRepErrors.nombre ? "border-red-500" : ""}
+                />
+                {newRepErrors.nombre && (
+                  <p className="text-xs text-red-500 mt-1">
+                    {newRepErrors.nombre}
+                  </p>
+                )}
+              </div>
+
+              <div>
+                <Label htmlFor="apellido" className="text-[#143E29]">
+                  Apellido *
+                </Label>
+                <Input
+                  id="apellido"
+                  name="apellido"
+                  value={newRepForm.apellido}
+                  onChange={(e) => {
+                    setNewRepForm({ ...newRepForm, apellido: e.target.value });
+                    setNewRepErrors({ ...newRepErrors, apellido: undefined });
+                  }}
+                  placeholder="Apellido"
+                  className={newRepErrors.apellido ? "border-red-500" : ""}
+                />
+                {newRepErrors.apellido && (
+                  <p className="text-xs text-red-500 mt-1">
+                    {newRepErrors.apellido}
+                  </p>
+                )}
+              </div>
+
+              <div>
+                <Label htmlFor="email" className="text-[#143E29]">
+                  Email *
+                </Label>
+                <Input
+                  id="email"
+                  name="email"
+                  type="email"
+                  value={newRepForm.email}
+                  onChange={(e) => {
+                    setNewRepForm({ ...newRepForm, email: e.target.value });
+                    setNewRepErrors({ ...newRepErrors, email: undefined });
+                  }}
+                  placeholder="email@example.com"
+                  className={newRepErrors.email ? "border-red-500" : ""}
+                />
+                {newRepErrors.email && (
+                  <p className="text-xs text-red-500 mt-1">
+                    {newRepErrors.email}
+                  </p>
+                )}
+              </div>
+
+              <div>
+                <Label htmlFor="cargo" className="text-[#143E29]">
+                  Cargo *
+                </Label>
+                <select
+                  id="cargo"
+                  name="cargo"
+                  value={newRepForm.cargo}
+                  onChange={(e) => {
+                    setNewRepForm({
+                      ...newRepForm,
+                      cargo: Number(e.target.value),
+                    });
+                    setNewRepErrors({ ...newRepErrors, cargo: undefined });
+                  }}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#68A243]"
+                >
+                  <option value="0">Selecciona un cargo</option>
+                  <option value="1">Gerente</option>
+                  <option value="2">Director</option>
+                  <option value="3">Coordinador</option>
+                  <option value="4">Asesor</option>
+                  <option value="5">Otro</option>
+                </select>
+                {newRepErrors.cargo !== undefined &&
+                  newRepErrors.cargo === 0 && (
+                    <p className="text-xs text-red-500 mt-1">
+                      El cargo es requerido
+                    </p>
+                  )}
+              </div>
+
+              <div className="flex gap-3 pt-4">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setShowAddRepresentativeDialog(false)}
+                  className="flex-1"
+                >
+                  Cancelar
+                </Button>
+                <Button
+                  type="submit"
+                  disabled={submittingNewRep}
+                  className="flex-1 bg-[#68A243] hover:bg-[#68A243]/90 text-white"
+                >
+                  {submittingNewRep ? "Agregando..." : "Agregar"}
+                </Button>
+              </div>
+            </form>
           </DialogContent>
         </Dialog>
       </div>
