@@ -30,7 +30,6 @@ import {
   Check,
   Plus,
 } from "lucide-react";
-import { useAuth } from "../context/AuthContext";
 import { Avatar, AvatarFallback } from "../components/ui/avatar";
 import {
   Command,
@@ -53,12 +52,14 @@ import {
   getRepresentantes,
   createRepresentante,
 } from "../api/RepresentanteService";
+import { createAsiento } from "../api/AsientoService";
 import type { MesaResponse } from "../types/Mesa";
 import type {
   RepresentanteResponse,
   RepresentanteWrite,
 } from "../types/Representante";
 import { toast } from "sonner";
+import { useUserStore } from "../store/userStore";
 
 interface TableUIData {
   id: number;
@@ -70,7 +71,7 @@ interface TableUIData {
 export default function Tables() {
   const { id: turnoId } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user: userFromStore } = useUserStore();
 
   const [tables, setTables] = useState<TableUIData[]>([]);
   const [loading, setLoading] = useState(true);
@@ -98,6 +99,7 @@ export default function Tables() {
     {},
   );
   const [submittingNewRep, setSubmittingNewRep] = useState(false);
+  const [submittingBooking, setSubmittingBooking] = useState(false);
 
   const tutorialSteps = [
     {
@@ -429,19 +431,82 @@ export default function Tables() {
     }
   };
 
-  const handleConfirmBooking = () => {
-    if (!selectedTable || !user?.id || !selectedRepresentative) return;
+  const handleConfirmBooking = async () => {
+    // Validar datos requeridos
+    if (!selectedTable) {
+      toast.error("Por favor selecciona una mesa");
+      return;
+    }
 
-    // TODO: Implementar lógica de booking cuando la API esté lista
-    // Por ahora solo mostramos éxito
-    setBookingSuccess(true);
-    setShowConfirmDialog(false);
-    setSelectedRepresentative("");
-    setNewRepForm({ nombre: "", apellido: "", email: "", cargo: 0 });
+    if (!selectedRepresentative) {
+      toast.error("Por favor selecciona un representante");
+      return;
+    }
 
-    setTimeout(() => {
-      setBookingSuccess(false);
-    }, 3000);
+    if (!userFromStore?.empresa_id) {
+      toast.error(
+        "No se encontró el ID de la empresa. Por favor inicia sesión de nuevo",
+      );
+      return;
+    }
+
+    setSubmittingBooking(true);
+    try {
+      // Construir el payload
+      const repIndex = parseInt(selectedRepresentative);
+      const payload = {
+        mesa: selectedTable.id,
+        empresa: userFromStore.empresa_id,
+        representante: repIndex,
+      };
+
+      // Llamar a la API
+      await createAsiento(payload);
+
+      // Mostrar éxito
+      toast.success("¡Reserva confirmada exitosamente!");
+      setBookingSuccess(true);
+      setShowConfirmDialog(false);
+      setSelectedRepresentative("");
+      setNewRepForm({ nombre: "", apellido: "", email: "", cargo: 0 });
+
+      // Recargar las mesas después de 2 segundos
+      setTimeout(async () => {
+        try {
+          const mesasData = await getMesasByTurnoId(parseInt(turnoId!));
+          const transformedTables = mesasData.map((mesa) => {
+            let status: "empty" | "partial" | "full" = "empty";
+            if (mesa.asientos.length === 1) {
+              status = "partial";
+            } else if (mesa.asientos.length >= 2) {
+              status = "full";
+            }
+
+            return {
+              id: mesa.id,
+              number: mesa.num_mesa,
+              status,
+              asientos: mesa.asientos,
+            };
+          });
+          setTables(transformedTables);
+        } catch (err) {
+          console.error("Error recargando mesas:", err);
+        }
+      }, 2000);
+
+      // Ocultar el mensaje de éxito después de 3 segundos
+      setTimeout(() => {
+        setBookingSuccess(false);
+      }, 3000);
+    } catch (err) {
+      console.error("Error confirmando reserva:", err);
+      const errorMessage =
+        err instanceof Error ? err.message : "Error al confirmar la reserva";
+      toast.error(errorMessage);
+    } finally {
+      setSubmittingBooking(false);
+    }
   };
 
   // Para mostrar la empresa anfitriona en el dialog
@@ -637,7 +702,6 @@ export default function Tables() {
 
             <div className="space-y-2 mt-4">
               <Label
-                htmlFor="representative"
                 className="flex items-center gap-2 text-[#143E29]"
               >
                 <User className="h-4 w-4 text-[#68A243]" />
@@ -746,9 +810,9 @@ export default function Tables() {
               <Button
                 onClick={handleConfirmBooking}
                 className="flex-1 bg-[#68A243] hover:bg-[#68A243]/90 text-white"
-                disabled={!selectedRepresentative}
+                disabled={!selectedRepresentative || submittingBooking}
               >
-                Confirmar Reserva
+                {submittingBooking ? "Confirmando..." : "Confirmar Reserva"}
               </Button>
             </div>
           </DialogContent>
