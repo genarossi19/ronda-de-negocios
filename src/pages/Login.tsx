@@ -22,7 +22,7 @@ import Navbar from "../components/Navbar";
 import { useAuth } from "../hooks/useAuth";
 import { Link, useNavigate } from "react-router";
 import { motion as m } from "motion/react";
-import Cookies from "js-cookie";
+import { toast } from "sonner";
 
 export default function Login() {
   const { login } = useAuth();
@@ -39,10 +39,21 @@ export default function Login() {
   const [focusedField, setFocusedField] = useState<string | null>(null);
 
   useEffect(() => {
-    if (Cookies.get("token")) {
-      navigate("/", { replace: true });
+    // Mostrar notificación si la sesión fue expirada (desde localStorage)
+    const sessionExpired = localStorage.getItem("sessionExpired");
+    if (sessionExpired === "true") {
+      toast.info(
+        "Tu sesión anterior fue cerrada. Por favor, iniciá sesión nuevamente.",
+        {
+          duration: 6000,
+          description:
+            "Esto puede haber ocurrido por inactividad o cambios de seguridad.",
+        },
+      );
+      // Limpiar la bandera después de mostrar el toast
+      localStorage.removeItem("sessionExpired");
     }
-  }, [navigate]);
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

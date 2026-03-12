@@ -1,6 +1,5 @@
 import axios from "axios";
 import Cookies from "js-cookie";
-import { toast } from "sonner";
 import { useUserStore } from "../store/userStore";
 
 const TOKEN_COOKIE_NAME = "token";
@@ -45,16 +44,30 @@ api.interceptors.response.use(
   (error) => {
     if (error.response?.status === 401 || error.response?.status === 403) {
       const token = Cookies.get(TOKEN_COOKIE_NAME);
-      const message = token
-        ? "Su sesión expiró. Por favor, inicie sesión nuevamente."
-        : "Debes iniciar sesión para acceder a este recurso.";
+      const errorData = error.response?.data as {
+        code?: string;
+        messages?: Array<{ message: string }>;
+      };
 
-      // Limpiar cookie y store de Zustand (incluye localStorage persistido)
-      Cookies.remove(TOKEN_COOKIE_NAME);
-      useUserStore.getState().clearUser();
+      // Detectar si es específicamente un token expirado
+      const isTokenExpired =
+        errorData?.code === "token_not_valid" ||
+        errorData?.messages?.some((msg) => msg.message === "Token is expired");
 
-      toast.error(message);
-      window.location.href = "/login";
+      if (token) {
+        // Guardar en localStorage que la sesión expiró (persiste entre reloads)
+        localStorage.setItem("sessionExpired", "true");
+
+        // Limpiar cookie y store de Zustand ANTES del redirect
+        Cookies.remove(TOKEN_COOKIE_NAME);
+        useUserStore.getState().clearUser();
+
+        // NO mostrar toast aquí (se pierde con el hard refresh)
+        // El toast se mostrará en Login.tsx cuando detecte la flag
+
+        // Redirect a login refresca pagina y no permite cargar el toast
+        //window.location.href = "/login";
+      }
     }
     return Promise.reject(error);
   },
