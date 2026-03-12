@@ -29,6 +29,7 @@ import {
   Briefcase,
   AlertCircle,
   User,
+  Building2,
 } from "lucide-react";
 import {
   getRepresentantes,
@@ -61,6 +62,9 @@ export default function Representantes() {
   const [representantes, setRepresentantes] = useState<RepresentanteResponse[]>(
     [],
   );
+  const [ownRepresentantes, setOwnRepresentantes] = useState<
+    RepresentanteResponse[]
+  >([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -72,8 +76,19 @@ export default function Representantes() {
     try {
       setLoading(true);
       setError(null);
-      const data = await getRepresentantes();
-      setRepresentantes(data);
+      // Si es superadmin, obtener todos los representantes
+      const params = user?.is_superuser ? { all: true } : {};
+      const data = await getRepresentantes(params);
+
+      if (user?.is_superuser && user?.empresa_id) {
+        // Separar entre propios y otros
+        const own = data.filter((rep) => rep.empresa_id === user.empresa_id);
+        const others = data.filter((rep) => rep.empresa_id !== user.empresa_id);
+        setOwnRepresentantes(own);
+        setRepresentantes(others);
+      } else {
+        setRepresentantes(data);
+      }
     } catch {
       setError("No se pudieron cargar los representantes. Intentá de nuevo.");
     } finally {
@@ -103,7 +118,16 @@ export default function Representantes() {
     setSubmitting(true);
     try {
       const nuevo = await createRepresentante(form);
-      setRepresentantes((prev) => [...prev, nuevo]);
+      // Actualizar la lista correctamente
+      if (user?.is_superuser && user?.empresa_id) {
+        if (nuevo.empresa_id === user.empresa_id) {
+          setOwnRepresentantes((prev) => [...prev, nuevo]);
+        } else {
+          setRepresentantes((prev) => [...prev, nuevo]);
+        }
+      } else {
+        setRepresentantes((prev) => [...prev, nuevo]);
+      }
       toast.success("Representante agregado correctamente.");
       setDialogOpen(false);
       setForm(EMPTY_FORM);
@@ -137,18 +161,45 @@ export default function Representantes() {
               <div>
                 <h1 className="text-4xl font-bold mb-2">Representantes</h1>
                 <p className="text-gray-200 text-lg">
-                  {user?.razon_social
-                    ? `Gestión de representantes de ${user.razon_social}`
-                    : "Gestión de representantes de tu empresa"}
+                  {user?.is_superuser
+                    ? "Gestión de representantes de todas las empresas"
+                    : user?.razon_social
+                      ? `Gestión de representantes de ${user.razon_social}`
+                      : "Gestión de representantes de tu empresa"}
                 </p>
               </div>
               <div className="hidden md:block">
                 <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 border border-white/20">
-                  <div className="flex items-center gap-2 text-sm mb-1">
-                    <Users className="h-4 w-4 text-[#68A243]" />
-                    <span className="font-semibold">Total</span>
-                  </div>
-                  <p className="text-3xl font-bold">{representantes.length}</p>
+                  {user?.is_superuser ? (
+                    <>
+                      <div className="flex items-center gap-2 text-sm mb-2">
+                        <Users className="h-4 w-4 text-[#68A243]" />
+                        <span className="font-semibold">Propios</span>
+                      </div>
+                      <p className="text-2xl font-bold mb-3">
+                        {ownRepresentantes.length}
+                      </p>
+                      <div className="border-t border-white/20 pt-3">
+                        <div className="flex items-center gap-2 text-sm mb-2">
+                          <Users className="h-4 w-4 text-[#ffb900]" />
+                          <span className="font-semibold">Total</span>
+                        </div>
+                        <p className="text-2xl font-bold">
+                          {ownRepresentantes.length + representantes.length}
+                        </p>
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <div className="flex items-center gap-2 text-sm mb-1">
+                        <Users className="h-4 w-4 text-[#68A243]" />
+                        <span className="font-semibold">Total</span>
+                      </div>
+                      <p className="text-3xl font-bold">
+                        {representantes.length}
+                      </p>
+                    </>
+                  )}
                 </div>
               </div>
             </div>
@@ -326,6 +377,147 @@ export default function Representantes() {
                 </Button>
               </CardContent>
             </Card>
+          ) : user?.is_superuser ? (
+            <>
+              {/* Vista Superadmin: Mis Representantes */}
+              <div className="mb-8">
+                <div className="mb-6">
+                  <h2 className="text-2xl font-bold text-[#143E29] flex items-center gap-2">
+                    <Badge className="bg-[#ffb900] text-black">
+                      {ownRepresentantes.length}
+                    </Badge>
+                    Mis Representantes
+                  </h2>
+                  <p className="text-gray-600 text-sm mt-1">
+                    Representantes de {user?.razon_social || "tu empresa"}
+                  </p>
+                </div>
+                {ownRepresentantes.length === 0 ? (
+                  <Card className="text-center py-8 border-2 border-dashed border-[#ffb900]/30">
+                    <CardHeader>
+                      <div className="flex justify-center mb-2">
+                        <Users className="h-10 w-10 text-gray-300" />
+                      </div>
+                      <CardTitle className="text-gray-500 text-base">
+                        Sin representantes propios
+                      </CardTitle>
+                    </CardHeader>
+                  </Card>
+                ) : (
+                  <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                    {ownRepresentantes.map((rep, i) => (
+                      <Card
+                        key={i}
+                        className="hover:shadow-md transition-shadow border-2 border-[#ffb900] bg-yellow-50/30"
+                      >
+                        <CardHeader className="pb-3">
+                          <div className="flex items-center gap-3">
+                            <div className="bg-[#ffb900]/20 rounded-full p-2">
+                              <User className="h-5 w-5 text-[#ffb900]" />
+                            </div>
+                            <div className="flex-1">
+                              <CardTitle className="text-base text-[#143E29]">
+                                {rep.nombre} {rep.apellido}
+                              </CardTitle>
+                              <Badge
+                                variant="secondary"
+                                className="text-xs mt-0.5"
+                              >
+                                {rep.cargo?.nombre || "Sin cargo"}
+                              </Badge>
+                            </div>
+                          </div>
+                        </CardHeader>
+                        <CardContent className="space-y-2 text-sm text-gray-600">
+                          <div className="flex items-center gap-2">
+                            <Mail className="h-4 w-4 text-[#68A243] shrink-0" />
+                            <span className="truncate">{rep.email}</span>
+                          </div>
+                          {rep.telefono && (
+                            <div className="flex items-center gap-2">
+                              <Phone className="h-4 w-4 text-[#68A243] shrink-0" />
+                              <span>{rep.telefono}</span>
+                            </div>
+                          )}
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Vista Superadmin: Todos los Representantes */}
+              <div>
+                <div className="mb-6">
+                  <h2 className="text-2xl font-bold text-[#143E29] flex items-center gap-2">
+                    <Badge className="bg-[#68A243]">
+                      {representantes.length}
+                    </Badge>
+                    Todos los Representantes
+                  </h2>
+                  <p className="text-gray-600 text-sm mt-1">
+                    Representantes de otras empresas
+                  </p>
+                </div>
+                {representantes.length === 0 ? (
+                  <Card className="text-center py-8 border-2 border-dashed border-gray-300">
+                    <CardHeader>
+                      <div className="flex justify-center mb-2">
+                        <Users className="h-10 w-10 text-gray-300" />
+                      </div>
+                      <CardTitle className="text-gray-500 text-base">
+                        Sin otros representantes
+                      </CardTitle>
+                    </CardHeader>
+                  </Card>
+                ) : (
+                  <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                    {representantes.map((rep, i) => (
+                      <Card
+                        key={i}
+                        className="hover:shadow-md transition-shadow border-2 hover:border-[#68A243]/30"
+                      >
+                        <CardHeader className="pb-3">
+                          <div className="flex items-center gap-3">
+                            <div className="bg-[#143E29]/10 rounded-full p-2">
+                              <User className="h-5 w-5 text-[#143E29]" />
+                            </div>
+                            <div className="flex-1">
+                              <CardTitle className="text-base text-[#143E29]">
+                                {rep.nombre} {rep.apellido}
+                              </CardTitle>
+                              <Badge
+                                variant="outline"
+                                className="text-xs mt-0.5"
+                              >
+                                <Building2 className="h-3 w-3 mr-1" />
+                                {rep.empresa_nombre || "Sin empresa"}
+                              </Badge>
+                            </div>
+                          </div>
+                        </CardHeader>
+                        <CardContent className="space-y-2 text-sm text-gray-600">
+                          <div className="flex items-center gap-2">
+                            <Mail className="h-4 w-4 text-[#68A243] shrink-0" />
+                            <span className="truncate">{rep.email}</span>
+                          </div>
+                          {rep.telefono && (
+                            <div className="flex items-center gap-2">
+                              <Phone className="h-4 w-4 text-[#68A243] shrink-0" />
+                              <span>{rep.telefono}</span>
+                            </div>
+                          )}
+                          <div className="flex items-center gap-2">
+                            <Briefcase className="h-4 w-4 text-[#68A243] shrink-0" />
+                            <span>{rep.cargo?.nombre || "Sin cargo"}</span>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </>
           ) : representantes.length === 0 ? (
             <Card className="text-center py-12">
               <CardHeader>
@@ -357,7 +549,7 @@ export default function Representantes() {
                           {rep.nombre} {rep.apellido}
                         </CardTitle>
                         <Badge variant="secondary" className="text-xs mt-0.5">
-                          {rep.cargo.nombre}
+                          {rep.cargo?.nombre || "Sin cargo"}
                         </Badge>
                       </div>
                     </div>
@@ -375,7 +567,7 @@ export default function Representantes() {
                     )}
                     <div className="flex items-center gap-2">
                       <Briefcase className="h-4 w-4 text-[#68A243] shrink-0" />
-                      <span>{rep.cargo.nombre}</span>
+                      <span>{rep.cargo?.nombre || "Sin cargo"}</span>
                     </div>
                   </CardContent>
                 </Card>

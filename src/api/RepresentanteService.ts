@@ -8,6 +8,7 @@ interface GetRepresentantesParams {
   nombre?: string;
   email?: string;
   search?: string;
+  all?: boolean;
 }
 
 export async function getRepresentantes(
@@ -18,6 +19,7 @@ export async function getRepresentantes(
   if (params.nombre) query.append("nombre", params.nombre);
   if (params.email) query.append("email", params.email);
   if (params.search) query.append("search", params.search);
+  if (params.all) query.append("all", "true");
 
   const { data } = await api.get<RepresentanteResponse[]>(
     `/representantes?${query.toString()}`,

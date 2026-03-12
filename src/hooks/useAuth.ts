@@ -35,9 +35,6 @@ export const useAuth = () => {
 
   // Sincronizar token de cookies con el store al cargar
   useEffect(() => {
-    // Solo ejecutar si aún no está autenticado
-    if (isAuthenticated) return;
-
     const token = Cookies.get(TOKEN_COOKIE_NAME);
 
     if (!token) {
@@ -70,7 +67,7 @@ export const useAuth = () => {
       is_superuser: decoded.is_superuser,
       token_type: decoded.token_type,
     });
-  }, [isAuthenticated, setUser, clearUser]);
+  }, []); // Solo ejecutar una vez al montar
 
   const getToken = useCallback(() => {
     return Cookies.get(TOKEN_COOKIE_NAME) || null;
@@ -151,6 +148,6 @@ export const useAuth = () => {
     login,
     logout,
     getToken,
-    isAuthenticated: checkIsAuthenticated,
+    isAuthenticated,
   };
 };

@@ -1,12 +1,14 @@
 import type { GenericType } from "./GenericType";
 
 export interface RepresentanteResponse {
+  id: number;
   nombre: string;
   apellido: string;
   email: string;
   telefono?: string;
   cargo: GenericType;
-  empresa?: number;
+  empresa_id?: number;
+  empresa_nombre?: string;
 }
 
 export interface RepresentanteWrite {

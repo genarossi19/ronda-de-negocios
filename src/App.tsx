@@ -14,6 +14,7 @@ import { ProtectedRoute } from "./components/ProtectedRoute";
 import { useAuth } from "./hooks/useAuth";
 import Dashboard from "./pages/admin/Dashboard";
 import Representantes from "./pages/Representantes";
+import NotFound from "./pages/NotFound";
 import { Toaster } from "./components/ui/sonner";
 
 function AppRoutes() {
@@ -59,6 +60,7 @@ function AppRoutes() {
           </ProtectedRoute>
         }
       />
+      <Route path="*" element={<NotFound />} />
     </Routes>
   );
 }

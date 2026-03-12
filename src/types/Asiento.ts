@@ -1,5 +1,6 @@
 export interface AsientoResponse {
   id: number;
+  empresa_id: number;
   empresa_nombre: string;
   representante_nombre?: string;
   representante_apellido?: string;

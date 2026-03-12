@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import Navbar from "../components/Navbar";
 import Footer from "../layout/Footer";
 import { Button } from "../components/ui/button";
@@ -52,7 +52,7 @@ import {
   getRepresentantes,
   createRepresentante,
 } from "../api/RepresentanteService";
-import { createAsiento } from "../api/AsientoService";
+import { createAsiento, updateAsiento } from "../api/AsientoService";
 import type { MesaResponse } from "../types/Mesa";
 import type {
   RepresentanteResponse,
@@ -78,6 +78,7 @@ export default function Tables() {
   const [error, setError] = useState<string | null>(null);
   const [selectedTable, setSelectedTable] = useState<TableUIData | null>(null);
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
+  const [showChangeRepDialog, setShowChangeRepDialog] = useState(false);
   const [bookingSuccess, setBookingSuccess] = useState(false);
   const [selectedRepresentative, setSelectedRepresentative] =
     useState<string>("");
@@ -189,6 +190,38 @@ export default function Tables() {
     loadTables();
   }, [turnoId]);
 
+  const loadRepresentatives = useCallback(async () => {
+    try {
+      setLoadingRepresentatives(true);
+      const params = userFromStore?.is_superuser ? { all: true } : {};
+      const data = await getRepresentantes(params);
+
+      // Si es superadmin, ordenar propios primero
+      if (userFromStore?.is_superuser && userFromStore?.empresa_id) {
+        const own = data.filter(
+          (rep) => rep.empresa_id === userFromStore.empresa_id,
+        );
+        const others = data.filter(
+          (rep) => rep.empresa_id !== userFromStore.empresa_id,
+        );
+        setRepresentatives([...own, ...others]);
+      } else {
+        setRepresentatives(data);
+      }
+    } catch (err) {
+      console.error("Error cargando representantes:", err);
+    } finally {
+      setLoadingRepresentatives(false);
+    }
+  }, [userFromStore?.is_superuser, userFromStore?.empresa_id]);
+
+  // Cargar representantes cuando se abre cualquier modal de confirmación
+  useEffect(() => {
+    if (showConfirmDialog || showChangeRepDialog) {
+      loadRepresentatives();
+    }
+  }, [showConfirmDialog, showChangeRepDialog, loadRepresentatives]);
+
   if (loading) {
     return (
       <>
@@ -266,7 +299,7 @@ export default function Tables() {
           <div className="max-w-4xl mx-auto px-4 py-16">
             <Card>
               <CardHeader>
-                <CardTitle className="text-red-700">{error}</CardTitle>
+                <CardTitle className="text-[#F05826]">{error}</CardTitle>
                 <CardDescription>
                   Intenta nuevamente más tarde o vuelve a los turnos disponibles
                 </CardDescription>
@@ -376,25 +409,22 @@ export default function Tables() {
     );
   }
 
-  const loadRepresentatives = async () => {
-    try {
-      setLoadingRepresentatives(true);
-      const data = await getRepresentantes();
-      setRepresentatives(data);
-    } catch (err) {
-      console.error("Error cargando representantes:", err);
-      toast.error("No se pudieron cargar los representantes");
-    } finally {
-      setLoadingRepresentatives(false);
-    }
-  };
-
   const handleTableClick = (table: TableUIData) => {
     if (table.status === "full") return;
     setSelectedTable(table);
     setSelectedRepresentative("");
-    setShowConfirmDialog(true);
-    loadRepresentatives();
+
+    // Verificar si la mesa tiene un representante de MI empresa
+    const isMyCompanyAtTable =
+      table.status === "partial" &&
+      table.asientos[0] &&
+      table.asientos[0].empresa_id === userFromStore?.empresa_id;
+
+    if (isMyCompanyAtTable) {
+      setShowChangeRepDialog(true);
+    } else {
+      setShowConfirmDialog(true);
+    }
   };
 
   const validateNewRep = (): boolean => {
@@ -418,7 +448,7 @@ export default function Tables() {
     try {
       const nuevo = await createRepresentante(newRepForm);
       setRepresentatives((prev) => [...prev, nuevo]);
-      setSelectedRepresentative(representatives.length.toString());
+      setSelectedRepresentative(nuevo.id.toString());
       toast.success("Representante agregado correctamente");
       setShowAddRepresentativeDialog(false);
       setNewRepForm({ nombre: "", apellido: "", email: "", cargo: 0 });
@@ -501,8 +531,123 @@ export default function Tables() {
       }, 3000);
     } catch (err) {
       console.error("Error confirmando reserva:", err);
-      const errorMessage =
-        err instanceof Error ? err.message : "Error al confirmar la reserva";
+
+      // Intentar extraer el mensaje de error del backend
+      let errorMessage = "Error al confirmar la reserva";
+
+      const axiosError = err as {
+        response?: { data?: Record<string, string[]> };
+        message?: string;
+      };
+
+      // Primero, intentar obtener el error específico del backend
+      if (
+        axiosError.response?.data &&
+        typeof axiosError.response.data === "object"
+      ) {
+        const errorData = axiosError.response.data;
+        // Obtener el primer array de errores del objeto
+        const firstErrorArray = Object.values(errorData)[0];
+        if (Array.isArray(firstErrorArray) && firstErrorArray.length > 0) {
+          errorMessage = firstErrorArray[0];
+        }
+      }
+      // Si no hay error del backend, usar el mensaje de axios
+      else if (err instanceof Error) {
+        errorMessage = err.message;
+      }
+
+      toast.error(errorMessage);
+    } finally {
+      setSubmittingBooking(false);
+    }
+  };
+
+  const handleChangeRepresentative = async () => {
+    // Validar datos requeridos
+    if (!selectedTable) {
+      toast.error("Por favor selecciona una mesa");
+      return;
+    }
+
+    if (!selectedRepresentative) {
+      toast.error("Por favor selecciona un representante");
+      return;
+    }
+
+    if (!selectedTable.asientos[0]) {
+      toast.error("No se encontró el asiento actual");
+      return;
+    }
+
+    setSubmittingBooking(true);
+    try {
+      // Construir el payload con solo el representante
+      const repId = parseInt(selectedRepresentative);
+      const payload = {
+        representante: repId,
+      };
+
+      // Llamar a la API para actualizar
+      await updateAsiento(selectedTable.asientos[0].id, payload);
+
+      // Mostrar éxito
+      toast.success("¡Representante cambio exitosamente!");
+      setShowChangeRepDialog(false);
+      setSelectedRepresentative("");
+
+      // Recargar las mesas después de 2 segundos
+      setTimeout(async () => {
+        try {
+          const mesasData = await getMesasByTurnoId(parseInt(turnoId!));
+          const transformedTables = mesasData.map((mesa) => {
+            let status: "empty" | "partial" | "full" = "empty";
+            if (mesa.asientos.length === 1) {
+              status = "partial";
+            } else if (mesa.asientos.length >= 2) {
+              status = "full";
+            }
+
+            return {
+              id: mesa.id,
+              number: mesa.num_mesa,
+              status,
+              asientos: mesa.asientos,
+            };
+          });
+          setTables(transformedTables);
+        } catch (err) {
+          console.error("Error recargando mesas:", err);
+        }
+      }, 2000);
+    } catch (err) {
+      console.error("Error cambiando representante:", err);
+
+      // Intentar extraer el mensaje de error del backend
+      let errorMessage = "Error al cambiar el representante";
+
+      const axiosError = err as {
+        response?: { data?: Record<string, string[]> };
+        message?: string;
+      };
+
+      // Primero, intentar obtener el error específico del backend
+      if (
+        axiosError.response?.data &&
+        typeof axiosError.response.data === "object"
+      ) {
+        const errorData = axiosError.response.data;
+        // Obtener el primer array de errores del objeto
+        const firstErrorArray = Object.values(errorData)[0];
+        if (Array.isArray(firstErrorArray) && firstErrorArray.length > 0) {
+          errorMessage = firstErrorArray[0];
+        }
+      }
+      // Si no hay error del backend, usar el mensaje de axios
+      else if (err instanceof Error) {
+        errorMessage = err.message;
+      }
+
       toast.error(errorMessage);
     } finally {
       setSubmittingBooking(false);
@@ -602,6 +747,11 @@ export default function Tables() {
                       }`.trim()
                     : null;
 
+                const isMyCompany =
+                  table.status === "partial" &&
+                  table.asientos[0] &&
+                  table.asientos[0].empresa_id === userFromStore?.empresa_id;
+
                 return (
                   <button
                     key={table.id}
@@ -614,7 +764,9 @@ export default function Tables() {
                         table.status === "full"
                           ? "bg-gray-200 border-gray-400 opacity-50 cursor-not-allowed"
                           : table.status === "partial"
-                            ? "bg-[#68A243]/10 border-[#68A243] hover:bg-[#68A243]/20 hover:scale-105 cursor-pointer"
+                            ? isMyCompany
+                              ? "bg-[#ffb900]/10 border-[#ffb900] hover:bg-[#ffb900]/20 hover:scale-105 cursor-pointer"
+                              : "bg-[#68A243]/10 border-[#68A243] hover:bg-[#68A243]/20 hover:scale-105 cursor-pointer"
                             : "bg-white border-gray-300 hover:border-[#68A243] hover:scale-105 cursor-pointer hover:shadow-lg"
                       }
                     `}
@@ -629,14 +781,29 @@ export default function Tables() {
 
                       {table.status === "partial" && hostName ? (
                         <div className="flex flex-col items-center gap-1">
-                          <div className="h-8 w-8 rounded-full bg-[#68A243] flex items-center justify-center text-white text-xs font-bold border border-white">
+                          <div
+                            className={`h-8 w-8 rounded-full flex items-center justify-center text-white text-xs font-bold border border-white ${
+                              isMyCompany ? "bg-[#ffb900]" : "bg-[#68A243]"
+                            }`}
+                          >
                             {table.asientos[0]?.empresa_nombre
                               ?.substring(0, 1)
                               .toUpperCase()}
                           </div>
-                          <p className="text-xs text-gray-600 line-clamp-1 max-w-full">
+                          <p
+                            className={`text-xs line-clamp-1 max-w-full ${
+                              isMyCompany
+                                ? "text-[#ffb900] font-semibold"
+                                : "text-gray-600"
+                            }`}
+                          >
                             {hostName}
                           </p>
+                          {isMyCompany && (
+                            <p className="text-[10px] text-[#ffb900] font-semibold">
+                              Tu empresa
+                            </p>
+                          )}
                         </div>
                       ) : table.status === "full" ? (
                         <p className="text-xs text-gray-500">Completa</p>
@@ -722,69 +889,131 @@ export default function Tables() {
                       className="w-full justify-between border-[#68A243]/20 hover:border-[#68A243] bg-transparent"
                     >
                       {selectedRepresentative
-                        ? representatives[parseInt(selectedRepresentative)]
-                          ? `${representatives[parseInt(selectedRepresentative)]?.nombre} ${representatives[parseInt(selectedRepresentative)]?.apellido}`
+                        ? representatives.find(
+                            (rep) =>
+                              rep.id.toString() === selectedRepresentative,
+                          )
+                          ? `${
+                              representatives.find(
+                                (rep) =>
+                                  rep.id.toString() === selectedRepresentative,
+                              )?.nombre
+                            } ${
+                              representatives.find(
+                                (rep) =>
+                                  rep.id.toString() === selectedRepresentative,
+                              )?.apellido
+                            }`
                           : "Buscá y seleccioná un representante"
                         : "Buscá y seleccioná un representante"}
                       <Search className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                     </Button>
                   </PopoverTrigger>
                   <PopoverContent className="w-full p-0" align="start">
-                    <Command>
-                      <CommandInput
-                        placeholder="Buscar representante..."
-                        className="h-9"
-                      />
-                      <CommandList>
-                        <CommandEmpty>
-                          No se encontró ningún representante
-                        </CommandEmpty>
-                        <CommandGroup>
-                          {representatives.map((rep, idx) => (
-                            <CommandItem
-                              key={idx}
-                              value={`${rep.nombre} ${rep.apellido}`}
-                              onSelect={() => {
-                                setSelectedRepresentative(idx.toString());
-                                setOpenRepresentativeSearch(false);
-                              }}
-                              className="cursor-pointer"
-                            >
-                              <div className="flex items-center gap-3 flex-1">
-                                <Avatar className="h-8 w-8 bg-[#68A243]">
-                                  <AvatarFallback className="bg-[#68A243] text-white text-xs font-semibold">
-                                    {`${rep.nombre[0]}${rep.apellido[0]}`.toUpperCase()}
-                                  </AvatarFallback>
-                                </Avatar>
-                                <div className="flex-1">
-                                  <p className="font-medium">
-                                    {rep.nombre} {rep.apellido}
-                                  </p>
-                                  <p className="text-xs text-gray-500">
-                                    {rep.email}
-                                  </p>
-                                </div>
-                              </div>
-                              <Check
-                                className={cn(
-                                  "ml-auto h-4 w-4 text-[#68A243]",
-                                  selectedRepresentative === idx.toString()
-                                    ? "opacity-100"
-                                    : "opacity-0",
-                                )}
-                              />
-                            </CommandItem>
-                          ))}
-                        </CommandGroup>
-                      </CommandList>
-                    </Command>
+                    {loadingRepresentatives ? (
+                      <div className="p-4 space-y-2">
+                        <Skeleton className="h-8 w-full" />
+                        <Skeleton className="h-10 w-full" />
+                        <Skeleton className="h-10 w-full" />
+                        <Skeleton className="h-10 w-full" />
+                      </div>
+                    ) : (
+                      <Command>
+                        <CommandInput
+                          placeholder="Buscar representante..."
+                          className="h-9"
+                        />
+                        <CommandList>
+                          <CommandEmpty>
+                            No se encontró ningún representante
+                          </CommandEmpty>
+                          <CommandGroup>
+                            {representatives.map((rep) => {
+                              const isOwn =
+                                userFromStore?.is_superuser &&
+                                rep.empresa_id === userFromStore.empresa_id;
+                              return (
+                                <CommandItem
+                                  key={rep.id}
+                                  value={`${rep.nombre} ${rep.apellido}`}
+                                  onSelect={() => {
+                                    setSelectedRepresentative(
+                                      rep.id.toString(),
+                                    );
+                                    setOpenRepresentativeSearch(false);
+                                  }}
+                                  className={cn(
+                                    "cursor-pointer",
+                                    isOwn && "bg-yellow-50",
+                                  )}
+                                >
+                                  <div className="flex items-center gap-3 flex-1">
+                                    <Avatar
+                                      className={cn(
+                                        "h-8 w-8",
+                                        isOwn ? "bg-[#ffb900]" : "bg-[#68A243]",
+                                      )}
+                                    >
+                                      <AvatarFallback
+                                        className={cn(
+                                          "text-white text-xs font-semibold",
+                                          isOwn
+                                            ? "bg-[#ffb900]"
+                                            : "bg-[#68A243]",
+                                        )}
+                                      >
+                                        {`${rep.nombre[0]}${rep.apellido[0]}`.toUpperCase()}
+                                      </AvatarFallback>
+                                    </Avatar>
+                                    <div className="flex-1">
+                                      <p className="font-medium">
+                                        {rep.nombre} {rep.apellido}
+                                      </p>
+                                      <p className="text-xs text-gray-500">
+                                        {userFromStore?.is_superuser &&
+                                        !isOwn ? (
+                                          <span>
+                                            {rep.email} •{" "}
+                                            {rep.empresa_nombre ||
+                                              "Sin empresa"}
+                                          </span>
+                                        ) : (
+                                          rep.email
+                                        )}
+                                      </p>
+                                    </div>
+                                    {isOwn && (
+                                      <Badge className="bg-[#ffb900] text-black shrink-0">
+                                        Propio
+                                      </Badge>
+                                    )}
+                                  </div>
+                                  <Check
+                                    className={cn(
+                                      "ml-auto h-4 w-4 text-[#68A243]",
+                                      selectedRepresentative ===
+                                        rep.id.toString()
+                                        ? "opacity-100"
+                                        : "opacity-0",
+                                    )}
+                                  />
+                                </CommandItem>
+                              );
+                            })}
+                          </CommandGroup>
+                        </CommandList>
+                      </Command>
+                    )}
                   </PopoverContent>
                 </Popover>
               ) : (
-                <div className="text-sm text-amber-600 bg-amber-50 p-3 rounded-lg border border-amber-200">
+                <div className="text-sm text-[#F05826] bg-[#F05826]/10 p-3 rounded-lg border border-[#F05826]/30">
                   No tenés representantes agregados.
                 </div>
               )}
+              <div className="text-xs text-gray-500 px-1 py-2 mt-3">
+                ¿No aparece en la lista? Agregá uno aquí ↓
+              </div>
               <Button
                 type="button"
                 variant="outline"
@@ -800,7 +1029,10 @@ export default function Tables() {
             <div className="flex gap-3 mt-4">
               <Button
                 variant="outline"
-                onClick={() => setShowConfirmDialog(false)}
+                onClick={() => {
+                  setShowConfirmDialog(false);
+                  setSelectedRepresentative("");
+                }}
                 className="flex-1"
               >
                 Cancelar
@@ -811,6 +1043,229 @@ export default function Tables() {
                 disabled={!selectedRepresentative || submittingBooking}
               >
                 {submittingBooking ? "Confirmando..." : "Confirmar Reserva"}
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
+
+        <Dialog
+          open={showChangeRepDialog}
+          onOpenChange={setShowChangeRepDialog}
+        >
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle className="text-[#143E29]">
+                Cambiar Representante
+              </DialogTitle>
+              <DialogDescription>
+                Esta es tu mesa. Podés cambiar el representante que está
+                sentado.
+              </DialogDescription>
+            </DialogHeader>
+
+            {selectedTable?.status === "partial" &&
+              selectedTable.asientos[0] && (
+                <Card className="border-[#ffb900]/30">
+                  <CardContent className="pt-6">
+                    <div className="flex items-center gap-4">
+                      <div className="h-16 w-16 rounded-full bg-[#ffb900] flex items-center justify-center text-white text-lg font-bold">
+                        {selectedTable.asientos[0].empresa_nombre
+                          ?.substring(0, 1)
+                          .toUpperCase()}
+                      </div>
+                      <div className="flex-1">
+                        <h4 className="font-bold text-[#143E29]">
+                          {selectedTable.asientos[0].empresa_nombre}
+                        </h4>
+                        <p className="text-sm text-gray-600">
+                          Rep: {selectedTable.asientos[0].representante_nombre}{" "}
+                          {selectedTable.asientos[0].representante_apellido}
+                        </p>
+                        <Badge className="mt-1 bg-[#ffb900]/10 text-[#ffb900] hover:bg-[#ffb900]/20">
+                          Tu Empresa
+                        </Badge>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
+            <div className="space-y-2 mt-4">
+              <Label className="flex items-center gap-2 text-[#143E29]">
+                <User className="h-4 w-4 text-[#ffb900]" />
+                Seleccioná el nuevo representante
+              </Label>
+              {loadingRepresentatives ? (
+                <div className="text-sm text-gray-600 p-3 rounded-lg bg-gray-50">
+                  Cargando representantes...
+                </div>
+              ) : representatives && representatives.length > 0 ? (
+                <Popover
+                  open={openRepresentativeSearch}
+                  onOpenChange={setOpenRepresentativeSearch}
+                >
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      role="combobox"
+                      aria-expanded={openRepresentativeSearch}
+                      className="w-full justify-between border-[#ffb900]/20 hover:border-[#ffb900] bg-transparent"
+                    >
+                      {selectedRepresentative
+                        ? representatives.find(
+                            (rep) =>
+                              rep.id.toString() === selectedRepresentative,
+                          )
+                          ? `${
+                              representatives.find(
+                                (rep) =>
+                                  rep.id.toString() === selectedRepresentative,
+                              )?.nombre
+                            } ${
+                              representatives.find(
+                                (rep) =>
+                                  rep.id.toString() === selectedRepresentative,
+                              )?.apellido
+                            }`
+                          : "Buscá y seleccioná un representante"
+                        : "Buscá y seleccioná un representante"}
+                      <Search className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-full p-0" align="start">
+                    {loadingRepresentatives ? (
+                      <div className="p-4 space-y-2">
+                        <Skeleton className="h-8 w-full" />
+                        <Skeleton className="h-10 w-full" />
+                        <Skeleton className="h-10 w-full" />
+                        <Skeleton className="h-10 w-full" />
+                      </div>
+                    ) : (
+                      <Command>
+                        <CommandInput
+                          placeholder="Buscar representante..."
+                          className="h-9"
+                        />
+                        <CommandList>
+                          <CommandEmpty>
+                            No se encontró ningún representante
+                          </CommandEmpty>
+                          <CommandGroup>
+                            {representatives.map((rep) => {
+                              const isOwn =
+                                userFromStore?.is_superuser &&
+                                rep.empresa_id === userFromStore.empresa_id;
+                              return (
+                                <CommandItem
+                                  key={rep.id}
+                                  value={`${rep.nombre} ${rep.apellido}`}
+                                  onSelect={() => {
+                                    setSelectedRepresentative(
+                                      rep.id.toString(),
+                                    );
+                                    setOpenRepresentativeSearch(false);
+                                  }}
+                                  className={cn(
+                                    "cursor-pointer",
+                                    isOwn && "bg-yellow-50",
+                                  )}
+                                >
+                                  <div className="flex items-center gap-3 flex-1">
+                                    <Avatar
+                                      className={cn(
+                                        "h-8 w-8",
+                                        isOwn ? "bg-[#ffb900]" : "bg-[#68A243]",
+                                      )}
+                                    >
+                                      <AvatarFallback
+                                        className={cn(
+                                          "text-white text-xs font-semibold",
+                                          isOwn
+                                            ? "bg-[#ffb900]"
+                                            : "bg-[#68A243]",
+                                        )}
+                                      >
+                                        {`${rep.nombre[0]}${rep.apellido[0]}`.toUpperCase()}
+                                      </AvatarFallback>
+                                    </Avatar>
+                                    <div className="flex-1">
+                                      <p className="font-medium">
+                                        {rep.nombre} {rep.apellido}
+                                      </p>
+                                      <p className="text-xs text-gray-500">
+                                        {userFromStore?.is_superuser &&
+                                        !isOwn ? (
+                                          <span>
+                                            {rep.email} •{" "}
+                                            {rep.empresa_nombre ||
+                                              "Sin empresa"}
+                                          </span>
+                                        ) : (
+                                          rep.email
+                                        )}
+                                      </p>
+                                    </div>
+                                    {isOwn && (
+                                      <Badge className="bg-[#ffb900] text-black shrink-0">
+                                        Propio
+                                      </Badge>
+                                    )}
+                                  </div>
+                                  <Check
+                                    className={cn(
+                                      "ml-auto h-4 w-4 text-[#ffb900]",
+                                      selectedRepresentative ===
+                                        rep.id.toString()
+                                        ? "opacity-100"
+                                        : "opacity-0",
+                                    )}
+                                  />
+                                </CommandItem>
+                              );
+                            })}
+                          </CommandGroup>
+                        </CommandList>
+                      </Command>
+                    )}
+                  </PopoverContent>
+                </Popover>
+              ) : (
+                <div className="text-sm text-[#F05826] bg-[#F05826]/10 p-3 rounded-lg border border-[#F05826]/30">
+                  No tenés representantes agregados.
+                </div>
+              )}
+              <div className="text-xs text-gray-500 px-1 py-2 mt-3">
+                ¿No aparece en la lista? Agregá uno aquí ↓
+              </div>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setShowAddRepresentativeDialog(true)}
+                className="w-full border-[#ffb900]/20 hover:border-[#ffb900] text-[#ffb900]"
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Agregar nuevo representante
+              </Button>
+            </div>
+
+            <div className="flex gap-3 mt-4">
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setShowChangeRepDialog(false);
+                  setSelectedRepresentative("");
+                }}
+                className="flex-1"
+              >
+                Cancelar
+              </Button>
+              <Button
+                onClick={handleChangeRepresentative}
+                className="flex-1 bg-[#ffb900] hover:bg-[#ffb900]/90 text-white"
+                disabled={!selectedRepresentative || submittingBooking}
+              >
+                {submittingBooking ? "Cambiando..." : "Cambiar Representante"}
               </Button>
             </div>
           </DialogContent>
