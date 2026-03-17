@@ -4,7 +4,6 @@ export interface LocalidadResponse {
   id: number;
   provincia: GenericType;
   nombre: string;
-  readOnly?: boolean;
 }
 
 export interface LocalidadWrite {
