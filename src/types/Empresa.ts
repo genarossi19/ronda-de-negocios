@@ -13,9 +13,16 @@ export interface EmpresaResponse {
 
 export interface EmpresaWrite {
   razon_social: string;
+  cuit: string;
   descripcion?: string;
-  sector: number;
+  email: string;
+  password: string;
+  password2: string;
+  telefono_contacto: string;
+  direccion: string;
+  logo?: File;
   localidad: number;
+  sector: number;
 }
 
 export type EmpresaUpdate = Partial<Omit<EmpresaResponse, "id">> & {

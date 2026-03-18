@@ -14,6 +14,30 @@ export const getCompanyById = async (
 };
 
 export const createCompany = async (company: EmpresaWrite) => {
-  const { data } = await api.post("/empresas/registro/", company);
+  const formData = new FormData();
+
+  formData.append("razon_social", company.razon_social);
+  formData.append("cuit", company.cuit);
+  formData.append("email", company.email);
+  formData.append("password", company.password);
+  formData.append("password2", company.password2);
+  formData.append("telefono_contacto", company.telefono_contacto);
+  formData.append("direccion", company.direccion);
+  formData.append("localidad", String(company.localidad));
+  formData.append("sector", String(company.sector));
+
+  if (company.descripcion) {
+    formData.append("descripcion", company.descripcion);
+  }
+
+  if (company.logo) {
+    formData.append("logo", company.logo);
+  }
+
+  const { data } = await api.post("/empresas/registro/", formData, {
+    headers: {
+      "Content-Type": "multipart/form-data",
+    },
+  });
   return data;
 };

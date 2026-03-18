@@ -76,7 +76,7 @@ export default function App() {
           <div className="min-h-screen">
             <AppRoutes />
           </div>
-          <Toaster richColors position="top-right" />
+          <Toaster richColors position="top-right" closeButton />
         </CompanyProvider>
       </BookingProvider>
     </AuthProvider>

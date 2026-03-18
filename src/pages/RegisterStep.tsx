@@ -1,21 +1,17 @@
-import React, { useActionState, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import {
   ArrowLeft,
-  Calendar,
-  MapPin,
   Building2,
   Mail,
-  Phone,
-  CheckCircle2,
-  Sparkles,
   User,
   FileText,
-  Image as ImageIcon,
   ChevronRight,
+  Eye,
+  EyeOff,
+  Check,
 } from "lucide-react";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
-import { Textarea } from "../components/ui/textarea";
 import { Label } from "../components/ui/label";
 import {
   Select,
@@ -27,124 +23,132 @@ import {
 import { Card, CardContent } from "../components/ui/card";
 import { useNavigate } from "react-router";
 import type { GenericType } from "../types/GenericType";
+import type { LocalidadResponse } from "../types/Localidad";
+import type { EmpresaWrite } from "../types/Empresa";
 import Navbar from "../components/Navbar";
+import ImageCropper from "../components/ImageCropper";
 import { getSectors } from "../api/SectorService";
-import type { CompanyType } from "../types/Empresa";
-
-const PROVINCES = [
-  { id: 1, name: "Buenos Aires" },
-  { id: 2, name: "Córdoba" },
-  { id: 3, name: "Santa Fe" },
-];
-
-const LOCALITIES = {
-  1: ["La Plata", "Mar del Plata", "Bahía Blanca"],
-  2: ["Córdoba Capital", "Villa Carlos Paz", "Río Cuarto"],
-  3: ["Rosario", "Santa Fe", "Rafaela"],
-};
+import { getLocalidades } from "../api/LocalidadesService";
+import { createCompany } from "../api/EmpresaService";
+import { toast } from "sonner";
 
 const STEPS = [
-  { id: 1, title: "Datos de la empresa", icon: Building2 },
-  { id: 2, title: "Descripción y sector", icon: FileText },
-  { id: 3, title: "Persona de contacto", icon: User },
-  { id: 4, title: "Logo (opcional)", icon: ImageIcon },
-  { id: 5, title: "Credenciales", icon: Mail },
+  { id: 1, title: "Empresa", icon: Building2 },
+  { id: 2, title: "Marca", icon: FileText },
+  { id: 3, title: "Contacto", icon: User },
+  { id: 4, title: "Seguridad", icon: Mail },
 ];
 
 export default function RegistrationForm() {
-  const initialData: CompanyType = {
-    id: 0,
-    email: "",
-    nombre_contacto: "",
-    apellido_contacto: "",
-    password: "",
-    password2: "",
+  const [sectorList, setSectorList] = useState<GenericType[]>([]);
+  const [localidadesList, setLocalidadesList] = useState<LocalidadResponse[]>(
+    [],
+  );
+  const [currentStep, setCurrentStep] = useState(1);
+  const [showPassword, setShowPassword] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [loadingData, setLoadingData] = useState(true);
+  const [logoBlob, setLogoBlob] = useState<Blob | null>(null);
+  const navigate = useNavigate();
+
+  const [formData, setFormData] = useState({
     razon_social: "",
     cuit: "",
-    email_empresa: "",
-    telefono_contacto: "",
-    descripcion: "",
+    email: "",
     direccion: "",
-    logo: null,
+    provincia_id: 0,
     localidad: 0,
     sector: 0,
-  };
-  const [sectorList, setSectorList] = useState<GenericType[]>([]);
-  const [currentStep, setCurrentStep] = useState(1);
-  const [formData, setFormData] = useState<CompanyType>(initialData);
-  const [previewLogo, setPreviewLogo] = useState<string | null>(null);
+    telefono_contacto: "",
+    password: "",
+    password_confirm: "",
+  });
 
   useEffect(() => {
-    const fetchSector = async () => {
+    const fetchData = async () => {
       try {
-        const sector = await getSectors();
-        setSectorList(sector);
-        console.log(sector);
+        const [sectors, localidades] = await Promise.all([
+          getSectors(),
+          getLocalidades(),
+        ]);
+        setSectorList(sectors);
+        setLocalidadesList(localidades);
       } catch (error) {
+        toast.error("Error al cargar datos del formulario");
         console.error(error);
+      } finally {
+        setLoadingData(false);
       }
     };
-    fetchSector();
+    fetchData();
   }, []);
 
-  const [showPrev, setShowPrev] = useState(false);
-  const handleSubmit = () => {
-    console.log("Form submitted:", formData);
-    setShowPrev(true);
-  };
-
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    setFormData({ ...formData, logo: file }); // guardamos el File para enviar al backend
-    setPreviewLogo(URL.createObjectURL(file)); // guardamos la URL para vista previa
+  const handleImageUpload = (croppedBlob: Blob) => {
+    setLogoBlob(croppedBlob);
+    toast.success("Logo guardado correctamente");
   };
 
   const isStepComplete = () => {
     switch (currentStep) {
       case 1:
-        return (
-          formData.razon_social.trim() !== "" &&
-          formData.cuit.trim() !== "" &&
-          formData.email_empresa.trim() !== ""
+        return !!(
+          formData.razon_social &&
+          formData.cuit &&
+          formData.direccion &&
+          formData.provincia_id &&
+          formData.localidad
         );
       case 2:
-        return formData.descripcion.trim() !== "" && formData.sector !== 0;
+        return formData.sector !== 0;
       case 3:
-        return (
-          formData.nombre_contacto.trim() !== "" &&
-          formData.apellido_contacto.trim() !== "" &&
-          formData.telefono_contacto.trim() !== "" &&
-          formData.email.trim() !== ""
-        );
+        return !!(formData.email && formData.telefono_contacto);
       case 4:
-        return true;
-      case 5:
-        return (
-          formData.password.trim() !== "" &&
-          formData.password2.trim() !== "" &&
-          formData.password === formData.password2
+        return !!(
+          formData.password &&
+          formData.password_confirm &&
+          formData.password === formData.password_confirm
         );
       default:
         return false;
     }
   };
 
-  const getNextStepInfo = () => {
-    switch (currentStep) {
-      case 1:
-        return "A continuación: descripción de tu empresa y sector";
-      case 2:
-        return "A continuación: datos de la persona de contacto";
-      case 3:
-        return "A continuación: cargar el logo de tu empresa (opcional)";
-      case 4:
-        return "A continuación: configurá tu contraseña";
-      case 5:
-        return "Tu inscripción será enviada para revisión";
-      default:
-        return "";
+  const handleSubmit = async () => {
+    try {
+      setIsLoading(true);
+
+      const companyData: EmpresaWrite = {
+        razon_social: formData.razon_social,
+        cuit: formData.cuit,
+        email: formData.email,
+        password: formData.password,
+        password2: formData.password_confirm,
+        telefono_contacto: formData.telefono_contacto,
+        direccion: formData.direccion,
+        localidad: formData.localidad,
+        sector: formData.sector,
+        ...(logoBlob && {
+          logo: new File([logoBlob], "logo.png", { type: "image/png" }),
+        }),
+      };
+
+      await createCompany(companyData);
+      toast.success("¡Empresa registrada exitosamente!");
+      navigate("/");
+    } catch (error: unknown) {
+      let errorMessage = "Error al registrar la empresa";
+      if (error && typeof error === "object" && "response" in error) {
+        const axiosError = error as Record<string, unknown>;
+        const response = axiosError.response as Record<string, unknown>;
+        errorMessage =
+          (response?.data as Record<string, string>)?.detail ||
+          (response?.data as Record<string, string>)?.message ||
+          errorMessage;
+      }
+      toast.error(errorMessage);
+      console.error(error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -162,17 +166,26 @@ export default function RegistrationForm() {
     }
   };
 
-  const navigate = useNavigate();
+  if (loadingData) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Navbar />
+        <div className="flex items-center justify-center min-h-[calc(100vh-64px)]">
+          <div className="w-8 h-8 border-4 border-primary/30 border-t-primary rounded-full animate-spin" />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
-      <div className=" pt-12">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 mt-12">
+      <div className="pt-12">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 mt-12">
           <Button
             variant="ghost"
             onClick={() => navigate(-1)}
-            className="hover:bg-gray-100  hover:text-primary text-foreground"
+            className="hover:bg-gray-100 hover:text-primary text-foreground"
           >
             <ArrowLeft className="mr-2 h-4 w-4" />
             Volver
@@ -180,127 +193,91 @@ export default function RegistrationForm() {
         </div>
       </div>
 
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          <aside className="lg:col-span-1 space-y-6">
-            <div>
-              <div className="flex items-center gap-2 mb-3">
-                <Sparkles className="h-5 w-5 text-primary" />
-                <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                  Ronda de Negocios 2025
-                </span>
-              </div>
-              <h1 className="text-3xl font-bold mb-2">Inscripción</h1>
-              <p className="text-sm text-muted-foreground">
-                Completá los pasos para registrar tu empresa
-              </p>
-            </div>
-
-            {/* Stepper desktop */}
-            <div className="hidden lg:block">
-              <Card className="border-secondary/20">
-                <CardContent className="p-4">
-                  <div className="space-y-3">
-                    {STEPS.map((step) => {
-                      const Icon = step.icon;
-                      const isCompleted = step.id < currentStep;
-                      const isCurrent = step.id === currentStep;
-                      return (
-                        <div
-                          key={step.id}
-                          className={`flex items-center gap-3 p-2 rounded-lg transition-colors ${
-                            isCurrent ? "bg-primary/10" : ""
-                          }`}
-                        >
-                          <div
-                            className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center ${
-                              isCompleted
-                                ? "bg-secondary text-secondary-foreground"
-                                : isCurrent
-                                ? "bg-primary text-primary-foreground"
-                                : "bg-muted text-muted-foreground"
-                            }`}
-                          >
-                            {isCompleted ? (
-                              <CheckCircle2 className="h-4 w-4" />
-                            ) : (
-                              <Icon className="h-4 w-4" />
-                            )}
-                          </div>
-                          <span
-                            className={`text-sm font-medium ${
-                              isCurrent
-                                ? "text-foreground"
-                                : "text-muted-foreground"
-                            }`}
-                          >
-                            {step.title}
-                          </span>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-
-            {/* Stepper mobile */}
-            {/* Stepper mobile estilo Origin UI */}
-            <div className="lg:hidden flex items-center justify-between gap-2 px-2">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+          {/* Sidebar with Steps */}
+          <aside className="lg:col-span-1">
+            <div className="space-y-4">
               {STEPS.map((step, index) => {
-                const isCompleted = step.id < currentStep;
-                const isCurrent = step.id === currentStep;
+                const isCompleted = index + 1 < currentStep;
+                const isCurrent = index + 1 === currentStep;
+                const StepIcon = step.icon;
+
                 return (
-                  <React.Fragment key={step.id}>
-                    <div className="flex flex-col items-center flex-1">
+                  <div key={step.id}>
+                    <div
+                      className={`flex items-start gap-4 p-4 rounded-lg transition-all ${
+                        isCurrent
+                          ? "bg-primary text-primary-foreground shadow-lg"
+                          : isCompleted
+                            ? "bg-primary/20 text-primary"
+                            : "bg-muted text-muted-foreground"
+                      }`}
+                    >
                       <div
-                        className={`w-7 h-7 flex items-center justify-center rounded-full border-2 font-semibold text-sm transition-colors
-                        ${
-                          isCompleted
-                            ? "bg-secondary border-secondary text-secondary-foreground"
-                            : ""
-                        }
-                        ${
+                        className={`flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center font-semibold ${
                           isCurrent
-                            ? "bg-primary border-primary text-primary-foreground"
-                            : ""
-                        }
-                        ${
-                          !isCompleted && !isCurrent
-                            ? "bg-white border-muted text-muted-foreground"
-                            : ""
-                        }
-                      `}
+                            ? "bg-primary-foreground text-primary"
+                            : isCompleted
+                              ? "bg-primary text-primary-foreground"
+                              : "bg-muted-foreground text-muted"
+                        }`}
                       >
-                        {step.id}
+                        {isCompleted ? (
+                          <Check className="w-5 h-5" />
+                        ) : (
+                          <StepIcon className="w-5 h-5" />
+                        )}
+                      </div>
+                      <div className="flex-1">
+                        <p className="text-xs font-semibold opacity-75">
+                          Paso {step.id}
+                        </p>
+                        <p className="font-semibold">{step.title}</p>
                       </div>
                     </div>
                     {index < STEPS.length - 1 && (
-                      <div className="flex-1 h-0.5 bg-muted/40 mt-[14px]"></div>
+                      <div
+                        className={`h-6 w-0.5 mx-[calc(1.25rem+1.25rem)] my-2 ${
+                          isCompleted ? "bg-primary" : "bg-muted"
+                        }`}
+                      ></div>
                     )}
-                  </React.Fragment>
+                  </div>
                 );
               })}
             </div>
+
+            {/* Progress info */}
+            <div className="mt-8 p-4 bg-muted/50 rounded-lg">
+              <p className="text-xs text-muted-foreground">
+                Progreso: <span className="font-semibold">{currentStep}</span>{" "}
+                de <span className="font-semibold">{STEPS.length}</span>
+              </p>
+              <div className="mt-2 w-full bg-muted-foreground/20 rounded-full h-2">
+                <div
+                  className="bg-primary h-2 rounded-full transition-all duration-300"
+                  style={{
+                    width: `${(currentStep / STEPS.length) * 100}%`,
+                  }}
+                ></div>
+              </div>
+            </div>
           </aside>
 
-          <div className="lg:col-span-2">
+          {/* Main content */}
+          <div className="lg:col-span-3">
             <Card className="border-secondary/20">
               <CardContent className="p-8">
                 {currentStep === 1 && (
                   <div className="space-y-6">
-                    <div className="flex items-center gap-3 mb-6">
-                      <div className="bg-primary/10 rounded-lg p-2">
-                        <Building2 className="h-6 w-6 text-primary" />
-                      </div>
-                      <div>
-                        <h2 className="text-2xl font-bold">
-                          Datos de la empresa
-                        </h2>
-                        <p className="text-sm text-muted-foreground">
-                          Información básica de tu organización
-                        </p>
-                      </div>
+                    <div>
+                      <h2 className="text-2xl font-bold">
+                        Datos de tu empresa
+                      </h2>
+                      <p className="text-sm text-muted-foreground">
+                        Información básica y ubicación
+                      </p>
                     </div>
 
                     <div className="space-y-4">
@@ -334,69 +311,88 @@ export default function RegistrationForm() {
                       </div>
 
                       <div className="space-y-2">
-                        <Label htmlFor="email_empresa">Email empresa *</Label>
+                        <Label htmlFor="direccion">Dirección *</Label>
                         <Input
-                          id="email_empresa"
-                          type="email"
-                          value={formData.email_empresa}
+                          id="direccion"
+                          value={formData.direccion}
                           onChange={(e) =>
                             setFormData({
                               ...formData,
-                              email_empresa: e.target.value,
+                              direccion: e.target.value,
                             })
                           }
-                          placeholder="contacto@empresa.com"
+                          placeholder="Ej: Calle Principal 123"
                           className="h-11"
                         />
                       </div>
 
-                      {/* Provincia y Localidad en línea */}
-                      <div className="flex flex-col sm:flex-row gap-4">
-                        <div className="flex-1 space-y-2">
-                          <Label htmlFor="province">Provincia *</Label>
-                          {/* <Select
-                            value={formData.province}
-                            onValueChange={(value) =>
+                      <div className="grid sm:grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="provincia">Provincia *</Label>
+                          <Select
+                            value={
+                              formData.provincia_id === 0
+                                ? ""
+                                : String(formData.provincia_id)
+                            }
+                            onValueChange={(v) =>
                               setFormData({
                                 ...formData,
-                                province: value,
-                                localidad: "",
+                                provincia_id: parseInt(v),
+                                localidad: 0,
                               })
                             }
                           >
-                            <SelectTrigger className="h-11 w-full">
+                            <SelectTrigger className="h-11">
                               <SelectValue placeholder="Seleccioná una provincia" />
                             </SelectTrigger>
                             <SelectContent>
-                              {PROVINCES.map((prov) => (
-                                <SelectItem key={prov.id} value={prov.id}>
-                                  {prov.name}
-                                </SelectItem>
-                              ))}
+                              {Array.from(
+                                new Set(
+                                  localidadesList.map((l) => l.provincia.id),
+                                ),
+                              ).map((provinciaId) => {
+                                const provincia = localidadesList.find(
+                                  (l) => l.provincia.id === provinciaId,
+                                )?.provincia;
+                                return (
+                                  <SelectItem
+                                    key={provinciaId}
+                                    value={String(provinciaId)}
+                                  >
+                                    {provincia?.nombre || ""}
+                                  </SelectItem>
+                                );
+                              })}
                             </SelectContent>
-                          </Select> */}
+                          </Select>
                         </div>
 
-                        <div className="flex-1 space-y-2">
+                        <div className="space-y-2">
                           <Label htmlFor="localidad">Localidad *</Label>
                           <Select
-                            value={formData.localidad}
-                            onValueChange={(value) =>
-                              setFormData({ ...formData, localidad: value })
+                            value={
+                              formData.localidad === 0
+                                ? ""
+                                : String(formData.localidad)
                             }
-                            // disabled={!formData.province}
+                            onValueChange={(v) =>
+                              setFormData({
+                                ...formData,
+                                localidad: parseInt(v),
+                              })
+                            }
+                            disabled={formData.provincia_id === 0}
                           >
-                            <SelectTrigger className="h-11 w-full">
+                            <SelectTrigger className="h-11 disabled:opacity-50">
                               <SelectValue placeholder="Seleccioná una localidad" />
                             </SelectTrigger>
                             <SelectContent>
-                              {(LOCALITIES[formData.province] || []).map(
-                                (loc) => (
-                                  <SelectItem key={loc} value={loc}>
-                                    {loc}
-                                  </SelectItem>
-                                )
-                              )}
+                              {localidadesList.map((loc) => (
+                                <SelectItem key={loc.id} value={String(loc.id)}>
+                                  {loc.nombre}
+                                </SelectItem>
+                              ))}
                             </SelectContent>
                           </Select>
                         </div>
@@ -407,50 +403,22 @@ export default function RegistrationForm() {
 
                 {currentStep === 2 && (
                   <div className="space-y-6">
-                    <div className="flex items-center gap-3 mb-6">
-                      <div className="bg-primary/10 rounded-lg p-2">
-                        <FileText className="h-6 w-6 text-primary" />
-                      </div>
-                      <div>
-                        <h2 className="text-2xl font-bold">
-                          Descripción y sector
-                        </h2>
-                        <p className="text-sm text-muted-foreground">
-                          Contanos sobre tu empresa
-                        </p>
-                      </div>
+                    <div>
+                      <h2 className="text-2xl font-bold">Sector y marca</h2>
+                      <p className="text-sm text-muted-foreground">
+                        ¿A qué se dedica tu empresa?
+                      </p>
                     </div>
 
-                    <div className="space-y-4">
+                    <div className="space-y-6">
                       <div className="space-y-2">
-                        <Label htmlFor="description">
-                          Descripción de la empresa *
-                        </Label>
-                        <Textarea
-                          id="description"
-                          value={formData.descripcion}
-                          onChange={(e) =>
-                            setFormData({
-                              ...formData,
-                              descripcion: e.target.value,
-                            })
-                          }
-                          placeholder="Contanos brevemente sobre tu empresa, sus servicios y qué te gustaría lograr en la ronda de negocios"
-                          rows={5}
-                          className="resize-none"
-                        />
-                      </div>
-
-                      <div className="space-y-2">
-                        <Label htmlFor="sector">Sector de la empresa *</Label>
+                        <Label htmlFor="sector">Seleccioná el sector *</Label>
                         <Select
                           value={
-                            formData.sector
-                              ? formData.sector.toString()
-                              : undefined
+                            formData.sector === 0 ? "" : String(formData.sector)
                           }
-                          onValueChange={(value) =>
-                            setFormData({ ...formData, sector: Number(value) })
+                          onValueChange={(v) =>
+                            setFormData({ ...formData, sector: parseInt(v) })
                           }
                         >
                           <SelectTrigger className="h-11">
@@ -460,7 +428,7 @@ export default function RegistrationForm() {
                             {sectorList.map((sector) => (
                               <SelectItem
                                 key={sector.id}
-                                value={sector.id.toString()}
+                                value={String(sector.id)}
                               >
                                 {sector.nombre}
                               </SelectItem>
@@ -468,55 +436,44 @@ export default function RegistrationForm() {
                           </SelectContent>
                         </Select>
                       </div>
+
+                      <div className="space-y-3 pt-4 border-t">
+                        <ImageCropper
+                          onCropComplete={handleImageUpload}
+                          maxFileSize={5}
+                          acceptedFormats={[
+                            "image/png",
+                            "image/jpeg",
+                            "image/webp",
+                          ]}
+                        />
+                      </div>
                     </div>
                   </div>
                 )}
 
                 {currentStep === 3 && (
                   <div className="space-y-6">
-                    <div className="flex items-center gap-3 mb-6">
-                      <div className="bg-primary/10 rounded-lg p-2">
-                        <User className="h-6 w-6 text-primary" />
-                      </div>
-                      <div>
-                        <h2 className="text-2xl font-bold">
-                          Persona de contacto
-                        </h2>
-                        <p className="text-sm text-muted-foreground">
-                          ¿Con quién nos comunicamos?
-                        </p>
-                      </div>
+                    <div>
+                      <h2 className="text-2xl font-bold">
+                        Persona de contacto
+                      </h2>
+                      <p className="text-sm text-muted-foreground">
+                        Información del representante principal
+                      </p>
                     </div>
 
-                    <div className="space-y-4">
+                    <div className="grid sm:grid-cols-2 gap-4">
                       <div className="space-y-2">
-                        <Label htmlFor="nombre_contacto">Nombre *</Label>
+                        <Label htmlFor="email">Email *</Label>
                         <Input
-                          id="nombre_contacto"
-                          value={formData.nombre_contacto}
+                          id="email"
+                          type="email"
+                          value={formData.email}
                           onChange={(e) =>
-                            setFormData({
-                              ...formData,
-                              nombre_contacto: e.target.value,
-                            })
+                            setFormData({ ...formData, email: e.target.value })
                           }
-                          placeholder="Ej: María"
-                          className="h-11"
-                        />
-                      </div>
-
-                      <div className="space-y-2">
-                        <Label htmlFor="apellido_contacto">Apellido *</Label>
-                        <Input
-                          id="apellido_contacto"
-                          value={formData.apellido_contacto}
-                          onChange={(e) =>
-                            setFormData({
-                              ...formData,
-                              apellido_contacto: e.target.value,
-                            })
-                          }
-                          placeholder="Ej: González"
+                          placeholder="contacto@empresa.com"
                           className="h-11"
                         />
                       </div>
@@ -537,128 +494,80 @@ export default function RegistrationForm() {
                           className="h-11"
                         />
                       </div>
-
-                      <div className="space-y-2">
-                        <Label htmlFor="email">Email *</Label>
-                        <Input
-                          id="email"
-                          type="email"
-                          value={formData.email}
-                          onChange={(e) =>
-                            setFormData({ ...formData, email: e.target.value })
-                          }
-                          placeholder="contacto@empresa.com"
-                          className="h-11"
-                        />
-                      </div>
                     </div>
                   </div>
                 )}
 
                 {currentStep === 4 && (
                   <div className="space-y-6">
-                    <div className="flex items-center gap-3 mb-6">
-                      <div className="bg-primary/10 rounded-lg p-2">
-                        <ImageIcon className="h-6 w-6 text-primary" />
-                      </div>
-                      <div>
-                        <h2 className="text-2xl font-bold">
-                          Logo de la empresa
-                        </h2>
-                        <p className="text-sm text-muted-foreground">
-                          Opcional - Ayuda a identificar tu marca
-                        </p>
-                      </div>
+                    <div>
+                      <h2 className="text-2xl font-bold">Crea tu contraseña</h2>
+                      <p className="text-sm text-muted-foreground">
+                        Esta será tu contraseña de acceso a la plataforma
+                      </p>
                     </div>
 
-                    <div className="space-y-4">
-                      <Input
-                        id="logo"
-                        type="file"
-                        accept="image/*"
-                        onChange={handleImageUpload}
-                        className="hidden"
-                      />
-                      <Button
-                        type="button"
-                        variant="outline"
-                        onClick={() => document.getElementById("logo")?.click()}
-                        className="w-full h-32 border-2 border-dashed hover:border-primary hover:bg-primary/5"
-                      >
-                        <div className="flex flex-col items-center gap-2">
-                          <ImageIcon className="h-8 w-8 text-muted-foreground" />
-                          <span className="text-sm font-medium">
-                            {formData.logo ? "Cambiar logo" : "Subir logo"}
-                          </span>
-                          <span className="text-xs text-muted-foreground">
-                            PNG, JPG hasta 5MB
-                          </span>
+                    <div className="space-y-5">
+                      <div className="grid sm:grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="password">Contraseña *</Label>
+                          <div className="relative">
+                            <Input
+                              id="password"
+                              type={showPassword ? "text" : "password"}
+                              value={formData.password}
+                              onChange={(e) =>
+                                setFormData({
+                                  ...formData,
+                                  password: e.target.value,
+                                })
+                              }
+                              placeholder="••••••••"
+                              className="h-11 pr-10"
+                            />
+                            <button
+                              type="button"
+                              onClick={() => setShowPassword(!showPassword)}
+                              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-600 hover:text-primary transition-colors"
+                            >
+                              {showPassword ? (
+                                <EyeOff className="h-4 w-4" />
+                              ) : (
+                                <Eye className="h-4 w-4" />
+                              )}
+                            </button>
+                          </div>
                         </div>
-                      </Button>
 
-                      {formData.logo && (
-                        <div className="flex justify-center p-4 bg-muted/30 rounded-lg">
-                          <img
-                            src={previewLogo!}
-                            alt="Logo preview"
-                            className="max-h-32 object-contain"
+                        <div className="space-y-2">
+                          <Label htmlFor="password_confirm">
+                            Repetir contraseña *
+                          </Label>
+                          <Input
+                            id="password_confirm"
+                            type="password"
+                            value={formData.password_confirm}
+                            onChange={(e) =>
+                              setFormData({
+                                ...formData,
+                                password_confirm: e.target.value,
+                              })
+                            }
+                            placeholder="••••••••"
+                            className="h-11"
                           />
                         </div>
-                      )}
-                    </div>
-                  </div>
-                )}
-
-                {currentStep === 5 && (
-                  <div className="space-y-6">
-                    <div className="flex items-center gap-3 mb-6">
-                      <div className="bg-primary/10 rounded-lg p-2">
-                        <Mail className="h-6 w-6 text-primary" />
-                      </div>
-                      <div>
-                        <h2 className="text-2xl font-bold">Credenciales</h2>
-                        <p className="text-sm text-muted-foreground">
-                          Configurá la contraseña de tu cuenta
-                        </p>
-                      </div>
-                    </div>
-
-                    <div className="space-y-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="password">Contraseña *</Label>
-                        <Input
-                          id="password"
-                          type="password"
-                          value={formData.password}
-                          onChange={(e) =>
-                            setFormData({
-                              ...formData,
-                              password: e.target.value,
-                            })
-                          }
-                          placeholder="********"
-                          className="h-11"
-                        />
                       </div>
 
-                      <div className="space-y-2">
-                        <Label htmlFor="password2">
-                          Confirmar contraseña *
-                        </Label>
-                        <Input
-                          id="password2"
-                          type="password"
-                          value={formData.password2}
-                          onChange={(e) =>
-                            setFormData({
-                              ...formData,
-                              password2: e.target.value,
-                            })
-                          }
-                          placeholder="********"
-                          className="h-11"
-                        />
-                      </div>
+                      {formData.password &&
+                        formData.password_confirm &&
+                        formData.password !== formData.password_confirm && (
+                          <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
+                            <p className="text-xs text-red-600 font-medium">
+                              ⚠️ Las contraseñas no coinciden
+                            </p>
+                          </div>
+                        )}
                     </div>
                   </div>
                 )}
@@ -678,33 +587,31 @@ export default function RegistrationForm() {
                     <Button
                       type="button"
                       onClick={nextStep}
-                      disabled={!isStepComplete()}
+                      disabled={!isStepComplete() || isLoading}
                       className={`${
                         currentStep === 1 ? "w-full" : "flex-1"
-                      } bg-primary hover:bg-primary-strong h-11 font-semibold`}
+                      } bg-primary hover:bg-primary-strong h-11 font-semibold disabled:opacity-50 disabled:cursor-not-allowed`}
                     >
-                      {currentStep === STEPS.length
-                        ? "Registrar empresa"
-                        : "Continuar"}
-                      {currentStep < STEPS.length && (
-                        <ChevronRight className="ml-2 h-4 w-4" />
+                      {isLoading ? (
+                        <span className="flex items-center gap-2">
+                          <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                          Registrando...
+                        </span>
+                      ) : (
+                        <span className="flex items-center gap-2">
+                          {currentStep === STEPS.length
+                            ? "Registrar empresa"
+                            : "Continuar"}
+                          {currentStep < STEPS.length && (
+                            <ChevronRight className="ml-2 h-4 w-4" />
+                          )}
+                        </span>
                       )}
                     </Button>
                   </div>
-                  <p className="text-center text-xs text-muted-foreground">
-                    {getNextStepInfo()}
-                  </p>
                 </div>
               </CardContent>
             </Card>
-            {showPrev && (
-              <pre className="mt-6 p-4 bg-gray-100 rounded max-h-96 overflow-auto">
-                {JSON.stringify(formData, null, 2)}
-              </pre>
-            )}
-            <pre className="mt-6 p-4 bg-gray-100 rounded max-h-96 overflow-auto">
-              {JSON.stringify(formData, null, 2)}
-            </pre>
           </div>
         </div>
       </div>
