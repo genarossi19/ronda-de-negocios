@@ -38,7 +38,7 @@ export default function ImageCropper({
   const previewImageRef = useRef<HTMLImageElement>(null);
 
   const [imageSrc, setImageSrc] = useState<string | null>(null);
-  const [croppedPreview, setCroppedPreview] = useState<string | null>(null);
+  const [croppedBlob, setCroppedBlob] = useState<Blob | null>(null);
   const [cropState, setCropState] = useState<CropState>({
     x: 0,
     y: 0,
@@ -50,22 +50,32 @@ export default function ImageCropper({
   const [error, setError] = useState<string | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [mode, setMode] = useState<EditorMode>("upload");
+  const blobTimeoutRef = useRef<number | null>(null);
 
   const CROP_SIZE = 280;
   const MIN_ZOOM = 0.5;
   const MAX_ZOOM = 3;
   const ZOOM_STEP = 0.1;
 
-  // === EFFECT: Actualizar imagen del preview cuando croppedPreview cambia ===
+  // === EFFECT: Actualizar imagen del preview cuando croppedBlob cambia ===
   useEffect(() => {
-    if (previewImageRef.current && croppedPreview) {
+    if (previewImageRef.current && croppedBlob) {
+      console.log("[ImageCropper] useEffect: Creating blob URL from blob");
+
+      // Crear URL del blob cuando sea necesario
+      const blobUrl = URL.createObjectURL(croppedBlob);
+      previewImageRef.current.src = blobUrl;
+
       console.log(
-        "[ImageCropper] useEffect: Actualizando src de preview imagen",
+        "[ImageCropper] Preview URL actualizada:",
+        blobUrl.substring(0, 50) + "...",
       );
-      previewImageRef.current.src = croppedPreview;
-      console.log("[ImageCropper] useEffect: src actualizado");
+
+      return () => {
+        URL.revokeObjectURL(blobUrl);
+      };
     }
-  }, [croppedPreview]);
+  }, [croppedBlob]);
 
   // === HANDLERS ===
 
@@ -148,6 +158,12 @@ export default function ImageCropper({
     setError(null);
     console.log("[ImageCropper] handleCrop iniciado");
 
+    // Limpiar timeout anterior si existe
+    if (blobTimeoutRef.current !== null) {
+      clearTimeout(blobTimeoutRef.current);
+      blobTimeoutRef.current = null;
+    }
+
     try {
       const canvas = canvasRef.current;
       const ctx = canvas.getContext("2d");
@@ -174,7 +190,7 @@ export default function ImageCropper({
         setIsProcessing(false);
       };
 
-      image.onload = () => {
+      image.onload = async () => {
         console.log(
           "[ImageCropper] Imagen cargada:",
           image.width,
@@ -239,57 +255,51 @@ export default function ImageCropper({
           // Guardar estado de edición para re-editar después
           setSavedEditState({ ...cropState });
 
-          // Convertir canvas a blob DIRECTAMENTE - NO usar toDataURL
-          canvas.toBlob(
-            (blob) => {
-              console.log(
-                "[ImageCropper] toBlob callback, blob size:",
-                blob?.size,
+          // Convertir canvas a blob usando PROMESA
+          try {
+            const blob = await new Promise<Blob | null>((resolve) => {
+              // Configurar timeout SOLO si tarda demasiado (15s)
+              const timeoutId = setTimeout(() => {
+                console.error(
+                  "[ImageCropper] CRITICAL: toBlob took longer than 15 seconds",
+                );
+                resolve(null); // Rechazar y continuar
+              }, 15000);
+
+              canvas.toBlob(
+                (blob) => {
+                  clearTimeout(timeoutId);
+                  resolve(blob);
+                },
+                "image/png",
+                0.95,
               );
-              if (blob) {
-                try {
-                  // Crear URL del blob (más eficiente que data URL)
-                  const blobUrl = URL.createObjectURL(blob);
-                  console.log(
-                    "[ImageCropper] Blob URL creado:",
-                    blobUrl.substring(0, 50) + "...",
-                  );
+            });
 
-                  // Guardar el blob URL como preview
-                  setCroppedPreview(blobUrl);
-                  console.log(
-                    "[ImageCropper] CroppedPreview estado actualizado con blob URL",
-                  );
+            if (!blob) {
+              throw new Error("Failed to generate blob from canvas");
+            }
 
-                  // Callback para upload
-                  onCropComplete?.(blob);
-                  console.log("[ImageCropper] onCropComplete ejecutado");
-                } catch (err) {
-                  console.error(
-                    "[ImageCropper] Error en toBlob callback:",
-                    err,
-                  );
-                }
-              } else {
-                console.warn("[ImageCropper] toBlob retornó null");
-              }
-              // SIEMPRE ir a preview una vez que el blob se procesó
-              setMode("preview");
-              console.log("[ImageCropper] Mode cambiado a preview");
-              setIsProcessing(false);
-            },
-            "image/png",
-            0.95,
-          );
+            console.log("[ImageCropper] Blob generado:", blob.size, "bytes");
 
-          // Fallback por timeout: si toBlob tarda demasiado, proceder de todas formas
-          setTimeout(() => {
-            console.warn(
-              "[ImageCropper] toBlob timeout fallback - blob generation taking too long",
-            );
+            // Guardar blob en estado
+            setCroppedBlob(blob);
+
+            // Callback para upload al backend
+            onCropComplete?.(blob);
+            console.log("[ImageCropper] onCropComplete ejecutado");
+
+            // SOLO cambiar a preview después de que el blob esté listo
             setMode("preview");
+            console.log("[ImageCropper] Mode cambiado a preview");
+          } catch (blobErr) {
+            console.error("[ImageCropper] Error generando blob:", blobErr);
+            setError("Error al procesar la imagen");
             setIsProcessing(false);
-          }, 7000);
+            return;
+          }
+
+          setIsProcessing(false);
         } catch (err) {
           console.error("[ImageCropper] Error en image.onload:", err);
           setError("Error al procesar el recorte");
@@ -300,7 +310,7 @@ export default function ImageCropper({
       image.src = imageSrc;
 
       // Timeout para carga de imagen
-      setTimeout(() => {
+      blobTimeoutRef.current = window.setTimeout(() => {
         if (image.src === imageSrc && !image.complete) {
           console.error("[ImageCropper] Timeout al cargar imagen");
           setError("Timeout al cargar imagen");
@@ -326,11 +336,15 @@ export default function ImageCropper({
 
   const handleChangeImage = () => {
     setImageSrc(null);
-    setCroppedPreview(null);
+    setCroppedBlob(null);
     setCropState({ x: 0, y: 0, zoom: 1 });
     setSavedEditState(null);
     setError(null);
     setMode("upload");
+    if (blobTimeoutRef.current !== null) {
+      clearTimeout(blobTimeoutRef.current);
+      blobTimeoutRef.current = null;
+    }
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
     }
@@ -539,7 +553,7 @@ export default function ImageCropper({
   }
 
   // === RENDER: PREVIEW MODE (Post-guardado) ===
-  if (mode === "preview" && croppedPreview) {
+  if (mode === "preview" && croppedBlob) {
     console.log("[ImageCropper] Renderizando PREVIEW MODE");
 
     return (

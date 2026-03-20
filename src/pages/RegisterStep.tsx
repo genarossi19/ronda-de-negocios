@@ -26,7 +26,7 @@ import type { GenericType } from "../types/GenericType";
 import type { LocalidadResponse } from "../types/Localidad";
 import type { EmpresaWrite } from "../types/Empresa";
 import Navbar from "../components/Navbar";
-import ImageCropper from "../components/ImageCropper";
+import ImageCropperNew from "../components/ImageCropperNew";
 import { getSectors } from "../api/SectorService";
 import { getLocalidades } from "../api/LocalidadesService";
 import { createCompany } from "../api/EmpresaService";
@@ -438,8 +438,9 @@ export default function RegistrationForm() {
                       </div>
 
                       <div className="space-y-3 pt-4 border-t">
-                        <ImageCropper
-                          onCropComplete={handleImageUpload}
+                        <ImageCropperNew
+                          onImageSelect={handleImageUpload}
+                          initialBlob={logoBlob}
                           maxFileSize={5}
                           acceptedFormats={[
                             "image/png",
