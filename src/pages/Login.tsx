@@ -23,9 +23,11 @@ import { useAuth } from "../hooks/useAuth";
 import { Link, useNavigate } from "react-router";
 import { motion as m } from "motion/react";
 import { toast } from "sonner";
+import { useTheme } from "../context/ThemeContext";
 
 export default function Login() {
   const { login } = useAuth();
+  const { resolvedTheme } = useTheme();
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
     email: "",
@@ -37,6 +39,7 @@ export default function Login() {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [focusedField, setFocusedField] = useState<string | null>(null);
+  const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
 
   useEffect(() => {
     // Mostrar notificación si la sesión fue expirada (desde localStorage)
@@ -53,6 +56,16 @@ export default function Login() {
       // Limpiar la bandera después de mostrar el toast
       localStorage.removeItem("sessionExpired");
     }
+  }, []);
+
+  // Cursor trail effect
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      setMousePos({ x: e.clientX, y: e.clientY });
+    };
+
+    window.addEventListener("mousemove", handleMouseMove);
+    return () => window.removeEventListener("mousemove", handleMouseMove);
   }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -107,6 +120,21 @@ export default function Login() {
 
   return (
     <div className="min-h-screen bg-white dark:bg-[#0a1a15] relative overflow-hidden transition-colors duration-300">
+      {/* Cursor Trail Effect */}
+      <div
+        className={`fixed w-64 h-64 rounded-full blur-3xl pointer-events-none z-0 transition-colors duration-300 ${
+          resolvedTheme === "dark"
+            ? "bg-[#68A243]/20 shadow-2xl shadow-[#68A243]/20"
+            : "bg-[#68A243]/15 shadow-2xl shadow-[#68A243]/15"
+        }`}
+        style={{
+          left: `${mousePos.x}px`,
+          top: `${mousePos.y}px`,
+          transform: "translate(-50%, -50%)",
+          transition: "left 0.1s ease-out, top 0.1s ease-out",
+        }}
+      />
+
       {/* Animated gradient background */}
       <div className="absolute inset-0">
         <m.div
