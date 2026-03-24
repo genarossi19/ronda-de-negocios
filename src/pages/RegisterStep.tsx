@@ -50,6 +50,7 @@ export default function RegistrationForm() {
   const [isLoading, setIsLoading] = useState(false);
   const [loadingData, setLoadingData] = useState(true);
   const [logoBlob, setLogoBlob] = useState<Blob | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string[]>>({});
   const navigate = useNavigate();
 
   const [formData, setFormData] = useState({
@@ -88,6 +89,59 @@ export default function RegistrationForm() {
   const handleImageUpload = (croppedBlob: Blob) => {
     setLogoBlob(croppedBlob);
     toast.success("Logo guardado correctamente");
+  };
+
+  const getStepForField = (field: string): number => {
+    const fieldToStep: Record<string, number> = {
+      razon_social: 1,
+      cuit: 1,
+      direccion: 1,
+      provincia_id: 1,
+      localidad: 1,
+      sector: 2,
+      descripcion: 2,
+      logo: 2,
+      email: 3,
+      telefono_contacto: 3,
+      password: 4,
+      password2: 4,
+    };
+    return fieldToStep[field] || 1;
+  };
+
+  const translateErrorMessage = (message: string): string => {
+    const translations: Record<string, string> = {
+      "empresa with this cuit already exists.":
+        "Ya existe una empresa registrada con ese CUIT",
+      "empresa with this email already exists.":
+        "Ya existe una empresa registrada con ese email",
+      "user with this email already exists.":
+        "Ya existe un usuario registrado con ese email",
+    };
+
+    return translations[message] || message;
+  };
+
+  const getErrorMessage = (errors: Record<string, string[]>): string => {
+    const errorEntries = Object.entries(errors);
+    return errorEntries
+      .map(([field, messages]) => {
+        const translatedMessages = messages.map(translateErrorMessage);
+        return `${field}: ${translatedMessages.join(", ")}`;
+      })
+      .join(" | ");
+  };
+
+  const hasFieldError = (field: string): boolean => {
+    return !!fieldErrors[field] && fieldErrors[field].length > 0;
+  };
+
+  const passwordsMismatch = (): boolean => {
+    return (
+      formData.password &&
+      formData.password_confirm &&
+      formData.password !== formData.password_confirm
+    );
   };
 
   const isStepComplete = () => {
@@ -139,17 +193,50 @@ export default function RegistrationForm() {
 
       await createCompany(companyData);
       toast.success("¡Empresa registrada exitosamente!");
+      setFieldErrors({});
       navigate("/");
     } catch (error: unknown) {
       let errorMessage = "Error al registrar la empresa";
+      const newFieldErrors: Record<string, string[]> = {};
+
       if (error && typeof error === "object" && "response" in error) {
         const axiosError = error as Record<string, unknown>;
         const response = axiosError.response as Record<string, unknown>;
-        errorMessage =
-          (response?.data as Record<string, string>)?.detail ||
-          (response?.data as Record<string, string>)?.message ||
-          errorMessage;
+        const responseData = response?.data as Record<string, unknown>;
+
+        // Intentar parsear errores de validación
+        if (typeof responseData === "object" && responseData !== null) {
+          for (const [key, value] of Object.entries(responseData)) {
+            if (Array.isArray(value)) {
+              newFieldErrors[key] = (value as string[]).map(
+                translateErrorMessage,
+              );
+            } else if (typeof value === "string") {
+              newFieldErrors[key] = [translateErrorMessage(value)];
+            }
+          }
+        }
+
+        // Si hay errores de campo, usarlos; si no, usar mensaje general
+        if (Object.keys(newFieldErrors).length > 0) {
+          errorMessage = getErrorMessage(newFieldErrors);
+          setFieldErrors(newFieldErrors);
+
+          // Navegar al primer paso que tenga error
+          const firstErrorField = Object.keys(newFieldErrors)[0];
+          const stepWithError = getStepForField(firstErrorField);
+          setCurrentStep(stepWithError);
+        } else {
+          errorMessage =
+            (responseData?.detail as string) ||
+            (responseData?.message as string) ||
+            errorMessage;
+          setFieldErrors({});
+        }
+      } else {
+        setFieldErrors({});
       }
+
       toast.error(errorMessage);
       console.error(error);
     } finally {
@@ -291,15 +378,28 @@ export default function RegistrationForm() {
                         <Input
                           id="razon_social"
                           value={formData.razon_social}
-                          onChange={(e) =>
+                          onChange={(e) => {
                             setFormData({
                               ...formData,
                               razon_social: e.target.value,
-                            })
-                          }
+                            });
+                            setFieldErrors({
+                              ...fieldErrors,
+                              razon_social: [],
+                            });
+                          }}
                           placeholder="Ej: TechSolutions SA"
-                          className="h-11"
+                          className={`h-11 ${
+                            hasFieldError("razon_social")
+                              ? "border-red-500 focus-visible:ring-red-500/50"
+                              : ""
+                          }`}
                         />
+                        {hasFieldError("razon_social") && (
+                          <p className="text-sm text-red-500">
+                            {fieldErrors.razon_social.join(", ")}
+                          </p>
+                        )}
                       </div>
 
                       <div className="space-y-2">
@@ -307,12 +407,22 @@ export default function RegistrationForm() {
                         <Input
                           id="cuit"
                           value={formData.cuit}
-                          onChange={(e) =>
-                            setFormData({ ...formData, cuit: e.target.value })
-                          }
-                          placeholder="XX-XXXXXXXX-X"
-                          className="h-11"
+                          onChange={(e) => {
+                            setFormData({ ...formData, cuit: e.target.value });
+                            setFieldErrors({ ...fieldErrors, cuit: [] });
+                          }}
+                          placeholder="30-12345678-9"
+                          className={`h-11 ${
+                            hasFieldError("cuit")
+                              ? "border-red-500 focus-visible:ring-red-500/50"
+                              : ""
+                          }`}
                         />
+                        {hasFieldError("cuit") && (
+                          <p className="text-sm text-red-500">
+                            {fieldErrors.cuit.join(", ")}
+                          </p>
+                        )}
                       </div>
 
                       <div className="space-y-2">
@@ -320,18 +430,28 @@ export default function RegistrationForm() {
                         <Input
                           id="direccion"
                           value={formData.direccion}
-                          onChange={(e) =>
+                          onChange={(e) => {
                             setFormData({
                               ...formData,
                               direccion: e.target.value,
-                            })
-                          }
+                            });
+                            setFieldErrors({ ...fieldErrors, direccion: [] });
+                          }}
                           placeholder="Ej: Calle Principal 123"
-                          className="h-11"
+                          className={`h-11 ${
+                            hasFieldError("direccion")
+                              ? "border-red-500 focus-visible:ring-red-500/50"
+                              : ""
+                          }`}
                         />
+                        {hasFieldError("direccion") && (
+                          <p className="text-sm text-red-500">
+                            {fieldErrors.direccion.join(", ")}
+                          </p>
+                        )}
                       </div>
 
-                      <div className="grid sm:grid-cols-2 gap-4">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div className="space-y-2">
                           <Label htmlFor="provincia">Provincia *</Label>
                           <Select
@@ -340,15 +460,25 @@ export default function RegistrationForm() {
                                 ? ""
                                 : String(formData.provincia_id)
                             }
-                            onValueChange={(v) =>
+                            onValueChange={(v) => {
                               setFormData({
                                 ...formData,
                                 provincia_id: parseInt(v),
                                 localidad: 0,
-                              })
-                            }
+                              });
+                              setFieldErrors({
+                                ...fieldErrors,
+                                provincia_id: [],
+                              });
+                            }}
                           >
-                            <SelectTrigger className="h-11">
+                            <SelectTrigger
+                              className={`h-11 w-full ${
+                                hasFieldError("provincia_id")
+                                  ? "border-red-500"
+                                  : ""
+                              }`}
+                            >
                               <SelectValue placeholder="Seleccioná una provincia" />
                             </SelectTrigger>
                             <SelectContent>
@@ -381,15 +511,25 @@ export default function RegistrationForm() {
                                 ? ""
                                 : String(formData.localidad)
                             }
-                            onValueChange={(v) =>
+                            onValueChange={(v) => {
                               setFormData({
                                 ...formData,
                                 localidad: parseInt(v),
-                              })
-                            }
+                              });
+                              setFieldErrors({
+                                ...fieldErrors,
+                                localidad: [],
+                              });
+                            }}
                             disabled={formData.provincia_id === 0}
                           >
-                            <SelectTrigger className="h-11 disabled:opacity-50">
+                            <SelectTrigger
+                              className={`h-11 w-full disabled:opacity-50 ${
+                                hasFieldError("localidad")
+                                  ? "border-red-500"
+                                  : ""
+                              }`}
+                            >
                               <SelectValue placeholder="Seleccioná una localidad" />
                             </SelectTrigger>
                             <SelectContent>
@@ -400,8 +540,18 @@ export default function RegistrationForm() {
                               ))}
                             </SelectContent>
                           </Select>
+                          {hasFieldError("localidad") && (
+                            <p className="text-sm text-red-500">
+                              {fieldErrors.localidad.join(", ")}
+                            </p>
+                          )}
                         </div>
                       </div>
+                      {hasFieldError("provincia_id") && (
+                        <p className="text-sm text-red-500">
+                          {fieldErrors.provincia_id.join(", ")}
+                        </p>
+                      )}
                     </div>
                   </div>
                 )}
@@ -422,11 +572,16 @@ export default function RegistrationForm() {
                           value={
                             formData.sector === 0 ? "" : String(formData.sector)
                           }
-                          onValueChange={(v) =>
-                            setFormData({ ...formData, sector: parseInt(v) })
-                          }
+                          onValueChange={(v) => {
+                            setFormData({ ...formData, sector: parseInt(v) });
+                            setFieldErrors({ ...fieldErrors, sector: [] });
+                          }}
                         >
-                          <SelectTrigger className="h-11">
+                          <SelectTrigger
+                            className={`h-11 ${
+                              hasFieldError("sector") ? "border-red-500" : ""
+                            }`}
+                          >
                             <SelectValue placeholder="Seleccioná un sector" />
                           </SelectTrigger>
                           <SelectContent>
@@ -440,6 +595,11 @@ export default function RegistrationForm() {
                             ))}
                           </SelectContent>
                         </Select>
+                        {hasFieldError("sector") && (
+                          <p className="text-sm text-red-500">
+                            {fieldErrors.sector.join(", ")}
+                          </p>
+                        )}
                       </div>
 
                       <div className="space-y-2">
@@ -447,14 +607,28 @@ export default function RegistrationForm() {
                         <Textarea
                           id="descripcion"
                           value={formData.descripcion}
-                          onChange={(e) =>
+                          onChange={(e) => {
                             setFormData({
                               ...formData,
                               descripcion: e.target.value,
-                            })
-                          }
+                            });
+                            setFieldErrors({
+                              ...fieldErrors,
+                              descripcion: [],
+                            });
+                          }}
                           placeholder="Cuéntanos más sobre tu empresa..."
+                          className={`${
+                            hasFieldError("descripcion")
+                              ? "border-red-500 focus-visible:ring-red-500/50"
+                              : ""
+                          }`}
                         />
+                        {hasFieldError("descripcion") && (
+                          <p className="text-sm text-red-500">
+                            {fieldErrors.descripcion.join(", ")}
+                          </p>
+                        )}
                       </div>
 
                       <div className="space-y-3 pt-4 border-t">
@@ -491,12 +665,22 @@ export default function RegistrationForm() {
                           id="email"
                           type="email"
                           value={formData.email}
-                          onChange={(e) =>
-                            setFormData({ ...formData, email: e.target.value })
-                          }
+                          onChange={(e) => {
+                            setFormData({ ...formData, email: e.target.value });
+                            setFieldErrors({ ...fieldErrors, email: [] });
+                          }}
                           placeholder="contacto@empresa.com"
-                          className="h-11"
+                          className={`h-11 ${
+                            hasFieldError("email")
+                              ? "border-red-500 focus-visible:ring-red-500/50"
+                              : ""
+                          }`}
                         />
+                        {hasFieldError("email") && (
+                          <p className="text-sm text-red-500">
+                            {fieldErrors.email.join(", ")}
+                          </p>
+                        )}
                       </div>
 
                       <div className="space-y-2">
@@ -505,15 +689,28 @@ export default function RegistrationForm() {
                           id="telefono_contacto"
                           type="tel"
                           value={formData.telefono_contacto}
-                          onChange={(e) =>
+                          onChange={(e) => {
                             setFormData({
                               ...formData,
                               telefono_contacto: e.target.value,
-                            })
-                          }
+                            });
+                            setFieldErrors({
+                              ...fieldErrors,
+                              telefono_contacto: [],
+                            });
+                          }}
                           placeholder="+54 11 1234-5678"
-                          className="h-11"
+                          className={`h-11 ${
+                            hasFieldError("telefono_contacto")
+                              ? "border-red-500 focus-visible:ring-red-500/50"
+                              : ""
+                          }`}
                         />
+                        {hasFieldError("telefono_contacto") && (
+                          <p className="text-sm text-red-500">
+                            {fieldErrors.telefono_contacto.join(", ")}
+                          </p>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -537,14 +734,22 @@ export default function RegistrationForm() {
                               id="password"
                               type={showPassword ? "text" : "password"}
                               value={formData.password}
-                              onChange={(e) =>
+                              onChange={(e) => {
                                 setFormData({
                                   ...formData,
                                   password: e.target.value,
-                                })
-                              }
+                                });
+                                setFieldErrors({
+                                  ...fieldErrors,
+                                  password: [],
+                                });
+                              }}
                               placeholder="••••••••"
-                              className="h-11 pr-10"
+                              className={`h-11 pr-10 ${
+                                hasFieldError("password") || passwordsMismatch()
+                                  ? "border-red-500 focus-visible:ring-red-500/50"
+                                  : ""
+                              }`}
                             />
                             <button
                               type="button"
@@ -558,6 +763,11 @@ export default function RegistrationForm() {
                               )}
                             </button>
                           </div>
+                          {hasFieldError("password") && (
+                            <p className="text-sm text-red-500">
+                              {fieldErrors.password.join(", ")}
+                            </p>
+                          )}
                         </div>
 
                         <div className="space-y-2">
@@ -568,27 +778,30 @@ export default function RegistrationForm() {
                             id="password_confirm"
                             type="password"
                             value={formData.password_confirm}
-                            onChange={(e) =>
+                            onChange={(e) => {
                               setFormData({
                                 ...formData,
                                 password_confirm: e.target.value,
-                              })
-                            }
+                              });
+                              setFieldErrors({
+                                ...fieldErrors,
+                                password2: [],
+                              });
+                            }}
                             placeholder="••••••••"
-                            className="h-11"
+                            className={`h-11 ${
+                              hasFieldError("password2") || passwordsMismatch()
+                                ? "border-red-500 focus-visible:ring-red-500/50"
+                                : ""
+                            }`}
                           />
+                          {hasFieldError("password2") && (
+                            <p className="text-sm text-red-500">
+                              {fieldErrors.password2.join(", ")}
+                            </p>
+                          )}
                         </div>
                       </div>
-
-                      {formData.password &&
-                        formData.password_confirm &&
-                        formData.password !== formData.password_confirm && (
-                          <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
-                            <p className="text-xs text-red-600 font-medium">
-                              ⚠️ Las contraseñas no coinciden
-                            </p>
-                          </div>
-                        )}
                     </div>
                   </div>
                 )}

@@ -25,7 +25,7 @@
   --popover-foreground: oklch(0.145 0 0);
 
   /* Primary: Dark Green #143E29 - Main brand color for backgrounds and primary elements */
-  --primary: oklch(0.25 0.08 155);
+  --primary: #1a5032;
   --primary-foreground: oklch(0.985 0 0);
 
   /* Secondary: Light Green #68A243 - For buttons, icons, and interactive elements */
@@ -48,7 +48,7 @@
   --input: oklch(0.922 0 0);
 
   /* Ring color changed to light green for consistency */
-  --ring: oklch(0.62 0.12 135);
+  --ring: #669649;
 
   --chart-1: oklch(0.646 0.222 41.116);
   --chart-2: oklch(0.6 0.118 184.704);
