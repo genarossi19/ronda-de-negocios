@@ -13,6 +13,7 @@ import Test from "./pages/Test";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 import { useAuth } from "./hooks/useAuth";
 import Dashboard from "./pages/admin/Dashboard";
+import CompaniesManagement from "./pages/admin/CompaniesManagement";
 import Representantes from "./pages/Representantes";
 import NotFound from "./pages/NotFound";
 import { Toaster } from "./components/ui/sonner";
@@ -48,6 +49,14 @@ function AppRoutes() {
         element={
           <ProtectedRoute>
             <Dashboard />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/panel-administrador/empresas"
+        element={
+          <ProtectedRoute>
+            <CompaniesManagement />
           </ProtectedRoute>
         }
       />

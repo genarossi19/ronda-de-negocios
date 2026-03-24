@@ -18,9 +18,11 @@ import { Button } from "../../components/ui/button";
 import Navbar from "../../components/Navbar";
 import { useAuth } from "../../context/AuthContext";
 import { useEffect } from "react";
+import { useNavigate } from "react-router";
 
 export default function AdminDashboard() {
   const { isAdmin } = useAuth();
+  const navigate = useNavigate();
 
   // useEffect(() => {
   //   if (!isAdmin) {
@@ -74,7 +76,7 @@ export default function AdminDashboard() {
       title: "Aprobar Empresas",
       description: "Revisar y aprobar registros de empresas",
       icon: Users,
-      href: "#admin-companies",
+      href: "/panel-administrador/empresas",
     },
     {
       title: "Ver Reuniones",
@@ -141,7 +143,7 @@ export default function AdminDashboard() {
                 <Card
                   key={index}
                   className="border-[#68A243]/20 hover:border-[#68A243] transition-all hover:shadow-lg cursor-pointer group"
-                  onClick={() => (window.location.href = action.href)}
+                  onClick={() => navigate(action.href)}
                 >
                   <CardHeader>
                     <div className="flex items-center gap-3 mb-2">

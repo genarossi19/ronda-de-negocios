@@ -15,11 +15,13 @@ import {
   TrendingUp,
   AlertCircle,
   RefreshCw,
+  Settings,
 } from "lucide-react";
 import { getCompanies } from "../api/EmpresaService";
 import type { EmpresaResponse } from "../types/Empresa";
 
 import { useAuth } from "../context/AuthContext";
+import { useNavigate } from "react-router";
 
 function CompanyCardSkeleton() {
   return (
@@ -36,7 +38,8 @@ function CompanyCardSkeleton() {
 }
 
 export default function Companies() {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, isAdmin } = useAuth();
+  const navigate = useNavigate();
   const [companies, setCompanies] = useState<EmpresaResponse[]>([]);
 
   const [error, setError] = useState<string | null>(null);
@@ -89,21 +92,32 @@ export default function Companies() {
               </p>
             </div>
 
-            <div className="flex gap-2">
-              <Badge
-                variant="secondary"
-                className="bg-[#68A243]/90 hover:bg-[#68A243] text-white px-2.5 py-0.5 text-xs font-medium"
-              >
-                <Building2 className="mr-1 h-3 w-3" />
-                {companies.length} Empresas
-              </Badge>
-              <Badge
-                variant="outline"
-                className="border-white/30 text-white px-2.5 py-0.5 text-xs font-medium"
-              >
-                <TrendingUp className="mr-1 h-3 w-3" />
-                Activas
-              </Badge>
+            <div className="flex flex-col gap-2">
+              {isAdmin && (
+                <Button
+                  onClick={() => navigate("/panel-administrador/empresas")}
+                  className="gap-2 bg-[#68A243] hover:bg-[#5a9038] text-white"
+                >
+                  <Settings className="h-4 w-4" />
+                  Gestionar empresas
+                </Button>
+              )}
+              <div className="flex gap-2">
+                <Badge
+                  variant="secondary"
+                  className="bg-[#68A243]/90 hover:bg-[#68A243] text-white px-2.5 py-0.5 text-xs font-medium"
+                >
+                  <Building2 className="mr-1 h-3 w-3" />
+                  {companies.length} Empresas
+                </Badge>
+                <Badge
+                  variant="outline"
+                  className="border-white/30 text-white px-2.5 py-0.5 text-xs font-medium"
+                >
+                  <TrendingUp className="mr-1 h-3 w-3" />
+                  Activas
+                </Badge>
+              </div>
             </div>
           </div>
         </div>
