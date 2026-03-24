@@ -16,7 +16,7 @@ import {
 } from "../../components/ui/card";
 import { Button } from "../../components/ui/button";
 import Navbar from "../../components/Navbar";
-
+import { motion as m } from "motion/react";
 import { useAuth } from "../../context/AuthContext";
 import { useEffect } from "react";
 import { useNavigate } from "react-router";
@@ -89,6 +89,26 @@ export default function AdminDashboard() {
 
   // if (!isAdmin) return null;
 
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.1,
+        delayChildren: 0.2,
+      },
+    },
+  };
+
+  const itemVariants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: { duration: 0.6 },
+    },
+  };
+
   return (
     <div className="min-h-screen bg-white dark:bg-[#0a1a15] transition-colors duration-300">
       <Navbar />
@@ -96,7 +116,12 @@ export default function AdminDashboard() {
       <div className="pt-24 pb-12 px-4">
         <div className="max-w-7xl mx-auto">
           {/* Header */}
-          <div className="mb-8 flex items-start justify-between">
+          <m.div
+            variants={itemVariants}
+            initial="hidden"
+            animate="visible"
+            className="mb-8 flex items-start justify-between"
+          >
             <div>
               <div className="flex items-center gap-3 mb-2">
                 <div className="bg-[#68A243] dark:bg-[#68A243] p-2 rounded-lg shadow-lg shadow-[#68A243]/20">
@@ -110,74 +135,94 @@ export default function AdminDashboard() {
                 Gestión completa de la Ronda de Negocios
               </p>
             </div>
-          </div>
+          </m.div>
 
           {/* Stats Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          <m.div
+            variants={containerVariants}
+            initial="hidden"
+            animate="visible"
+            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8"
+          >
             {stats.map((stat, index) => (
-              <Card
+              <m.div
                 key={index}
-                className="border-[#68A243]/20 dark:border-[#68A243]/30 dark:bg-[#143E29] transition-all duration-300"
+                variants={itemVariants}
+                initial="hidden"
+                animate="visible"
               >
-                <CardHeader className="flex flex-row items-center justify-between pb-2">
-                  <CardTitle className="text-sm font-medium text-muted-foreground dark:text-gray-300">
-                    {stat.title}
-                  </CardTitle>
-                  <div
-                    className={`${stat.bg} dark:bg-[#68A243]/20 p-2 rounded-lg transition-colors duration-300`}
-                  >
-                    <stat.icon className={`h-5 w-5 ${stat.color}`} />
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-3xl font-bold text-[#143E29] dark:text-white mb-1 transition-colors duration-300">
-                    {stat.value}
-                  </div>
-                  <p className="text-sm text-muted-foreground dark:text-gray-300 transition-colors duration-300">
-                    {stat.description}
-                  </p>
-                </CardContent>
-              </Card>
+                <Card className="border-[#68A243]/20 dark:border-[#68A243]/30 dark:bg-[#143E29] transition-all duration-300">
+                  <CardHeader className="flex flex-row items-center justify-between pb-2">
+                    <CardTitle className="text-sm font-medium text-muted-foreground dark:text-gray-300">
+                      {stat.title}
+                    </CardTitle>
+                    <div
+                      className={`${stat.bg} dark:bg-[#68A243]/20 p-2 rounded-lg transition-colors duration-300`}
+                    >
+                      <stat.icon className={`h-5 w-5 ${stat.color}`} />
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-3xl font-bold text-[#143E29] dark:text-white mb-1 transition-colors duration-300">
+                      {stat.value}
+                    </div>
+                    <p className="text-sm text-muted-foreground dark:text-gray-300 transition-colors duration-300">
+                      {stat.description}
+                    </p>
+                  </CardContent>
+                </Card>
+              </m.div>
             ))}
-          </div>
+          </m.div>
 
           {/* Quick Actions */}
-          <div>
+          <m.div variants={itemVariants} initial="hidden" animate="visible">
             <h2 className="text-2xl font-bold text-[#143E29] dark:text-white mb-4 transition-colors duration-300">
               Acciones Rápidas
             </h2>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <m.div
+              variants={containerVariants}
+              initial="hidden"
+              animate="visible"
+              className="grid grid-cols-1 md:grid-cols-3 gap-6"
+            >
               {quickActions.map((action, index) => (
-                <Card
+                <m.div
                   key={index}
-                  className="border-[#68A243]/20 hover:border-[#68A243] transition-all hover:shadow-lg cursor-pointer group dark:border-[#68A243]/30 dark:bg-[#143E29] dark:hover:border-[#68A243]/50 dark:hover:shadow-xl dark:hover:shadow-[#68A243]/10"
-                  onClick={() => navigate(action.href)}
+                  variants={itemVariants}
+                  initial="hidden"
+                  animate="visible"
                 >
-                  <CardHeader>
-                    <div className="flex items-center gap-3 mb-2">
-                      <div className="bg-[#68A243]/10 dark:bg-[#68A243]/20 p-2 rounded-lg group-hover:bg-[#68A243] dark:group-hover:bg-[#68A243]/40 transition-colors">
-                        <action.icon className="h-6 w-6 text-[#68A243] group-hover:text-white dark:group-hover:text-white transition-colors" />
+                  <Card
+                    className="border-[#68A243]/20 hover:border-[#68A243] transition-all hover:shadow-lg cursor-pointer group dark:border-[#68A243]/30 dark:bg-[#143E29] dark:hover:border-[#68A243]/50 dark:hover:shadow-xl dark:hover:shadow-[#68A243]/10"
+                    onClick={() => navigate(action.href)}
+                  >
+                    <CardHeader>
+                      <div className="flex items-center gap-3 mb-2">
+                        <div className="bg-[#68A243]/10 dark:bg-[#68A243]/20 p-2 rounded-lg group-hover:bg-[#68A243] dark:group-hover:bg-[#68A243]/40 transition-colors">
+                          <action.icon className="h-6 w-6 text-[#68A243] group-hover:text-white dark:group-hover:text-white transition-colors" />
+                        </div>
+                        <CardTitle className="text-lg text-[#143E29] dark:text-white transition-colors duration-300">
+                          {action.title}
+                        </CardTitle>
                       </div>
-                      <CardTitle className="text-lg text-[#143E29] dark:text-white transition-colors duration-300">
-                        {action.title}
-                      </CardTitle>
-                    </div>
-                    <CardDescription className="dark:text-gray-300 transition-colors duration-300">
-                      {action.description}
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <Button
-                      variant="outline"
-                      className="w-full border-[#68A243] text-[#68A243] hover:bg-[#68A243] hover:text-white bg-transparent dark:border-[#68A243]/60 dark:text-[#68A243] dark:hover:bg-[#68A243] dark:hover:text-white dark:hover:border-[#68A243] dark:bg-transparent transition-all duration-300"
-                    >
-                      Acceder
-                    </Button>
-                  </CardContent>
-                </Card>
+                      <CardDescription className="dark:text-gray-300 transition-colors duration-300">
+                        {action.description}
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <Button
+                        variant="outline"
+                        className="w-full border-[#68A243] text-[#68A243] hover:bg-[#68A243] hover:text-white bg-transparent dark:border-[#68A243]/60 dark:text-[#68A243] dark:hover:bg-[#68A243] dark:hover:text-white dark:hover:border-[#68A243] dark:bg-transparent transition-all duration-300"
+                      >
+                        Acceder
+                      </Button>
+                    </CardContent>
+                  </Card>
+                </m.div>
               ))}
-            </div>
-          </div>
+            </m.div>
+          </m.div>
         </div>
       </div>
     </div>
