@@ -7,6 +7,7 @@ import Register from "./pages/RegisterStep";
 import Shifts from "./pages/Shifts";
 import { BookingProvider } from "./context/BookingContext";
 import { AuthProvider } from "./context/AuthContext";
+import { ThemeProvider } from "./context/ThemeContext";
 import Login from "./pages/Login";
 import Tables from "./pages/Tables";
 import Test from "./pages/Test";
@@ -22,55 +23,57 @@ function AppRoutes() {
   useAuth();
 
   return (
-    <Routes>
-      <Route path="/login" element={<Login />} />
-      <Route path="/" element={<Landing />} />
-      <Route path="/empresas" element={<Empresas />} />
-      <Route path="/empresas/:id" element={<EmpresasDetail />} />
-      <Route path="/register" element={<Register />} />
-      <Route
-        path="/turnos"
-        element={
-          <ProtectedRoute>
-            <Shifts />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/mesas/:id"
-        element={
-          <ProtectedRoute>
-            <Tables />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/panel-administrador"
-        element={
-          <ProtectedRoute>
-            <Dashboard />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/panel-administrador/empresas"
-        element={
-          <ProtectedRoute>
-            <CompaniesManagement />
-          </ProtectedRoute>
-        }
-      />
-      <Route path="/test" element={<Test />} />
-      <Route
-        path="/representantes"
-        element={
-          <ProtectedRoute>
-            <Representantes />
-          </ProtectedRoute>
-        }
-      />
-      <Route path="*" element={<NotFound />} />
-    </Routes>
+    <ThemeProvider>
+      <Routes>
+        <Route path="/login" element={<Login />} />
+        <Route path="/" element={<Landing />} />
+        <Route path="/empresas" element={<Empresas />} />
+        <Route path="/empresas/:id" element={<EmpresasDetail />} />
+        <Route path="/register" element={<Register />} />
+        <Route
+          path="/turnos"
+          element={
+            <ProtectedRoute>
+              <Shifts />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/mesas/:id"
+          element={
+            <ProtectedRoute>
+              <Tables />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/panel-administrador"
+          element={
+            <ProtectedRoute>
+              <Dashboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/panel-administrador/empresas"
+          element={
+            <ProtectedRoute>
+              <CompaniesManagement />
+            </ProtectedRoute>
+          }
+        />
+        <Route path="/test" element={<Test />} />
+        <Route
+          path="/representantes"
+          element={
+            <ProtectedRoute>
+              <Representantes />
+            </ProtectedRoute>
+          }
+        />
+        <Route path="*" element={<NotFound />} />
+      </Routes>
+    </ThemeProvider>
   );
 }
 

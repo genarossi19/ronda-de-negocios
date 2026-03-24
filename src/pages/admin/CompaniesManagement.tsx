@@ -34,6 +34,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import Navbar from "@/components/Navbar";
+import { ThemeToggle } from "@/components/ThemeToggle";
 import { toast } from "sonner";
 
 // Mock data types
@@ -180,46 +181,72 @@ export default function CompaniesManagement() {
     description: string;
   }) => (
     <div className="flex flex-col items-center justify-center py-12 text-center">
-      <div className="text-muted-foreground mb-4">{Icon}</div>
-      <h3 className="text-lg font-semibold mb-2">{title}</h3>
-      <p className="text-sm text-muted-foreground">{description}</p>
+      <div className="text-muted-foreground dark:text-gray-300 mb-4 transition-colors duration-300">
+        {Icon}
+      </div>
+      <h3 className="font-semibold text-sm dark:text-white transition-colors duration-300">
+        {title}
+      </h3>
+      <p className="text-sm text-muted-foreground dark:text-gray-300 transition-colors duration-300">
+        {description}
+      </p>
     </div>
   );
 
   const CompaniesTable = ({ companies: data }: { companies: Company[] }) => (
-    <div className="rounded-lg border">
+    <div className="rounded-lg border dark:border-[#68A243]/20 dark:bg-[#143E29] transition-colors duration-300">
       <Table>
         <TableHeader>
-          <TableRow className="bg-muted/50">
-            <TableHead className="font-semibold">Empresa</TableHead>
-            <TableHead className="font-semibold">Email</TableHead>
-            <TableHead className="font-semibold">Teléfono</TableHead>
-            <TableHead className="font-semibold">Sector</TableHead>
-            <TableHead className="text-right font-semibold">Acciones</TableHead>
+          <TableRow className="bg-muted/50 dark:bg-[#0f2f25] border-b dark:border-[#68A243]/20 transition-colors duration-300">
+            <TableHead className="font-semibold dark:text-gray-200 transition-colors duration-300">
+              Empresa
+            </TableHead>
+            <TableHead className="font-semibold dark:text-gray-200 transition-colors duration-300">
+              Email
+            </TableHead>
+            <TableHead className="font-semibold dark:text-gray-200 transition-colors duration-300">
+              Teléfono
+            </TableHead>
+            <TableHead className="font-semibold dark:text-gray-200 transition-colors duration-300">
+              Sector
+            </TableHead>
+            <TableHead className="text-right font-semibold dark:text-gray-200 transition-colors duration-300">
+              Acciones
+            </TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {data.map((company) => (
-            <TableRow key={company.id} className="hover:bg-muted/50">
+            <TableRow
+              key={company.id}
+              className="hover:bg-muted/50 dark:hover:bg-[#0f2f25] dark:border-[#68A243]/20 transition-colors duration-300"
+            >
               <TableCell>
                 <div className="flex items-center gap-3">
-                  <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10">
-                    <Building2 className="h-4 w-4 text-primary" />
+                  <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 dark:bg-[#68A243]/20 transition-colors duration-300">
+                    <Building2 className="h-4 w-4 text-primary dark:text-[#68A243]" />
                   </div>
                   <div>
-                    <p className="font-medium text-sm">
+                    <p className="font-medium text-sm dark:text-white transition-colors duration-300">
                       {company.razon_social}
                     </p>
                   </div>
                 </div>
               </TableCell>
-              <TableCell className="text-sm">{company.email}</TableCell>
-              <TableCell className="text-sm">
+              <TableCell className="text-sm dark:text-gray-200 transition-colors duration-300">
+                {company.email}
+              </TableCell>
+              <TableCell className="text-sm dark:text-gray-200 transition-colors duration-300">
                 {company.telefono_contacto}
               </TableCell>
               <TableCell className="text-sm">
                 {company.sector && (
-                  <Badge variant="secondary">{company.sector}</Badge>
+                  <Badge
+                    variant="secondary"
+                    className="dark:bg-[#68A243]/20 dark:text-[#68A243] dark:border-[#68A243]/30 transition-colors duration-300"
+                  >
+                    {company.sector}
+                  </Badge>
                 )}
               </TableCell>
               <TableCell className="text-right">
@@ -229,7 +256,7 @@ export default function CompaniesManagement() {
                       size="sm"
                       variant="default"
                       onClick={() => handleApprove(company)}
-                      className="gap-2"
+                      className="gap-2 dark:bg-[#68A243] dark:hover:bg-[#5a9038] transition-colors duration-300"
                     >
                       <CheckCircle className="h-4 w-4" />
                       Aprobar
@@ -239,6 +266,7 @@ export default function CompaniesManagement() {
                     size="sm"
                     variant="outline"
                     onClick={() => handleViewDetail(company)}
+                    className="dark:border-[#68A243]/60 dark:text-[#68A243] dark:hover:bg-[#68A243]/20 dark:hover:border-[#68A243] transition-colors duration-300"
                   >
                     Ver
                   </Button>
@@ -261,7 +289,7 @@ export default function CompaniesManagement() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-background">
+      <div className="min-h-screen bg-background dark:bg-[#0a1a15] transition-colors duration-300">
         <Navbar />
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
           <div className="space-y-8">
@@ -277,65 +305,69 @@ export default function CompaniesManagement() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background dark:bg-[#0a1a15] transition-colors duration-300">
       <Navbar />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         {/* Header */}
-        <div className="mb-8 space-y-2">
-          <h1 className="text-3xl font-bold tracking-tight">
-            Gestión de empresas
-          </h1>
-          <p className="text-muted-foreground">
-            Administra empresas pendientes de aprobación y empresas registradas
-          </p>
+        <div className="mb-8 space-y-2 flex items-start justify-between">
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight dark:text-white transition-colors duration-300">
+              Gestión de empresas
+            </h1>
+            <p className="text-muted-foreground dark:text-gray-300 transition-colors duration-300">
+              Administra empresas pendientes de aprobación y empresas
+              registradas
+            </p>
+          </div>
+          <ThemeToggle />
         </div>
 
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-          <Card>
+          <Card className="dark:bg-[#143E29] dark:border-[#68A243]/20 transition-colors duration-300">
             <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
+              <CardTitle className="text-sm font-medium text-muted-foreground dark:text-gray-200 transition-colors duration-300">
                 Pendientes de aprobación
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold text-orange-600">
+              <div className="text-3xl font-bold text-orange-600 dark:text-orange-400 transition-colors duration-300">
                 {pendingCompanies.length}
               </div>
-              <p className="text-xs text-muted-foreground mt-1">
+              <p className="text-xs text-muted-foreground dark:text-gray-300 mt-1 transition-colors duration-300">
                 Requieren revisión
               </p>
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="dark:bg-[#143E29] dark:border-[#68A243]/20 transition-colors duration-300">
             <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
+              <CardTitle className="text-sm font-medium text-muted-foreground dark:text-gray-200 transition-colors duration-300">
                 Empresas aprobadas
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold text-green-600">
+              <div className="text-3xl font-bold text-green-600 dark:text-green-400 transition-colors duration-300">
                 {approvedCompanies.length}
               </div>
-              <p className="text-xs text-muted-foreground mt-1">
+              <p className="text-xs text-muted-foreground dark:text-gray-300 mt-1 transition-colors duration-300">
                 Activas en la plataforma
               </p>
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="dark:bg-[#143E29] dark:border-[#68A243]/20 transition-colors duration-300">
             <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
+              <CardTitle className="text-sm font-medium text-muted-foreground dark:text-gray-200 transition-colors duration-300">
                 Total de empresas
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold text-primary">
+              <div className="text-3xl font-bold text-primary dark:text-[#68A243] transition-colors duration-300">
                 {companies.length}
               </div>
-              <p className="text-xs text-muted-foreground mt-1">
+              <p className="text-xs text-muted-foreground dark:text-gray-300 mt-1 transition-colors duration-300">
                 En el sistema
               </p>
             </CardContent>
@@ -362,7 +394,7 @@ export default function CompaniesManagement() {
           {/* Pending Approval Tab */}
           <TabsContent value="pending" className="space-y-6">
             {pendingCompanies.length === 0 ? (
-              <Card className="border-amber-200 bg-amber-50/50">
+              <Card className="border-amber-200 bg-amber-50/50 dark:border-[#68A243]/20 dark:bg-[#143E29] dark:text-white transition-colors duration-300">
                 <CardContent className="pt-6">
                   <EmptyState
                     icon={<CheckCircle className="h-12 w-12 text-green-600" />}
@@ -372,7 +404,7 @@ export default function CompaniesManagement() {
                 </CardContent>
               </Card>
             ) : (
-              <Card className="border-orange-200 bg-orange-50/30">
+              <Card className="border-orange-200 bg-orange-50/30 dark:border-[#68A243]/20 dark:bg-[#143E29] transition-colors duration-300">
                 <CardHeader className="pb-4">
                   <div className="flex items-center gap-2">
                     <AlertCircle className="h-5 w-5 text-orange-600" />
@@ -398,11 +430,11 @@ export default function CompaniesManagement() {
           {/* Approved Tab */}
           <TabsContent value="approved" className="space-y-6">
             {approvedCompanies.length === 0 ? (
-              <Card>
+              <Card className="dark:bg-[#143E29] dark:border-[#68A243]/20 transition-colors duration-300">
                 <CardContent className="pt-6">
                   <EmptyState
                     icon={
-                      <Building2 className="h-12 w-12 text-muted-foreground" />
+                      <Building2 className="h-12 w-12 text-muted-foreground dark:text-gray-300" />
                     }
                     title="Sin empresas registradas"
                     description="No hay empresas aprobadas en el sistema"
@@ -410,13 +442,18 @@ export default function CompaniesManagement() {
                 </CardContent>
               </Card>
             ) : (
-              <Card>
+              <Card className="dark:bg-[#143E29] dark:border-[#68A243]/20 transition-colors duration-300">
                 <CardHeader className="pb-4">
                   <div className="flex items-center justify-between">
-                    <CardTitle className="text-base">
+                    <CardTitle className="text-base dark:text-white transition-colors duration-300">
                       Empresas registradas
                     </CardTitle>
-                    <Badge variant="outline">{approvedCompanies.length}</Badge>
+                    <Badge
+                      variant="outline"
+                      className="dark:border-[#68A243]/50 dark:text-[#68A243]"
+                    >
+                      {approvedCompanies.length}
+                    </Badge>
                   </div>
                 </CardHeader>
                 <CardContent>
@@ -430,58 +467,69 @@ export default function CompaniesManagement() {
 
       {/* Detail Dialog */}
       <Dialog open={isDetailOpen} onOpenChange={setIsDetailOpen}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-w-md dark:bg-[#143E29] dark:border-[#68A243]/20 transition-colors duration-300">
           <DialogHeader>
-            <DialogTitle>Detalle de empresa</DialogTitle>
+            <DialogTitle className="dark:text-white transition-colors duration-300">
+              Detalle de empresa
+            </DialogTitle>
           </DialogHeader>
           {selectedCompany && (
             <div className="space-y-4">
               <div>
-                <h3 className="text-sm font-semibold text-muted-foreground mb-1">
+                <h3 className="text-sm font-semibold text-muted-foreground dark:text-gray-200 mb-1 transition-colors duration-300">
                   Razón social
                 </h3>
-                <p className="font-medium">{selectedCompany.razon_social}</p>
+                <p className="font-medium dark:text-white transition-colors duration-300">
+                  {selectedCompany.razon_social}
+                </p>
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <h3 className="text-sm font-semibold text-muted-foreground mb-1">
+                  <h3 className="text-sm font-semibold text-muted-foreground dark:text-gray-200 mb-1 transition-colors duration-300">
                     Email
                   </h3>
-                  <p className="text-sm">{selectedCompany.email}</p>
+                  <p className="text-sm dark:text-gray-300 transition-colors duration-300">
+                    {selectedCompany.email}
+                  </p>
                 </div>
                 <div>
-                  <h3 className="text-sm font-semibold text-muted-foreground mb-1">
+                  <h3 className="text-sm font-semibold text-muted-foreground dark:text-gray-200 mb-1 transition-colors duration-300">
                     Teléfono
                   </h3>
-                  <p className="text-sm">{selectedCompany.telefono_contacto}</p>
+                  <p className="text-sm dark:text-gray-300 transition-colors duration-300">
+                    {selectedCompany.telefono_contacto}
+                  </p>
                 </div>
               </div>
 
               <div>
-                <h3 className="text-sm font-semibold text-muted-foreground mb-1">
+                <h3 className="text-sm font-semibold text-muted-foreground dark:text-gray-200 mb-1 transition-colors duration-300">
                   Dirección
                 </h3>
-                <p className="text-sm">{selectedCompany.direccion}</p>
+                <p className="text-sm dark:text-gray-300 transition-colors duration-300">
+                  {selectedCompany.direccion}
+                </p>
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <h3 className="text-sm font-semibold text-muted-foreground mb-1">
+                  <h3 className="text-sm font-semibold text-muted-foreground dark:text-gray-200 mb-1 transition-colors duration-300">
                     Sector
                   </h3>
-                  <p className="text-sm">
+                  <p className="text-sm dark:text-gray-300 transition-colors duration-300">
                     {selectedCompany.sector || "No especificado"}
                   </p>
                 </div>
                 <div>
-                  <h3 className="text-sm font-semibold text-muted-foreground mb-1">
+                  <h3 className="text-sm font-semibold text-muted-foreground dark:text-gray-200 mb-1 transition-colors duration-300">
                     Estado
                   </h3>
                   <Badge
                     variant={
                       selectedCompany.approved ? "default" : "destructive"
                     }
+                    className="dark:bg-[#68A243] dark:text-white dark:border-none transition-colors duration-300"
                   >
                     {selectedCompany.approved ? "Aprobada" : "Pendiente"}
                   </Badge>
@@ -490,7 +538,11 @@ export default function CompaniesManagement() {
             </div>
           )}
           <DialogFooter className="mt-6">
-            <Button variant="outline" onClick={() => setIsDetailOpen(false)}>
+            <Button
+              variant="outline"
+              onClick={() => setIsDetailOpen(false)}
+              className="dark:border-[#68A243]/60 dark:text-[#68A243] dark:hover:bg-[#68A243]/20 dark:hover:border-[#68A243] transition-colors duration-300"
+            >
               Cerrar
             </Button>
           </DialogFooter>
@@ -499,22 +551,32 @@ export default function CompaniesManagement() {
 
       {/* Delete Confirmation Dialog */}
       <Dialog open={isDeleteOpen} onOpenChange={setIsDeleteOpen}>
-        <DialogContent className="max-w-sm">
+        <DialogContent className="max-w-sm dark:bg-[#143E29] dark:border-[#68A243]/20 transition-colors duration-300">
           <DialogHeader>
-            <DialogTitle>¿Eliminar empresa?</DialogTitle>
-            <DialogDescription>
+            <DialogTitle className="dark:text-white transition-colors duration-300">
+              ¿Eliminar empresa?
+            </DialogTitle>
+            <DialogDescription className="dark:text-gray-300 transition-colors duration-300">
               Esta acción no se puede deshacer. Se eliminará permanentemente{" "}
-              <span className="font-semibold text-foreground">
+              <span className="font-semibold text-foreground dark:text-white transition-colors duration-300">
                 {companyToDelete?.razon_social}
               </span>{" "}
               del sistema.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter className="gap-3 sm:gap-0">
-            <Button variant="outline" onClick={() => setIsDeleteOpen(false)}>
+            <Button
+              variant="outline"
+              onClick={() => setIsDeleteOpen(false)}
+              className="dark:border-[#68A243]/50 dark:text-[#68A243] dark:hover:bg-[#68A243]/10 transition-colors duration-300"
+            >
               Cancelar
             </Button>
-            <Button variant="destructive" onClick={handleConfirmDelete}>
+            <Button
+              variant="destructive"
+              onClick={handleConfirmDelete}
+              className="dark:bg-red-600 dark:hover:bg-red-700 dark:text-white transition-colors duration-300"
+            >
               Eliminar
             </Button>
           </DialogFooter>
