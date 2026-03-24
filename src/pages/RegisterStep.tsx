@@ -13,6 +13,7 @@ import {
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
+import { Textarea } from "../components/ui/textarea";
 import {
   Select,
   SelectContent,
@@ -62,6 +63,7 @@ export default function RegistrationForm() {
     telefono_contacto: "",
     password: "",
     password_confirm: "",
+    descripcion: "",
   });
 
   useEffect(() => {
@@ -127,6 +129,9 @@ export default function RegistrationForm() {
         direccion: formData.direccion,
         localidad: formData.localidad,
         sector: formData.sector,
+        ...(formData.descripcion && {
+          descripcion: formData.descripcion,
+        }),
         ...(logoBlob && {
           logo: new File([logoBlob], "logo.png", { type: "image/png" }),
         }),
@@ -435,6 +440,21 @@ export default function RegistrationForm() {
                             ))}
                           </SelectContent>
                         </Select>
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="descripcion">Descripción</Label>
+                        <Textarea
+                          id="descripcion"
+                          value={formData.descripcion}
+                          onChange={(e) =>
+                            setFormData({
+                              ...formData,
+                              descripcion: e.target.value,
+                            })
+                          }
+                          placeholder="Cuéntanos más sobre tu empresa..."
+                        />
                       </div>
 
                       <div className="space-y-3 pt-4 border-t">
