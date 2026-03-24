@@ -16,7 +16,7 @@ import {
 } from "../../components/ui/card";
 import { Button } from "../../components/ui/button";
 import Navbar from "../../components/Navbar";
-import { ThemeToggle } from "../../components/ThemeToggle";
+
 import { useAuth } from "../../context/AuthContext";
 import { useEffect } from "react";
 import { useNavigate } from "react-router";
@@ -110,7 +110,6 @@ export default function AdminDashboard() {
                 Gestión completa de la Ronda de Negocios
               </p>
             </div>
-            <ThemeToggle />
           </div>
 
           {/* Stats Grid */}

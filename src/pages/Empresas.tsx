@@ -76,10 +76,10 @@ export default function Companies() {
   };
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen bg-white dark:bg-[#0a1a15] transition-colors duration-300">
       <Navbar />
 
-      <div className="bg-gradient-to-br from-[#143E29] to-[#1a5236] text-white pt-8 pb-4">
+      <div className="bg-gradient-to-br from-[#143E29] to-[#1a5236] dark:from-[#0f2f25] dark:to-[#143E29] text-white pt-8 pb-4 transition-colors duration-300">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-12">
           <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4 mb-4">
             <div>
@@ -126,17 +126,17 @@ export default function Companies() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="mb-8">
           <div className="relative max-w-md">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground dark:text-gray-400 transition-colors" />
             <Input
               type="text"
               placeholder="Buscar empresas por nombre..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10 h-12 border-[#68A243]/20 focus-visible:border-[#68A243] focus-visible:ring-[#68A243]/20"
+              className="pl-10 h-12 border-[#68A243]/20 focus-visible:border-[#68A243] focus-visible:ring-[#68A243]/20 dark:bg-[#143E29] dark:border-[#68A243]/20 dark:text-white dark:placeholder-gray-400 transition-colors"
             />
           </div>
           {searchQuery && (
-            <p className="text-sm text-muted-foreground mt-2">
+            <p className="text-sm text-muted-foreground dark:text-gray-300 mt-2 transition-colors">
               {filteredCompanies.length} resultado
               {filteredCompanies.length !== 1 ? "s" : ""} encontrado
               {filteredCompanies.length !== 1 ? "s" : ""}
@@ -146,18 +146,18 @@ export default function Companies() {
 
         {error ? (
           <div className="text-center py-20">
-            <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-red-50 mb-4">
+            <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-red-50 dark:bg-red-950/30 mb-4 transition-colors">
               <AlertCircle className="h-10 w-10 text-red-500" />
             </div>
-            <h3 className="text-xl font-semibold mb-2 text-[#143E29]">
+            <h3 className="text-xl font-semibold mb-2 text-[#143E29] dark:text-white transition-colors">
               Lo sentimos
             </h3>
-            <p className="text-muted-foreground mb-6 max-w-md mx-auto">
+            <p className="text-muted-foreground dark:text-gray-300 mb-6 max-w-md mx-auto transition-colors">
               {error}
             </p>
             <Button
               onClick={() => window.location.reload()}
-              className="bg-[#68A243] hover:bg-[#143E29] text-white"
+              className="bg-[#68A243] hover:bg-[#143E29] dark:hover:bg-[#143E29] text-white transition-colors"
             >
               <RefreshCw className="mr-2 h-4 w-4" />
               Intentar nuevamente
@@ -185,15 +185,15 @@ export default function Companies() {
 
             {filteredCompanies.length === 0 && (
               <div className="text-center py-20">
-                <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-[#68A243]/10 mb-4">
+                <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-[#68A243]/10 dark:bg-[#68A243]/20 mb-4 transition-colors">
                   <Building2 className="h-10 w-10 text-[#68A243]" />
                 </div>
-                <h3 className="text-xl font-semibold mb-2 text-[#143E29]">
+                <h3 className="text-xl font-semibold mb-2 text-[#143E29] dark:text-white transition-colors">
                   {searchQuery
                     ? "No se encontraron empresas"
                     : "Todavía no hay empresas inscriptas"}
                 </h3>
-                <p className="text-muted-foreground">
+                <p className="text-muted-foreground dark:text-gray-300 transition-colors">
                   {searchQuery
                     ? "Intenta con otro término de búsqueda"
                     : "Las empresas aparecerán aquí una vez que se registren"}
