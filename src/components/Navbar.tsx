@@ -13,6 +13,7 @@ import { useState, useEffect, useRef } from "react";
 import { useAuth } from "../hooks/useAuth";
 import { useCurrentUser } from "../hooks/useCurrentUser";
 import { Link, useNavigate } from "react-router";
+import { ThemeToggle } from "./ThemeToggle";
 
 export default function Navbar() {
   const { user, isAuthenticated } = useCurrentUser();
@@ -209,6 +210,7 @@ export default function Navbar() {
 
           {/* Derecha - User Section */}
           <div className="flex items-center gap-3">
+            <ThemeToggle />
             {isAuthenticated ? (
               <DropdownMenu
                 open={isDropdownOpen}

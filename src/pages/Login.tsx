@@ -106,11 +106,11 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen bg-white relative overflow-hidden">
+    <div className="min-h-screen bg-white dark:bg-[#0a1a15] relative overflow-hidden transition-colors duration-300">
       {/* Animated gradient background */}
       <div className="absolute inset-0">
         <m.div
-          className="absolute top-0 left-0 w-96 h-96 bg-gradient-to-br from-[#68A243]/30 to-transparent rounded-full blur-3xl"
+          className="absolute top-0 left-0 w-96 h-96 bg-gradient-to-br from-[#68A243]/30 dark:from-[#68A243]/20 to-transparent rounded-full blur-3xl"
           animate={{
             y: [0, 50, 0],
             x: [0, 30, 0],
@@ -122,7 +122,7 @@ export default function Login() {
           }}
         />
         <m.div
-          className="absolute bottom-0 right-0 w-96 h-96 bg-gradient-to-tl from-[#143E29]/20 to-transparent rounded-full blur-3xl"
+          className="absolute bottom-0 right-0 w-96 h-96 bg-gradient-to-tl from-[#143E29]/20 dark:from-[#68A243]/10 to-transparent rounded-full blur-3xl"
           animate={{
             y: [0, -50, 0],
             x: [0, -30, 0],
@@ -163,11 +163,11 @@ export default function Login() {
                 <div className="w-12 h-12 bg-gradient-to-br from-[#68A243] to-[#5a9139] rounded-xl flex items-center justify-center shadow-lg">
                   <Building2 className="w-6 h-6 text-white" />
                 </div>
-                <h1 className="text-3xl font-bold text-[#143E29]">
+                <h1 className="text-3xl font-bold text-[#143E29] dark:text-white transition-colors">
                   Ronda de Negocios
                 </h1>
               </div>
-              <p className="text-gray-600 text-lg">
+              <p className="text-gray-600 dark:text-gray-300 text-lg transition-colors">
                 Conecta con empresas y expande tu red de negocios
               </p>
             </m.div>
@@ -195,16 +195,18 @@ export default function Login() {
                   <m.div
                     key={idx}
                     variants={itemVariants}
-                    className="flex gap-4 p-4 rounded-xl border border-[#68A243]/20 bg-gradient-to-r from-[#68A243]/5 to-transparent hover:border-[#68A243]/40 transition-all duration-300"
+                    className="flex gap-4 p-4 rounded-xl border border-[#68A243]/20 bg-gradient-to-r from-[#68A243]/5 dark:from-[#68A243]/10 to-transparent dark:to-[#143E29]/50 hover:border-[#68A243]/40 dark:hover:border-[#68A243]/60 transition-all duration-300"
                   >
                     <div className="w-12 h-12 bg-gradient-to-br from-[#68A243] to-[#5a9139] rounded-xl flex items-center justify-center shadow-lg flex-shrink-0">
                       <Icon className="w-6 h-6 text-white" />
                     </div>
                     <div>
-                      <h3 className="font-semibold text-[#143E29]">
+                      <h3 className="font-semibold text-[#143E29] dark:text-white transition-colors">
                         {item.title}
                       </h3>
-                      <p className="text-sm text-gray-600">{item.desc}</p>
+                      <p className="text-sm text-gray-600 dark:text-gray-300 transition-colors">
+                        {item.desc}
+                      </p>
                     </div>
                   </m.div>
                 );
@@ -212,7 +214,7 @@ export default function Login() {
             </m.div>
 
             <m.div variants={itemVariants} className="pt-8">
-              <p className="text-sm text-gray-500">
+              <p className="text-sm text-gray-500 dark:text-gray-400 transition-colors">
                 Trenque Lauquen 2025 • Evento de Networking
               </p>
             </m.div>
@@ -230,7 +232,7 @@ export default function Login() {
               <Link to="/">
                 <Button
                   variant="ghost"
-                  className="text-gray-600 hover:text-[#68A243] hover:bg-gray-100 transition-all duration-300"
+                  className="text-gray-600 dark:text-gray-300 hover:text-[#68A243] dark:hover:text-[#68A243] hover:bg-gray-100 dark:hover:bg-[#143E29] transition-all duration-300"
                 >
                   <ArrowLeft className="mr-2 h-4 w-4" />
                   Volver
@@ -241,16 +243,16 @@ export default function Login() {
             {/* Form Container */}
             <m.div
               variants={itemVariants}
-              className="bg-white rounded-2xl border border-gray-200 p-8 shadow-xl shadow-gray-200/50"
+              className="bg-white dark:bg-[#143E29] rounded-2xl border border-gray-200 dark:border-[#68A243]/20 p-8 shadow-xl shadow-gray-200/50 dark:shadow-black/50 transition-colors duration-300"
             >
               {/* Header */}
               <div className="space-y-2 mb-8">
                 <div className="flex items-center justify-between">
                   <div>
-                    <h2 className="text-3xl font-bold text-[#143E29]">
+                    <h2 className="text-3xl font-bold text-[#143E29] dark:text-white transition-colors">
                       Bienvenido
                     </h2>
-                    <p className="text-gray-600 text-sm mt-1">
+                    <p className="text-gray-600 dark:text-gray-300 text-sm mt-1 transition-colors">
                       Accedé a tu cuenta para participar
                     </p>
                   </div>
@@ -276,7 +278,7 @@ export default function Login() {
                 <m.div variants={itemVariants} className="space-y-2">
                   <Label
                     htmlFor="email"
-                    className="text-sm font-semibold text-gray-700"
+                    className="text-sm font-semibold text-gray-700 dark:text-gray-200 transition-colors"
                   >
                     Email
                   </Label>
@@ -299,10 +301,10 @@ export default function Login() {
                       onBlur={() => setFocusedField(null)}
                       placeholder="tu@empresa.com"
                       aria-invalid={!!emailError}
-                      className={`pl-12 h-12 border-2 focus:ring-0 transition-all duration-300 rounded-xl bg-gray-50 focus:bg-white font-medium ${
+                      className={`pl-12 h-12 border-2 focus:ring-0 transition-all duration-300 rounded-xl bg-gray-50 dark:bg-[#0f2f25] focus:bg-white dark:focus:bg-[#143E29] font-medium dark:text-white dark:placeholder-gray-500 ${
                         emailError
                           ? "border-red-500"
-                          : "border-gray-200 focus-visible:border-[#68A243]"
+                          : "border-gray-200 dark:border-[#68A243]/20 focus-visible:border-[#68A243]"
                       }`}
                       required
                     />
@@ -319,13 +321,13 @@ export default function Login() {
                   <div className="flex justify-between items-center">
                     <Label
                       htmlFor="password"
-                      className="text-sm font-semibold text-gray-700"
+                      className="text-sm font-semibold text-gray-700 dark:text-gray-200 transition-colors"
                     >
                       Contraseña
                     </Label>
                     <Link
                       to="#"
-                      className="text-xs text-[#68A243] hover:text-[#143E29] font-medium transition-colors"
+                      className="text-xs text-[#68A243] hover:text-[#143E29] dark:hover:text-white font-medium transition-colors"
                     >
                       ¿Olvidaste tu contraseña?
                     </Link>
@@ -349,17 +351,17 @@ export default function Login() {
                       onBlur={() => setFocusedField(null)}
                       placeholder="••••••••"
                       aria-invalid={!!passwordError}
-                      className={`pl-12 pr-12 h-12 border-2 focus:ring-0 transition-all duration-300 rounded-xl bg-gray-50 focus:bg-white font-medium ${
+                      className={`pl-12 pr-12 h-12 border-2 focus:ring-0 transition-all duration-300 rounded-xl bg-gray-50 dark:bg-[#0f2f25] focus:bg-white dark:focus:bg-[#143E29] font-medium dark:text-white dark:placeholder-gray-500 ${
                         passwordError
                           ? "border-red-500"
-                          : "border-gray-200 focus-visible:border-[#68A243]"
+                          : "border-gray-200 dark:border-[#68A243]/20 focus-visible:border-[#68A243]"
                       }`}
                       required
                     />
                     <button
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-[#68A243] transition-colors"
+                      className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500 hover:text-[#68A243] dark:hover:text-[#68A243] transition-colors"
                     >
                       {showPassword ? (
                         <EyeOff className="w-5 h-5" />
@@ -381,7 +383,7 @@ export default function Login() {
                     initial={{ opacity: 0, x: -10 }}
                     animate={{ opacity: 1, x: 0 }}
                     exit={{ opacity: 0, x: -10 }}
-                    className="bg-red-50 border-l-4 border-red-500 text-red-700 px-4 py-3 rounded-lg text-sm font-medium"
+                    className="bg-red-50 dark:bg-red-950/30 border-l-4 border-red-500 text-red-700 dark:text-red-300 px-4 py-3 rounded-lg text-sm font-medium transition-colors"
                   >
                     {error}
                   </m.div>
@@ -467,7 +469,7 @@ export default function Login() {
             {/* Trust Badge */}
             <m.div
               variants={itemVariants}
-              className="flex items-center justify-center gap-2 text-xs text-gray-500"
+              className="flex items-center justify-center gap-2 text-xs text-gray-500 dark:text-gray-400 transition-colors"
             >
               <Shield className="w-4 h-4 text-[#68A243]" />
               <span>Conexión segura y encriptada</span>
