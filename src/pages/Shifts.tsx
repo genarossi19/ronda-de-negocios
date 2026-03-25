@@ -104,14 +104,14 @@ export default function Shifts() {
     return (
       <>
         <Navbar />
-        <div className="min-h-screen bg-gray-50 pt-20">
+        <div className="min-h-screen bg-white dark:bg-[#0a1a15] pt-20 transition-colors duration-300">
           <div className="max-w-4xl mx-auto px-4 py-16">
-            <Card className="text-center">
+            <Card className="text-center dark:bg-[#143E29] dark:border-[#68A243]/20 transition-colors duration-300">
               <CardHeader>
-                <CardTitle className="text-2xl text-[#143E29]">
+                <CardTitle className="text-2xl text-[#143E29] dark:text-white transition-colors duration-300">
                   Acceso Restringido
                 </CardTitle>
-                <CardDescription>
+                <CardDescription className="dark:text-gray-300 transition-colors duration-300">
                   Debes iniciar sesión para ver y reservar turnos
                 </CardDescription>
               </CardHeader>
@@ -133,8 +133,8 @@ export default function Shifts() {
   return (
     <>
       <Navbar />
-      <div className="min-h-screen bg-gray-50 pt-8 pb-4">
-        <div className="bg-gradient-to-br from-[#143E29] to-[#143E29]/90 text-white py-12">
+      <div className="min-h-screen bg-white dark:bg-[#0a1a15] pt-8 pb-4 transition-colors duration-300">
+        <div className="bg-gradient-to-br from-[#143E29] to-[#143E29]/90 dark:from-[#0f2f25] dark:to-[#143E29] text-white py-12 transition-colors duration-300">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex items-center justify-between">
               <div>
@@ -163,71 +163,78 @@ export default function Shifts() {
           {loading ? (
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-2">
               {[...Array(4)].map((_, i) => (
-                <Card key={i} className="border-2">
+                <Card
+                  key={i}
+                  className="border-2 dark:bg-[#143E29] dark:border-[#68A243]/20 transition-colors duration-300"
+                >
                   <CardHeader>
                     <div className="flex items-start justify-between">
                       <div className="space-y-2">
-                        <Skeleton className="h-7 w-28" />
-                        <Skeleton className="h-4 w-48" />
+                        <Skeleton className="h-7 w-28 dark:bg-[#0f2f25]" />
+                        <Skeleton className="h-4 w-48 dark:bg-[#0f2f25]" />
                       </div>
-                      <Skeleton className="h-6 w-20 rounded-full" />
+                      <Skeleton className="h-6 w-20 rounded-full dark:bg-[#0f2f25]" />
                     </div>
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <div className="space-y-3">
                       <div className="flex items-center gap-3">
-                        <Skeleton className="h-9 w-9 rounded-lg" />
+                        <Skeleton className="h-9 w-9 rounded-lg dark:bg-[#0f2f25]" />
                         <div className="space-y-1">
-                          <Skeleton className="h-3 w-16" />
-                          <Skeleton className="h-5 w-32" />
+                          <Skeleton className="h-3 w-16 dark:bg-[#0f2f25]" />
+                          <Skeleton className="h-5 w-32 dark:bg-[#0f2f25]" />
                         </div>
                       </div>
                       <div className="flex items-center gap-3">
-                        <Skeleton className="h-9 w-9 rounded-lg" />
+                        <Skeleton className="h-9 w-9 rounded-lg dark:bg-[#0f2f25]" />
                         <div className="space-y-1">
-                          <Skeleton className="h-3 w-16" />
-                          <Skeleton className="h-5 w-24" />
+                          <Skeleton className="h-3 w-16 dark:bg-[#0f2f25]" />
+                          <Skeleton className="h-5 w-24 dark:bg-[#0f2f25]" />
                         </div>
                       </div>
                     </div>
                     <div className="pt-2 space-y-2">
                       <div className="flex justify-between">
-                        <Skeleton className="h-4 w-16" />
-                        <Skeleton className="h-4 w-10" />
+                        <Skeleton className="h-4 w-16 dark:bg-[#0f2f25]" />
+                        <Skeleton className="h-4 w-10 dark:bg-[#0f2f25]" />
                       </div>
-                      <Skeleton className="h-2 w-full rounded-full" />
+                      <Skeleton className="h-2 w-full rounded-full dark:bg-[#0f2f25]" />
                     </div>
-                    <Skeleton className="h-12 w-full rounded-md" />
+                    <Skeleton className="h-12 w-full rounded-md dark:bg-[#0f2f25]" />
                   </CardContent>
                 </Card>
               ))}
             </div>
           ) : error ? (
-            <Card className="border-destructive/50 bg-destructive/5">
+            <Card className="border-destructive/50 bg-destructive/5 dark:bg-destructive/10 dark:border-destructive/30 dark:text-white transition-colors duration-300">
               <CardHeader>
                 <div className="flex items-center gap-3">
                   <AlertCircle className="h-6 w-6 text-destructive" />
-                  <CardTitle className="text-destructive">
+                  <CardTitle className="text-destructive dark:text-red-400 transition-colors duration-300">
                     Error al cargar los turnos
                   </CardTitle>
                 </div>
-                <CardDescription>{error}</CardDescription>
+                <CardDescription className="dark:text-gray-300 transition-colors duration-300">
+                  {error}
+                </CardDescription>
               </CardHeader>
               <CardContent>
                 <Button
                   variant="outline"
                   onClick={() => window.location.reload()}
-                  className="border-destructive/50 text-destructive hover:bg-destructive/10"
+                  className="border-destructive/50 text-destructive hover:bg-destructive/10 dark:border-destructive/30 dark:hover:bg-destructive/20"
                 >
                   Reintentar
                 </Button>
               </CardContent>
             </Card>
           ) : filteredShifts.length === 0 ? (
-            <Card>
+            <Card className="dark:bg-[#143E29] dark:border-[#68A243]/20 transition-colors duration-300">
               <CardHeader>
-                <CardTitle>No hay turnos disponibles</CardTitle>
-                <CardDescription>
+                <CardTitle className="dark:text-white transition-colors duration-300">
+                  No hay turnos disponibles
+                </CardTitle>
+                <CardDescription className="dark:text-gray-300 transition-colors duration-300">
                   No se encontraron turnos para este evento
                 </CardDescription>
               </CardHeader>
@@ -237,7 +244,7 @@ export default function Shifts() {
               {filteredShifts.map((shift, index) => (
                 <Card
                   key={shift.id}
-                  className="hover:shadow-lg transition-all duration-300 border-2 hover:border-[#68A243]/30"
+                  className="hover:shadow-lg transition-all duration-300 border-2 hover:border-[#68A243]/30 dark:bg-[#143E29] dark:border-[#68A243]/20 dark:hover:shadow-lg dark:hover:shadow-[#68A243]/20 dark:hover:border-[#68A243]/40"
                   style={{
                     animation: `fadeInUp 0.5s ease-out ${index * 0.1}s both`,
                   }}
@@ -245,10 +252,10 @@ export default function Shifts() {
                   <CardHeader>
                     <div className="flex items-start justify-between">
                       <div>
-                        <CardTitle className="text-2xl text-[#143E29] mb-1">
+                        <CardTitle className="text-2xl text-[#143E29] dark:text-white mb-1 transition-colors duration-300">
                           Turno {shift.id}
                         </CardTitle>
-                        <CardDescription className="text-base">
+                        <CardDescription className="text-base dark:text-gray-200 transition-colors duration-300">
                           Ronda de negocios - Reuniones 1 a 1
                         </CardDescription>
                       </div>
@@ -257,24 +264,26 @@ export default function Shifts() {
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <div className="space-y-3">
-                      <div className="flex items-center gap-3 text-gray-700">
-                        <div className="bg-[#68A243]/10 p-2 rounded-lg">
+                      <div className="flex items-center gap-3 text-gray-700 dark:text-gray-300 transition-colors duration-300">
+                        <div className="bg-[#68A243]/10 dark:bg-[#68A243]/20 p-2 rounded-lg transition-colors duration-300">
                           <Clock className="h-5 w-5 text-[#68A243]" />
                         </div>
                         <div>
-                          <p className="text-sm text-gray-500">Horario</p>
-                          <p className="font-semibold text-lg">
+                          <p className="text-sm text-gray-500 dark:text-gray-300 transition-colors duration-300">
+                            Horario
+                          </p>
+                          <p className="font-semibold text-lg dark:text-white transition-colors duration-300">
                             {shift.hora_inicio} - {shift.hora_fin}
                           </p>
                         </div>
                       </div>
 
-                      <div className="flex items-center gap-3 text-gray-700">
-                        <div className="bg-[#68A243]/10 p-2 rounded-lg">
+                      <div className="flex items-center gap-3 text-gray-700 dark:text-gray-300 transition-colors duration-300">
+                        <div className="bg-[#68A243]/10 dark:bg-[#68A243]/20 p-2 rounded-lg transition-colors duration-300">
                           <Users className="h-5 w-5 text-[#68A243]" />
                         </div>
                         <div>
-                          <p className="text-sm text-gray-500">
+                          <p className="text-sm text-gray-500 dark:text-gray-300 transition-colors duration-300">
                             Mesas Disponibles
                           </p>
                           <p className="font-semibold text-lg">
@@ -287,8 +296,10 @@ export default function Shifts() {
 
                     <div className="pt-2">
                       <div className="flex justify-between text-sm mb-2">
-                        <span className="text-gray-600">Ocupación</span>
-                        <span className="font-semibold text-[#143E29]">
+                        <span className="text-gray-600 dark:text-gray-300 transition-colors duration-300">
+                          Ocupación
+                        </span>
+                        <span className="font-semibold text-[#143E29] dark:text-white transition-colors duration-300">
                           {Math.round(
                             ((shift.cant_mesas -
                               (shift.cant_mesas - shift.mesas_ocupadas)) /
@@ -298,9 +309,9 @@ export default function Shifts() {
                           %
                         </span>
                       </div>
-                      <div className="w-full bg-gray-200 rounded-full h-2">
+                      <div className="w-full bg-gray-200 dark:bg-[#0f2f25] rounded-full h-2 transition-colors duration-300">
                         <div
-                          className="bg-[#68A243] h-2 rounded-full transition-all duration-500"
+                          className="bg-[#68A243] dark:bg-[#68A243] h-2 rounded-full transition-all duration-500"
                           style={{
                             width: `${
                               ((shift.cant_mesas -

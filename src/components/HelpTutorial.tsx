@@ -58,19 +58,9 @@ export function HelpTutorial({ title, steps }: HelpTutorialProps) {
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="sm:max-w-2xl">
           <DialogHeader>
-            <div className="flex items-center justify-between">
-              <DialogTitle className="text-2xl text-[#143E29]">
-                {title}
-              </DialogTitle>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={handleClose}
-                className="h-8 w-8"
-              >
-                <X className="h-4 w-4" />
-              </Button>
-            </div>
+            <DialogTitle className="text-2xl text-[#143E29]">
+              {title}
+            </DialogTitle>
             <DialogDescription>
               Tutorial paso a paso para ayudarte a usar esta sección
             </DialogDescription>
@@ -86,8 +76,8 @@ export function HelpTutorial({ title, steps }: HelpTutorialProps) {
                     index === currentStep
                       ? "bg-[#68A243] w-8"
                       : index < currentStep
-                      ? "bg-[#68A243]/50 w-2"
-                      : "bg-gray-300 w-2"
+                        ? "bg-[#68A243]/50 w-2"
+                        : "bg-gray-300 w-2"
                   }`}
                 />
               ))}

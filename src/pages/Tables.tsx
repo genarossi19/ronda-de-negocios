@@ -108,9 +108,10 @@ export default function Tables() {
       description:
         "Aquí podés ver todas las mesas disponibles del turno. Cada mesa puede tener hasta 2 empresas para una reunión 1 a 1. Las mesas se muestran con diferentes colores según su estado.",
       icon: (
-        <div className="grid grid-cols-3 gap-2">
+        <div className="grid grid-cols-4 gap-2">
           <div className="w-12 h-12 bg-white border-2 border-gray-300 rounded-lg" />
           <div className="w-12 h-12 bg-[#68A243]/10 border-2 border-[#68A243] rounded-lg" />
+          <div className="w-12 h-12 bg-[#ffb900]/10 border-2 border-[#ffb900] rounded-lg" />
           <div className="w-12 h-12 bg-gray-200 border-2 border-gray-400 rounded-lg opacity-50" />
         </div>
       ),
@@ -124,6 +125,11 @@ export default function Tables() {
       title: "Mesa Parcial (Verde)",
       description:
         "Las mesas verdes ya tienen una empresa esperando. Si elegís una de estas mesas, vas a unirte directamente con esa empresa para una reunión 1 a 1. Podés ver el logo y nombre de la empresa antes de confirmar.",
+    },
+    {
+      title: "Tu Empresa Esperando (Naranja)",
+      description:
+        "Las mesas naranjas tienen un representante de tu empresa esperando. Si elegís una de estas mesas, podrás cambiar el representante de tu empresa que ya está asignado.",
     },
     {
       title: "Mesa Completa (Gris)",
@@ -226,8 +232,8 @@ export default function Tables() {
     return (
       <>
         <Navbar />
-        <div className="min-h-screen bg-gray-50 pt-8 pb-4">
-          <div className="bg-gradient-to-br from-[#143E29] to-[#143E29]/90 text-white py-8">
+        <div className="min-h-screen bg-gray-50 dark:bg-[#0a1a15] pt-8 pb-4 transition-colors duration-300">
+          <div className="bg-gradient-to-br from-[#143E29] to-[#143E29]/90 dark:from-[#0f2f25] dark:to-[#143E29] text-white py-8 transition-colors duration-300">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
               <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                 <div>
@@ -244,23 +250,37 @@ export default function Tables() {
           </div>
 
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-            <Card>
+            <Card className="dark:bg-[#143E29] dark:border-[#68A243]/20 transition-colors duration-300">
               <CardHeader>
-                <CardTitle className="text-lg">Leyenda</CardTitle>
+                <CardTitle className="text-lg dark:text-white transition-colors duration-300">
+                  Leyenda
+                </CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="flex flex-wrap gap-6">
                   <div className="flex items-center gap-2">
-                    <div className="w-12 h-12 bg-white border-2 border-gray-300 rounded-lg" />
-                    <span className="text-sm">Mesa Libre</span>
+                    <div className="w-12 h-12 bg-white dark:bg-[#0f2f25] border-2 border-gray-300 dark:border-gray-600 rounded-lg transition-colors duration-300" />
+                    <span className="text-sm dark:text-gray-300 transition-colors duration-300">
+                      Mesa Libre
+                    </span>
                   </div>
                   <div className="flex items-center gap-2">
                     <div className="w-12 h-12 bg-[#68A243]/10 border-2 border-[#68A243] rounded-lg" />
-                    <span className="text-sm">Mesa con 1 Empresa</span>
+                    <span className="text-sm dark:text-gray-300 transition-colors duration-300">
+                      Mesa con 1 Empresa
+                    </span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <div className="w-12 h-12 bg-gray-200 border-2 border-gray-400 rounded-lg opacity-50" />
-                    <span className="text-sm">Mesa Completa</span>
+                    <div className="w-12 h-12 bg-[#ffb900]/10 border-2 border-[#ffb900] rounded-lg" />
+                    <span className="text-sm dark:text-gray-300 transition-colors duration-300">
+                      Tu Empresa Esperando
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="w-12 h-12 bg-gray-200 dark:bg-gray-700 border-2 border-gray-400 dark:border-gray-600 rounded-lg opacity-50" />
+                    <span className="text-sm dark:text-gray-300 transition-colors duration-300">
+                      Mesa Completa
+                    </span>
                   </div>
                 </div>
               </CardContent>
@@ -268,8 +288,8 @@ export default function Tables() {
           </div>
 
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-12">
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-8">
-              <h2 className="text-2xl font-bold text-[#143E29] mb-6 text-center">
+            <div className="bg-white dark:bg-[#143E29] rounded-xl shadow-sm border border-gray-200 dark:border-[#68A243]/20 p-8 transition-colors duration-300">
+              <h2 className="text-2xl font-bold text-[#143E29] dark:text-white mb-6 text-center transition-colors duration-300">
                 Seleccioná tu Mesa
               </h2>
 
@@ -279,7 +299,7 @@ export default function Tables() {
                   .map((_, index) => (
                     <Skeleton
                       key={`skeleton-${index}`}
-                      className="aspect-square rounded-lg"
+                      className="aspect-square rounded-lg dark:bg-[#0f2f25]"
                     />
                   ))}
               </div>
@@ -295,12 +315,14 @@ export default function Tables() {
     return (
       <>
         <Navbar />
-        <div className="min-h-screen bg-gray-50 pt-20">
+        <div className="min-h-screen bg-gray-50 dark:bg-[#0a1a15] pt-20 transition-colors duration-300">
           <div className="max-w-4xl mx-auto px-4 py-16">
-            <Card>
+            <Card className="dark:bg-[#143E29] dark:border-[#68A243]/20 transition-colors duration-300">
               <CardHeader>
-                <CardTitle className="text-[#F05826]">{error}</CardTitle>
-                <CardDescription>
+                <CardTitle className="text-[#F05826] dark:text-orange-400 transition-colors duration-300">
+                  {error}
+                </CardTitle>
+                <CardDescription className="dark:text-gray-300 transition-colors duration-300">
                   Intenta nuevamente más tarde o vuelve a los turnos disponibles
                 </CardDescription>
               </CardHeader>
@@ -325,14 +347,16 @@ export default function Tables() {
     return (
       <>
         <Navbar />
-        <div className="min-h-screen bg-gray-50 pt-20">
+        <div className="min-h-screen bg-gray-50 dark:bg-[#0a1a15] pt-20 transition-colors duration-300">
           <div className="max-w-4xl mx-auto px-4 py-16">
-            <Card>
+            <Card className="dark:bg-[#143E29] dark:border-[#68A243]/20 transition-colors duration-300">
               <CardHeader>
-                <CardTitle className="text-[#143E29]">
+                <CardTitle className="text-[#143E29] dark:text-white transition-colors duration-300">
                   Turno no encontrado
                 </CardTitle>
-                <CardDescription>El turno que buscás no existe</CardDescription>
+                <CardDescription className="dark:text-gray-300 transition-colors duration-300">
+                  El turno que buscás no existe
+                </CardDescription>
               </CardHeader>
               <CardContent>
                 <Button
@@ -355,8 +379,8 @@ export default function Tables() {
     return (
       <>
         <Navbar />
-        <div className="min-h-screen bg-gray-50 pt-8 pb-4">
-          <div className="bg-gradient-to-br from-[#143E29] to-[#143E29]/90 text-white py-8">
+        <div className="min-h-screen bg-gray-50 dark:bg-[#0a1a15] pt-8 pb-4 transition-colors duration-300">
+          <div className="bg-gradient-to-br from-[#143E29] to-[#143E29]/90 dark:from-[#0f2f25] dark:to-[#143E29] text-white py-8 transition-colors duration-300">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
               <Button
                 variant="ghost"
@@ -382,12 +406,12 @@ export default function Tables() {
           </div>
 
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-            <Card>
+            <Card className="dark:bg-[#143E29] dark:border-[#68A243]/20 transition-colors duration-300">
               <CardHeader>
-                <CardTitle className="text-[#143E29]">
+                <CardTitle className="text-[#143E29] dark:text-white transition-colors duration-300">
                   No hay mesas disponibles
                 </CardTitle>
-                <CardDescription>
+                <CardDescription className="dark:text-gray-300 transition-colors duration-300">
                   No hay mesas para este turno. Intenta con otro turno o vuelve
                   más tarde.
                 </CardDescription>
@@ -659,8 +683,8 @@ export default function Tables() {
   return (
     <>
       <Navbar />
-      <div className="min-h-screen bg-gray-50 pt-8 pb-4">
-        <div className="bg-gradient-to-br from-[#143E29] to-[#143E29]/90 text-white py-8">
+      <div className="min-h-screen bg-gray-50 dark:bg-[#0a1a15] pt-8 pb-4 transition-colors duration-300">
+        <div className="bg-gradient-to-br from-[#143E29] to-[#143E29]/90 dark:from-[#0f2f25] dark:to-[#143E29] text-white py-8 transition-colors duration-300">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <Button
               variant="ghost"
@@ -694,13 +718,13 @@ export default function Tables() {
 
         {bookingSuccess && (
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6">
-            <div className="bg-green-50 border-l-4 border-green-500 p-4 rounded-lg flex items-center gap-3">
-              <CheckCircle2 className="h-6 w-6 text-green-600" />
+            <div className="bg-green-50 dark:bg-green-950 border-l-4 border-green-500 p-4 rounded-lg flex items-center gap-3 transition-colors duration-300">
+              <CheckCircle2 className="h-6 w-6 text-green-600 dark:text-green-400" />
               <div>
-                <p className="font-semibold text-green-800">
+                <p className="font-semibold text-green-800 dark:text-green-200">
                   ¡Reserva confirmada!
                 </p>
-                <p className="text-sm text-green-700">
+                <p className="text-sm text-green-700 dark:text-green-300">
                   Tu mesa ha sido reservada exitosamente
                 </p>
               </div>
@@ -709,23 +733,37 @@ export default function Tables() {
         )}
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <Card>
+          <Card className="dark:bg-[#143E29] dark:border-[#68A243]/20 transition-colors duration-300">
             <CardHeader>
-              <CardTitle className="text-lg">Leyenda</CardTitle>
+              <CardTitle className="text-lg dark:text-white transition-colors duration-300">
+                Leyenda
+              </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="flex flex-wrap gap-6">
                 <div className="flex items-center gap-2">
-                  <div className="w-12 h-12 bg-white border-2 border-gray-300 rounded-lg" />
-                  <span className="text-sm">Mesa Libre</span>
+                  <div className="w-12 h-12 bg-white dark:bg-[#0f2f25] border-2 border-gray-300 dark:border-gray-600 rounded-lg transition-colors duration-300" />
+                  <span className="text-sm dark:text-gray-300 transition-colors duration-300">
+                    Mesa Libre
+                  </span>
                 </div>
                 <div className="flex items-center gap-2">
                   <div className="w-12 h-12 bg-[#68A243]/10 border-2 border-[#68A243] rounded-lg" />
-                  <span className="text-sm">Mesa con 1 Empresa</span>
+                  <span className="text-sm dark:text-gray-300 transition-colors duration-300">
+                    Mesa con 1 Empresa
+                  </span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <div className="w-12 h-12 bg-gray-200 border-2 border-gray-400 rounded-lg opacity-50" />
-                  <span className="text-sm">Mesa Completa</span>
+                  <div className="w-12 h-12 bg-[#ffb900]/10 border-2 border-[#ffb900] rounded-lg" />
+                  <span className="text-sm dark:text-gray-300 transition-colors duration-300">
+                    Tu Empresa Esperando
+                  </span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-12 h-12 bg-gray-200 dark:bg-gray-700 border-2 border-gray-400 dark:border-gray-600 rounded-lg opacity-50" />
+                  <span className="text-sm dark:text-gray-300 transition-colors duration-300">
+                    Mesa Completa
+                  </span>
                 </div>
               </div>
             </CardContent>
@@ -733,8 +771,8 @@ export default function Tables() {
         </div>
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-12">
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-8">
-            <h2 className="text-2xl font-bold text-[#143E29] mb-6 text-center">
+          <div className="bg-white dark:bg-[#143E29] rounded-xl shadow-sm border border-gray-200 dark:border-[#68A243]/20 p-8 transition-colors duration-300">
+            <h2 className="text-2xl font-bold text-[#143E29] dark:text-white mb-6 text-center transition-colors duration-300">
               Seleccioná tu Mesa
             </h2>
 
@@ -762,12 +800,12 @@ export default function Tables() {
                       flex flex-col items-center justify-center p-3
                       ${
                         table.status === "full"
-                          ? "bg-gray-200 border-gray-400 opacity-50 cursor-not-allowed"
+                          ? "bg-gray-200 dark:bg-gray-700 border-gray-400 dark:border-gray-600 opacity-50 cursor-not-allowed"
                           : table.status === "partial"
                             ? isMyCompany
-                              ? "bg-[#ffb900]/10 border-[#ffb900] hover:bg-[#ffb900]/20 hover:scale-105 cursor-pointer"
-                              : "bg-[#68A243]/10 border-[#68A243] hover:bg-[#68A243]/20 hover:scale-105 cursor-pointer"
-                            : "bg-white border-gray-300 hover:border-[#68A243] hover:scale-105 cursor-pointer hover:shadow-lg"
+                              ? "bg-[#ffb900]/10 border-[#ffb900] hover:bg-[#ffb900]/20 hover:scale-105 cursor-pointer dark:bg-[#ffb900]/10 dark:border-[#ffb900]"
+                              : "bg-[#68A243]/10 border-[#68A243] hover:bg-[#68A243]/20 hover:scale-105 cursor-pointer dark:bg-[#68A243]/10 dark:border-[#68A243]"
+                            : "bg-white dark:bg-[#0f2f25] border-gray-300 dark:border-gray-600 hover:border-[#68A243] hover:scale-105 cursor-pointer hover:shadow-lg dark:hover:border-[#68A243] dark:hover:shadow-[#68A243]/20 transition-colors duration-300"
                       }
                     `}
                     style={{
@@ -775,7 +813,7 @@ export default function Tables() {
                     }}
                   >
                     <div className="text-center">
-                      <p className="font-bold text-lg text-[#143E29] mb-1">
+                      <p className="font-bold text-lg text-[#143E29] dark:text-white mb-1 transition-colors duration-300">
                         {table.number}
                       </p>
 
@@ -791,10 +829,10 @@ export default function Tables() {
                               .toUpperCase()}
                           </div>
                           <p
-                            className={`text-xs line-clamp-1 max-w-full ${
+                            className={`text-xs line-clamp-1 max-w-full transition-colors duration-300 ${
                               isMyCompany
                                 ? "text-[#ffb900] font-semibold"
-                                : "text-gray-600"
+                                : "text-gray-600 dark:text-gray-300"
                             }`}
                           >
                             {hostName}
@@ -806,9 +844,13 @@ export default function Tables() {
                           )}
                         </div>
                       ) : table.status === "full" ? (
-                        <p className="text-xs text-gray-500">Completa</p>
+                        <p className="text-xs text-gray-500 dark:text-gray-200 transition-colors duration-300">
+                          Completa
+                        </p>
                       ) : (
-                        <p className="text-xs text-gray-500">Libre</p>
+                        <p className="text-xs text-gray-500 dark:text-gray-200 transition-colors duration-300">
+                          Libre
+                        </p>
                       )}
                     </div>
                   </button>
@@ -819,12 +861,12 @@ export default function Tables() {
         </div>
 
         <Dialog open={showConfirmDialog} onOpenChange={setShowConfirmDialog}>
-          <DialogContent className="sm:max-w-md">
+          <DialogContent className="sm:max-w-md dark:bg-[#143E29] dark:border-[#68A243]/20">
             <DialogHeader>
-              <DialogTitle className="text-[#143E29]">
+              <DialogTitle className="text-[#143E29] dark:text-white transition-colors duration-300">
                 Confirmar Reserva
               </DialogTitle>
-              <DialogDescription>
+              <DialogDescription className="dark:text-gray-300 transition-colors duration-300">
                 {selectedTable?.status === "partial" &&
                 selectedTable.asientos[0] ? (
                   <>
@@ -842,7 +884,7 @@ export default function Tables() {
 
             {selectedTable?.status === "partial" &&
               selectedTable.asientos[0] && (
-                <Card className="border-[#68A243]/30">
+                <Card className="border-[#68A243]/30 dark:bg-[#143E29] dark:border-[#68A243]/20 transition-colors duration-300">
                   <CardContent className="pt-6">
                     <div className="flex items-center gap-4">
                       <div className="h-16 w-16 rounded-full bg-[#68A243] flex items-center justify-center text-white text-lg font-bold">
@@ -851,10 +893,10 @@ export default function Tables() {
                           .toUpperCase()}
                       </div>
                       <div className="flex-1">
-                        <h4 className="font-bold text-[#143E29]">
+                        <h4 className="font-bold text-[#143E29] dark:text-white transition-colors duration-300">
                           {selectedTable.asientos[0].empresa_nombre}
                         </h4>
-                        <p className="text-sm text-gray-600">
+                        <p className="text-sm text-gray-600 dark:text-gray-300 transition-colors duration-300">
                           Rep: {selectedTable.asientos[0].representante_nombre}{" "}
                           {selectedTable.asientos[0].representante_apellido}
                         </p>
@@ -868,12 +910,12 @@ export default function Tables() {
               )}
 
             <div className="space-y-2 mt-4">
-              <Label className="flex items-center gap-2 text-[#143E29]">
+              <Label className="flex items-center gap-2 text-[#143E29] dark:text-white transition-colors duration-300">
                 <User className="h-4 w-4 text-[#68A243]" />
                 Seleccioná el representante que asistirá
               </Label>
               {loadingRepresentatives ? (
-                <div className="text-sm text-gray-600 p-3 rounded-lg bg-gray-50">
+                <div className="text-sm text-gray-600 dark:text-gray-300 p-3 rounded-lg bg-gray-50 dark:bg-[#0f2f25] transition-colors duration-300">
                   Cargando representantes...
                 </div>
               ) : representatives && representatives.length > 0 ? (
@@ -886,7 +928,7 @@ export default function Tables() {
                       variant="outline"
                       role="combobox"
                       aria-expanded={openRepresentativeSearch}
-                      className="w-full justify-between border-[#68A243]/20 hover:border-[#68A243] bg-transparent"
+                      className="w-full justify-between border-[#68A243]/20 hover:border-[#68A243] bg-transparent dark:bg-[#0f2f25] dark:border-[#68A243]/20 dark:text-white dark:hover:bg-[#1a3f30] transition-colors duration-300"
                     >
                       {selectedRepresentative
                         ? representatives.find(
@@ -969,7 +1011,7 @@ export default function Tables() {
                                       <p className="font-medium">
                                         {rep.nombre} {rep.apellido}
                                       </p>
-                                      <p className="text-xs text-gray-500">
+                                      <p className="text-xs text-gray-500 dark:text-gray-200 transition-colors duration-300">
                                         {userFromStore?.is_superuser &&
                                         !isOwn ? (
                                           <span>
@@ -983,7 +1025,7 @@ export default function Tables() {
                                       </p>
                                     </div>
                                     {isOwn && (
-                                      <Badge className="bg-[#ffb900] text-black shrink-0">
+                                      <Badge className="bg-[#ffb900] text-black shrink-0 dark:bg-amber-500 dark:text-black">
                                         Propio
                                       </Badge>
                                     )}
@@ -1007,11 +1049,11 @@ export default function Tables() {
                   </PopoverContent>
                 </Popover>
               ) : (
-                <div className="text-sm text-[#F05826] bg-[#F05826]/10 p-3 rounded-lg border border-[#F05826]/30">
+                <div className="text-sm text-[#F05826] dark:text-orange-400 bg-[#F05826]/10 dark:bg-orange-950/20 p-3 rounded-lg border border-[#F05826]/30 dark:border-orange-700/30 transition-colors duration-300">
                   No tenés representantes agregados.
                 </div>
               )}
-              <div className="text-xs text-gray-500 px-1 py-2 mt-3">
+              <div className="text-xs text-gray-500 dark:text-gray-200 px-1 py-2 mt-3 transition-colors duration-300">
                 ¿No aparece en la lista? Agregá uno aquí ↓
               </div>
               <Button
@@ -1019,7 +1061,7 @@ export default function Tables() {
                 variant="outline"
                 size="sm"
                 onClick={() => setShowAddRepresentativeDialog(true)}
-                className="w-full border-[#68A243]/20 hover:border-[#68A243] text-[#68A243]"
+                className="w-full border-[#68A243]/20 hover:border-[#68A243] text-[#68A243] dark:bg-[#0f2f25] dark:border-[#68A243]/20 dark:text-[#68A243] dark:hover:bg-[#1a3f30] transition-colors duration-300"
               >
                 <Plus className="h-4 w-4 mr-2" />
                 Agregar nuevo representante
@@ -1033,7 +1075,7 @@ export default function Tables() {
                   setShowConfirmDialog(false);
                   setSelectedRepresentative("");
                 }}
-                className="flex-1"
+                className="flex-1 dark:bg-[#0f2f25] dark:border-[#68A243]/20 dark:text-white dark:hover:bg-[#1a3f30] transition-colors duration-300"
               >
                 Cancelar
               </Button>
@@ -1065,7 +1107,7 @@ export default function Tables() {
 
             {selectedTable?.status === "partial" &&
               selectedTable.asientos[0] && (
-                <Card className="border-[#ffb900]/30">
+                <Card className="border-[#ffb900]/30 dark:bg-[#143E29] dark:border-[#ffb900]/20 transition-colors duration-300">
                   <CardContent className="pt-6">
                     <div className="flex items-center gap-4">
                       <div className="h-16 w-16 rounded-full bg-[#ffb900] flex items-center justify-center text-white text-lg font-bold">
@@ -1074,10 +1116,10 @@ export default function Tables() {
                           .toUpperCase()}
                       </div>
                       <div className="flex-1">
-                        <h4 className="font-bold text-[#143E29]">
+                        <h4 className="font-bold text-[#143E29] dark:text-white transition-colors duration-300">
                           {selectedTable.asientos[0].empresa_nombre}
                         </h4>
-                        <p className="text-sm text-gray-600">
+                        <p className="text-sm text-gray-600 dark:text-gray-300 transition-colors duration-300">
                           Rep: {selectedTable.asientos[0].representante_nombre}{" "}
                           {selectedTable.asientos[0].representante_apellido}
                         </p>
@@ -1091,12 +1133,12 @@ export default function Tables() {
               )}
 
             <div className="space-y-2 mt-4">
-              <Label className="flex items-center gap-2 text-[#143E29]">
+              <Label className="flex items-center gap-2 text-[#143E29] dark:text-white transition-colors duration-300">
                 <User className="h-4 w-4 text-[#ffb900]" />
                 Seleccioná el nuevo representante
               </Label>
               {loadingRepresentatives ? (
-                <div className="text-sm text-gray-600 p-3 rounded-lg bg-gray-50">
+                <div className="text-sm text-gray-600 dark:text-gray-300 p-3 rounded-lg bg-gray-50 dark:bg-[#0f2f25] transition-colors duration-300">
                   Cargando representantes...
                 </div>
               ) : representatives && representatives.length > 0 ? (
@@ -1109,7 +1151,7 @@ export default function Tables() {
                       variant="outline"
                       role="combobox"
                       aria-expanded={openRepresentativeSearch}
-                      className="w-full justify-between border-[#ffb900]/20 hover:border-[#ffb900] bg-transparent"
+                      className="w-full justify-between border-[#ffb900]/20 hover:border-[#ffb900] bg-transparent dark:bg-[#0f2f25] dark:border-[#ffb900]/20 dark:text-white dark:hover:bg-[#1a3f30] transition-colors duration-300"
                     >
                       {selectedRepresentative
                         ? representatives.find(
@@ -1192,7 +1234,7 @@ export default function Tables() {
                                       <p className="font-medium">
                                         {rep.nombre} {rep.apellido}
                                       </p>
-                                      <p className="text-xs text-gray-500">
+                                      <p className="text-xs text-gray-500 dark:text-gray-200 transition-colors duration-300">
                                         {userFromStore?.is_superuser &&
                                         !isOwn ? (
                                           <span>
@@ -1206,7 +1248,7 @@ export default function Tables() {
                                       </p>
                                     </div>
                                     {isOwn && (
-                                      <Badge className="bg-[#ffb900] text-black shrink-0">
+                                      <Badge className="bg-[#ffb900] text-black shrink-0 dark:bg-amber-500 dark:text-black">
                                         Propio
                                       </Badge>
                                     )}
@@ -1234,7 +1276,7 @@ export default function Tables() {
                   No tenés representantes agregados.
                 </div>
               )}
-              <div className="text-xs text-gray-500 px-1 py-2 mt-3">
+              <div className="text-xs text-gray-500 dark:text-gray-200 px-1 py-2 mt-3 transition-colors duration-300">
                 ¿No aparece en la lista? Agregá uno aquí ↓
               </div>
               <Button
@@ -1242,7 +1284,7 @@ export default function Tables() {
                 variant="outline"
                 size="sm"
                 onClick={() => setShowAddRepresentativeDialog(true)}
-                className="w-full border-[#ffb900]/20 hover:border-[#ffb900] text-[#ffb900]"
+                className="w-full border-[#ffb900]/20 hover:border-[#ffb900] text-[#ffb900] dark:bg-[#0f2f25] dark:border-[#ffb900]/20 dark:text-[#ffb900] dark:hover:bg-[#1a3f30] transition-colors duration-300"
               >
                 <Plus className="h-4 w-4 mr-2" />
                 Agregar nuevo representante
@@ -1256,7 +1298,7 @@ export default function Tables() {
                   setShowChangeRepDialog(false);
                   setSelectedRepresentative("");
                 }}
-                className="flex-1"
+                className="flex-1 dark:bg-[#0f2f25] dark:border-[#68A243]/20 dark:text-white dark:hover:bg-[#1a3f30] transition-colors duration-300"
               >
                 Cancelar
               </Button>
@@ -1275,19 +1317,22 @@ export default function Tables() {
           open={showAddRepresentativeDialog}
           onOpenChange={setShowAddRepresentativeDialog}
         >
-          <DialogContent className="sm:max-w-md">
+          <DialogContent className="sm:max-w-md dark:bg-[#143E29] dark:border-[#68A243]/20">
             <DialogHeader>
-              <DialogTitle className="text-[#143E29]">
+              <DialogTitle className="text-[#143E29] dark:text-white transition-colors duration-300">
                 Agregar Representante
               </DialogTitle>
-              <DialogDescription>
+              <DialogDescription className="dark:text-gray-300 transition-colors duration-300">
                 Agregá un nuevo representante de tu empresa para esta reunión
               </DialogDescription>
             </DialogHeader>
 
             <form onSubmit={handleAddRepresentative} className="space-y-4">
               <div>
-                <Label htmlFor="nombre" className="text-[#143E29]">
+                <Label
+                  htmlFor="nombre"
+                  className="text-[#143E29] dark:text-white transition-colors duration-300"
+                >
                   Nombre *
                 </Label>
                 <Input
@@ -1299,17 +1344,20 @@ export default function Tables() {
                     setNewRepErrors({ ...newRepErrors, nombre: undefined });
                   }}
                   placeholder="Nombre"
-                  className={newRepErrors.nombre ? "border-red-500" : ""}
+                  className={`${newRepErrors.nombre ? "border-red-500" : ""} dark:bg-[#0f2f25] dark:border-[#68A243]/20 dark:text-white dark:placeholder-gray-500 dark:focus:border-[#68A243] transition-colors duration-300`}
                 />
                 {newRepErrors.nombre && (
-                  <p className="text-xs text-red-500 mt-1">
+                  <p className="text-xs text-red-500 dark:text-red-400 mt-1">
                     {newRepErrors.nombre}
                   </p>
                 )}
               </div>
 
               <div>
-                <Label htmlFor="apellido" className="text-[#143E29]">
+                <Label
+                  htmlFor="apellido"
+                  className="text-[#143E29] dark:text-white transition-colors duration-300"
+                >
                   Apellido *
                 </Label>
                 <Input
@@ -1321,17 +1369,20 @@ export default function Tables() {
                     setNewRepErrors({ ...newRepErrors, apellido: undefined });
                   }}
                   placeholder="Apellido"
-                  className={newRepErrors.apellido ? "border-red-500" : ""}
+                  className={`${newRepErrors.apellido ? "border-red-500" : ""} dark:bg-[#0f2f25] dark:border-[#68A243]/20 dark:text-white dark:placeholder-gray-500 dark:focus:border-[#68A243] transition-colors duration-300`}
                 />
                 {newRepErrors.apellido && (
-                  <p className="text-xs text-red-500 mt-1">
+                  <p className="text-xs text-red-500 dark:text-red-400 mt-1">
                     {newRepErrors.apellido}
                   </p>
                 )}
               </div>
 
               <div>
-                <Label htmlFor="email" className="text-[#143E29]">
+                <Label
+                  htmlFor="email"
+                  className="text-[#143E29] dark:text-white transition-colors duration-300"
+                >
                   Email *
                 </Label>
                 <Input
@@ -1344,17 +1395,20 @@ export default function Tables() {
                     setNewRepErrors({ ...newRepErrors, email: undefined });
                   }}
                   placeholder="email@example.com"
-                  className={newRepErrors.email ? "border-red-500" : ""}
+                  className={`${newRepErrors.email ? "border-red-500" : ""} dark:bg-[#0f2f25] dark:border-[#68A243]/20 dark:text-white dark:placeholder-gray-500 dark:focus:border-[#68A243] transition-colors duration-300`}
                 />
                 {newRepErrors.email && (
-                  <p className="text-xs text-red-500 mt-1">
+                  <p className="text-xs text-red-500 dark:text-red-400 mt-1">
                     {newRepErrors.email}
                   </p>
                 )}
               </div>
 
               <div>
-                <Label htmlFor="cargo" className="text-[#143E29]">
+                <Label
+                  htmlFor="cargo"
+                  className="text-[#143E29] dark:text-white transition-colors duration-300"
+                >
                   Cargo *
                 </Label>
                 <select
@@ -1368,7 +1422,7 @@ export default function Tables() {
                     });
                     setNewRepErrors({ ...newRepErrors, cargo: undefined });
                   }}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#68A243]"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#68A243] dark:bg-[#0f2f25] dark:border-[#68A243]/20 dark:text-white dark:focus:ring-[#68A243] transition-colors duration-300"
                 >
                   <option value="0">Selecciona un cargo</option>
                   <option value="1">Gerente</option>
@@ -1379,7 +1433,7 @@ export default function Tables() {
                 </select>
                 {newRepErrors.cargo !== undefined &&
                   newRepErrors.cargo === 0 && (
-                    <p className="text-xs text-red-500 mt-1">
+                    <p className="text-xs text-red-500 dark:text-red-400 mt-1">
                       El cargo es requerido
                     </p>
                   )}
@@ -1390,7 +1444,7 @@ export default function Tables() {
                   type="button"
                   variant="outline"
                   onClick={() => setShowAddRepresentativeDialog(false)}
-                  className="flex-1"
+                  className="flex-1 dark:bg-[#0f2f25] dark:border-[#68A243]/20 dark:text-white dark:hover:bg-[#1a3f30] transition-colors duration-300"
                 >
                   Cancelar
                 </Button>
