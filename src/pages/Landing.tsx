@@ -21,7 +21,7 @@ export default function Landing() {
   const [companyCount, setCompanyCount] = useState(0);
 
   const handleViewCompanies = () => {
-    navigate("/companies");
+    navigate("/empresas");
   };
 
   return (
@@ -43,8 +43,8 @@ export default function Landing() {
         <div className="relative z-10 w-full pt-[80px] pb-20 px-4 sm:px-6 lg:px-8">
           {/* Aviso superior */}
           <div className="text-center">
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-accent/20 dark:bg-[#68A243]/20 text-accent dark:text-[#68A243] border border-accent/30 dark:border-[#68A243]/30 text-sm font-medium mb-8 transition-colors duration-300">
-              <span className="w-2 h-2 rounded-full bg-accent animate-pulse"></span>
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-accent/20 dark:bg-[#ffb900]/20 text-accent dark:text-[#ffb900] border border-accent/30 dark:border-[#ffb900]/30 text-sm font-medium mb-8 transition-colors duration-300">
+              <span className="w-2 h-2 rounded-full bg-accent dark:bg-[#ffb900] animate-pulse"></span>
               Inscripciones abiertas
             </div>
           </div>
