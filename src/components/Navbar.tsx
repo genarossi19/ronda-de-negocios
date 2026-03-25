@@ -1,5 +1,5 @@
 import { Button } from "../components/ui/button";
-import { Building2, Menu, X, LogOut, Settings, User2Icon } from "lucide-react";
+import { Building2, Menu, X, LogOut, User2Icon } from "lucide-react";
 import { Sheet, SheetContent, SheetTrigger } from "../components/ui/sheet";
 import {
   DropdownMenu,
@@ -22,8 +22,25 @@ export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
   const [isVisible, setIsVisible] = useState(true);
   const [theme, setTheme] = useState<"light" | "dark">("light");
+  const [globalDarkMode, setGlobalDarkMode] = useState(false);
   const lastScrollY = useRef(0);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+
+  useEffect(() => {
+    // Detectar dark mode global
+    const checkDarkMode = () => {
+      setGlobalDarkMode(document.documentElement.classList.contains("dark"));
+    };
+
+    // Inicializar
+    checkDarkMode();
+
+    // Observar cambios en la clase 'dark' del html
+    const observer = new MutationObserver(checkDarkMode);
+    observer.observe(document.documentElement, { attributes: true });
+
+    return () => observer.disconnect();
+  }, []);
 
   useEffect(() => {
     const sections = document.querySelectorAll("[data-navbar-theme]");
@@ -73,7 +90,7 @@ export default function Navbar() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  const isDarkTheme = theme === "light";
+  const isDarkTheme = globalDarkMode || theme === "light";
 
   const navClasses = isDarkTheme
     ? "bg-gradient-to-r from-[#143E29] via-[#1a5032] to-[#143E29] shadow-lg shadow-black/10"
@@ -324,7 +341,10 @@ export default function Navbar() {
                     <Menu className="h-5 w-5" />
                   </Button>
                 </SheetTrigger>
-                <SheetContent side="right" className="w-64 p-0 bg-white">
+                <SheetContent
+                  side="right"
+                  className={`w-64 p-0 transition-colors duration-300 ${globalDarkMode ? "bg-[#0a1a15]" : "bg-white"}`}
+                >
                   <div className="flex flex-col h-full">
                     {/* Header */}
                     <div className="flex justify-between items-center p-6 border-b border-gray-100 bg-gradient-to-r from-[#143E29] to-[#1a5032]">
@@ -348,7 +368,13 @@ export default function Navbar() {
 
                     {/* User Info (if authenticated) */}
                     {isAuthenticated && (
-                      <div className="p-4 border-b border-gray-100 bg-gray-50">
+                      <div
+                        className={`p-4 border-b transition-colors duration-300 ${
+                          globalDarkMode
+                            ? "border-[#143E29] bg-[#143E29]/20"
+                            : "border-gray-100 bg-gray-50"
+                        }`}
+                      >
                         <div className="flex items-center gap-3">
                           <Avatar className="h-10 w-10 bg-[#68A243] border-2 border-[#68A243]/20">
                             <AvatarFallback className="bg-[#68A243] text-white font-semibold text-sm">
@@ -356,10 +382,20 @@ export default function Navbar() {
                             </AvatarFallback>
                           </Avatar>
                           <div className="flex-1 min-w-0">
-                            <p className="text-sm font-semibold text-gray-900 truncate">
+                            <p
+                              className={`text-sm font-semibold truncate transition-colors duration-300 ${
+                                globalDarkMode ? "text-white" : "text-gray-900"
+                              }`}
+                            >
                               {user?.razon_social}
                             </p>
-                            <p className="text-xs text-gray-500 truncate">
+                            <p
+                              className={`text-xs truncate transition-colors duration-300 ${
+                                globalDarkMode
+                                  ? "text-gray-400"
+                                  : "text-gray-500"
+                              }`}
+                            >
                               ID: {user?.empresa_id}
                             </p>
                           </div>
@@ -368,13 +404,21 @@ export default function Navbar() {
                     )}
 
                     {/* Menu Items */}
-                    <div className="flex-1 p-4 space-y-1 overflow-y-auto">
+                    <div
+                      className={`flex-1 p-4 space-y-1 overflow-y-auto transition-colors duration-300 ${
+                        globalDarkMode ? "bg-[#0a1a15]" : "bg-white"
+                      }`}
+                    >
                       {isAdmin && (
                         <>
                           <Link to="/panel-administrador">
                             <button
                               onClick={() => setIsOpen(false)}
-                              className="w-full text-left px-4 py-2.5 text-sm font-medium text-gray-900 hover:bg-gray-100 rounded-lg transition-colors duration-200"
+                              className={`w-full text-left px-4 py-2.5 text-sm font-medium rounded-lg transition-colors duration-200 ${
+                                globalDarkMode
+                                  ? "text-white hover:bg-[#143E29]"
+                                  : "text-gray-900 hover:bg-gray-100"
+                              }`}
                             >
                               Panel Admin
                             </button>
@@ -386,7 +430,11 @@ export default function Navbar() {
                         <Link to="/empresas">
                           <button
                             onClick={() => setIsOpen(false)}
-                            className="w-full text-left px-4 py-2.5 text-sm font-medium text-gray-900 hover:bg-gray-100 rounded-lg transition-colors duration-200"
+                            className={`w-full text-left px-4 py-2.5 text-sm font-medium rounded-lg transition-colors duration-200 ${
+                              globalDarkMode
+                                ? "text-white hover:bg-[#143E29]"
+                                : "text-gray-900 hover:bg-gray-100"
+                            }`}
                           >
                             Empresas
                           </button>
@@ -398,7 +446,11 @@ export default function Navbar() {
                           <Link to="/empresas">
                             <button
                               onClick={() => setIsOpen(false)}
-                              className="w-full text-left px-4 py-2.5 text-sm font-medium text-gray-900 hover:bg-gray-100 rounded-lg transition-colors duration-200"
+                              className={`w-full text-left px-4 py-2.5 text-sm font-medium rounded-lg transition-colors duration-200 ${
+                                globalDarkMode
+                                  ? "text-white hover:bg-[#143E29]"
+                                  : "text-gray-900 hover:bg-gray-100"
+                              }`}
                             >
                               Empresas
                             </button>
@@ -411,7 +463,11 @@ export default function Navbar() {
                           <Link to="/turnos">
                             <button
                               onClick={() => setIsOpen(false)}
-                              className="w-full text-left px-4 py-2.5 text-sm font-medium text-gray-900 hover:bg-gray-100 rounded-lg transition-colors duration-200"
+                              className={`w-full text-left px-4 py-2.5 text-sm font-medium rounded-lg transition-colors duration-200 ${
+                                globalDarkMode
+                                  ? "text-white hover:bg-[#143E29]"
+                                  : "text-gray-900 hover:bg-gray-100"
+                              }`}
                             >
                               {isAdmin ? "Turnos" : "Mis Turnos"}
                             </button>
@@ -419,7 +475,11 @@ export default function Navbar() {
                           <Link to="/historial">
                             <button
                               onClick={() => setIsOpen(false)}
-                              className="w-full text-left px-4 py-2.5 text-sm font-medium text-gray-900 hover:bg-gray-100 rounded-lg transition-colors duration-200"
+                              className={`w-full text-left px-4 py-2.5 text-sm font-medium rounded-lg transition-colors duration-200 ${
+                                globalDarkMode
+                                  ? "text-white hover:bg-[#143E29]"
+                                  : "text-gray-900 hover:bg-gray-100"
+                              }`}
                             >
                               Historial
                             </button>
@@ -427,7 +487,11 @@ export default function Navbar() {
                           <Link to="/perfil">
                             <button
                               onClick={() => setIsOpen(false)}
-                              className="w-full text-left px-4 py-2.5 text-sm font-medium text-gray-900 hover:bg-gray-100 rounded-lg transition-colors duration-200"
+                              className={`w-full text-left px-4 py-2.5 text-sm font-medium rounded-lg transition-colors duration-200 ${
+                                globalDarkMode
+                                  ? "text-white hover:bg-[#143E29]"
+                                  : "text-gray-900 hover:bg-gray-100"
+                              }`}
                             >
                               Mi Perfil
                             </button>
@@ -435,7 +499,11 @@ export default function Navbar() {
                           <Link to="/configuracion">
                             <button
                               onClick={() => setIsOpen(false)}
-                              className="w-full text-left px-4 py-2.5 text-sm font-medium text-gray-900 hover:bg-gray-100 rounded-lg transition-colors duration-200"
+                              className={`w-full text-left px-4 py-2.5 text-sm font-medium rounded-lg transition-colors duration-200 ${
+                                globalDarkMode
+                                  ? "text-white hover:bg-[#143E29]"
+                                  : "text-gray-900 hover:bg-gray-100"
+                              }`}
                             >
                               Configuración
                             </button>
@@ -445,7 +513,13 @@ export default function Navbar() {
                     </div>
 
                     {/* Footer */}
-                    <div className="p-4 border-t border-gray-100 bg-gray-50 space-y-2">
+                    <div
+                      className={`p-4 border-t space-y-2 transition-colors duration-300 ${
+                        globalDarkMode
+                          ? "border-[#143E29] bg-[#143E29]/20"
+                          : "border-gray-100 bg-gray-50"
+                      }`}
+                    >
                       {isAuthenticated ? (
                         <Button
                           onClick={() => {
@@ -464,7 +538,11 @@ export default function Navbar() {
                             <Button
                               onClick={() => setIsOpen(false)}
                               variant="outline"
-                              className="w-full text-gray-900 border-gray-300 font-semibold text-sm"
+                              className={`w-full font-semibold text-sm transition-colors duration-300 ${
+                                globalDarkMode
+                                  ? "text-white border-[#68A243]/30 hover:bg-[#143E29]"
+                                  : "text-gray-900 border-gray-300"
+                              }`}
                             >
                               Iniciar sesión
                             </Button>
