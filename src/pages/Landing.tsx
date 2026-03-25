@@ -25,7 +25,7 @@ export default function Landing() {
   };
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen bg-white dark:bg-[#0a1a15] transition-colors duration-300">
       <Navbar />
 
       {/* Hero Section */}
@@ -43,42 +43,54 @@ export default function Landing() {
         <div className="relative z-10 w-full pt-[80px] pb-20 px-4 sm:px-6 lg:px-8">
           {/* Aviso superior */}
           <div className="text-center">
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-accent/20 text-accent border border-accent/30 text-sm font-medium mb-8">
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-accent/20 dark:bg-[#68A243]/20 text-accent dark:text-[#68A243] border border-accent/30 dark:border-[#68A243]/30 text-sm font-medium mb-8 transition-colors duration-300">
               <span className="w-2 h-2 rounded-full bg-accent animate-pulse"></span>
               Inscripciones abiertas
             </div>
           </div>
 
           <div className="flex flex-wrap justify-center gap-6 mb-6">
-            <div className="inline-flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-white/5 hover:backdrop-blur-sm hover:border hover:border-white/10 transition-all duration-150 ease-in-out">
-              <Calendar className="h-6 w-6 text-secondary" />
+            <div className="inline-flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-white/5 dark:hover:bg-white/5 hover:backdrop-blur-sm hover:border hover:border-white/10 dark:hover:border-white/10 transition-all duration-150 ease-in-out">
+              <Calendar className="h-6 w-6 text-secondary dark:text-[#68A243]" />
               <div className="text-left text-white">
-                <div className="text-sm text-gray-300">Fecha</div>
+                <div className="text-sm text-gray-300 dark:text-gray-400 transition-colors duration-300">
+                  Fecha
+                </div>
                 <div className="font-semibold flex flex-col">
                   Martes 21 de Octubre
-                  <span className="text-gray-300">2025</span>
+                  <span className="text-gray-300 dark:text-gray-400 transition-colors duration-300">
+                    2025
+                  </span>
                 </div>
               </div>
             </div>
 
-            <div className="inline-flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-white/5 hover:backdrop-blur-sm hover:border hover:border-white/10 transition-all duration-150 ease-in-out">
-              <MapPin className="h-6 w-6 text-secondary" />
+            <div className="inline-flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-white/5 dark:hover:bg-white/5 hover:backdrop-blur-sm hover:border hover:border-white/10 dark:hover:border-white/10 transition-all duration-150 ease-in-out">
+              <MapPin className="h-6 w-6 text-secondary dark:text-[#68A243]" />
               <div className="text-left text-white">
-                <div className="text-sm text-gray-300">Lugar</div>
+                <div className="text-sm text-gray-300 dark:text-gray-400 transition-colors duration-300">
+                  Lugar
+                </div>
                 <div className="font-semibold flex flex-col">
                   Polo Científico Tecnológico
-                  <span className="text-gray-300">Hernández 816</span>
+                  <span className="text-gray-300 dark:text-gray-400 transition-colors duration-300">
+                    Hernández 816
+                  </span>
                 </div>
               </div>
             </div>
 
-            <div className="inline-flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-white/5 hover:backdrop-blur-sm hover:border hover:border-white/10 transition-all duration-150 ease-in-out">
-              <Clock className="h-6 w-6 text-secondary" />
+            <div className="inline-flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-white/5 dark:hover:bg-white/5 hover:backdrop-blur-sm hover:border hover:border-white/10 dark:hover:border-white/10 transition-all duration-150 ease-in-out">
+              <Clock className="h-6 w-6 text-secondary dark:text-[#68A243]" />
               <div className="text-left text-white">
-                <div className="text-sm text-gray-300">Hora</div>
+                <div className="text-sm text-gray-300 dark:text-gray-400 transition-colors duration-300">
+                  Hora
+                </div>
                 <div className="font-semibold flex flex-col">
                   8:00 hs
-                  <span className="text-gray-300">Inicio formal 8:20 hs</span>
+                  <span className="text-gray-300 dark:text-gray-400 transition-colors duration-300">
+                    Inicio formal 8:20 hs
+                  </span>
                 </div>
               </div>
             </div>
@@ -136,13 +148,16 @@ export default function Landing() {
       </section>
 
       {/* Companies Carousel */}
-      <section data-navbar-theme="dark" className="py-20 px-4 sm:px-6 lg:px-8">
+      <section
+        data-navbar-theme="dark"
+        className="py-20 px-4 sm:px-6 lg:px-8 bg-white dark:bg-[#0a1a15] transition-colors duration-300"
+      >
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-12">
-            <h2 className="text-3xl sm:text-4xl font-bold mb-4">
+            <h2 className="text-3xl sm:text-4xl font-bold mb-4 text-[#143E29] dark:text-white transition-colors duration-300">
               Empresas Participantes
             </h2>
-            <p className="text-lg text-muted-foreground">
+            <p className="text-lg text-muted-foreground dark:text-gray-300 transition-colors duration-300">
               {companyCount > 0
                 ? `${companyCount} empresa${companyCount !== 1 ? "s" : ""} ya confirm${companyCount !== 1 ? "aron" : "ó"} su participación`
                 : "Cargando empresas..."}
@@ -155,54 +170,54 @@ export default function Landing() {
       {/* Features Section */}
       <section
         data-navbar-theme="dark"
-        className="py-20 px-4 sm:px-6 lg:px-8 bg-muted/30"
+        className="py-20 px-4 sm:px-6 lg:px-8 bg-white dark:bg-[#0a1a15] transition-colors duration-300"
       >
         <div className="max-w-7xl mx-auto">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
             <div className="text-center">
-              <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-secondary/10 text-secondary mb-4">
+              <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-secondary/10 dark:bg-[#68A243]/20 text-secondary dark:text-[#68A243] mb-4 transition-colors duration-300">
                 <Building2 className="h-8 w-8" />
               </div>
-              <h3 className="text-xl font-semibold mb-2 text-primary">
+              <h3 className="text-xl font-semibold mb-2 text-primary dark:text-white transition-colors duration-300">
                 Empresas Líderes
               </h3>
-              <p className="text-muted-foreground leading-relaxed">
+              <p className="text-muted-foreground dark:text-gray-300 leading-relaxed transition-colors duration-300">
                 Conectá con las empresas más importantes de la región
               </p>
             </div>
 
             <div className="text-center">
-              <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-secondary/10 text-secondary mb-4">
+              <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-secondary/10 dark:bg-[#68A243]/20 text-secondary dark:text-[#68A243] mb-4 transition-colors duration-300">
                 <Users className="h-8 w-8" />
               </div>
-              <h3 className="text-xl font-semibold mb-2 text-primary">
+              <h3 className="text-xl font-semibold mb-2 text-primary dark:text-white transition-colors duration-300">
                 Networking
               </h3>
-              <p className="text-muted-foreground leading-relaxed">
+              <p className="text-muted-foreground dark:text-gray-300 leading-relaxed transition-colors duration-300">
                 Expandí tu red de contactos profesionales
               </p>
             </div>
 
             <div className="text-center">
-              <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-secondary/10 text-secondary mb-4">
+              <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-secondary/10 dark:bg-[#68A243]/20 text-secondary dark:text-[#68A243] mb-4 transition-colors duration-300">
                 <Handshake className="h-8 w-8" />
               </div>
-              <h3 className="text-xl font-semibold mb-2 text-primary">
+              <h3 className="text-xl font-semibold mb-2 text-primary dark:text-white transition-colors duration-300">
                 Oportunidades
               </h3>
-              <p className="text-muted-foreground leading-relaxed">
+              <p className="text-muted-foreground dark:text-gray-300 leading-relaxed transition-colors duration-300">
                 Descubrí nuevas alianzas estratégicas
               </p>
             </div>
 
             <div className="text-center">
-              <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-secondary/10 text-secondary mb-4">
+              <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-secondary/10 dark:bg-[#68A243]/20 text-secondary dark:text-[#68A243] mb-4 transition-colors duration-300">
                 <TrendingUp className="h-8 w-8" />
               </div>
-              <h3 className="text-xl font-semibold mb-2 text-primary">
+              <h3 className="text-xl font-semibold mb-2 text-primary dark:text-white transition-colors duration-300">
                 Crecimiento
               </h3>
-              <p className="text-muted-foreground leading-relaxed">
+              <p className="text-muted-foreground dark:text-gray-300 leading-relaxed transition-colors duration-300">
                 Impulsá el desarrollo de tu negocio
               </p>
             </div>
@@ -213,13 +228,13 @@ export default function Landing() {
       {/* CTA Section */}
       <section
         data-navbar-theme="light"
-        className="py-20 px-4 sm:px-6 lg:px-8 bg-primary text-primary-foreground"
+        className="py-20 px-4 sm:px-6 lg:px-8 bg-[#143E29] dark:bg-[#0f2f25] text-white transition-colors duration-300"
       >
         <div className="max-w-4xl mx-auto text-center">
-          <h2 className="text-3xl sm:text-4xl font-bold mb-6 text-balance">
+          <h2 className="text-3xl sm:text-4xl font-bold mb-6 text-balance text-white dark:text-white transition-colors duration-300">
             ¿Listo para hacer crecer tu negocio?
           </h2>
-          <p className="text-xl mb-8 text-primary-foreground/90 text-pretty leading-relaxed">
+          <p className="text-xl mb-8 dark:text-gray-300 text-pretty leading-relaxed transition-colors duration-300">
             No te pierdas la oportunidad de conectar con las empresas más
             importantes de la región. Inscribite ahora y asegurá tu lugar.
           </p>

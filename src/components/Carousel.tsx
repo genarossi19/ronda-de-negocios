@@ -133,16 +133,18 @@ export default function Carousel({ onCompaniesLoaded }: CarouselProps) {
     <div className="relative overflow-hidden">
       {/* Error State */}
       {error && (
-        <div className="mb-6 flex items-start gap-4 rounded-lg border border-red-200 bg-red-50 p-4">
-          <AlertCircle className="h-5 w-5 text-red-600 flex-shrink-0 mt-0.5" />
+        <div className="mb-6 flex items-start gap-4 rounded-lg border border-red-200 dark:border-red-900/30 bg-red-50 dark:bg-red-950/20 p-4 transition-colors duration-300">
+          <AlertCircle className="h-5 w-5 text-red-600 dark:text-red-400 flex-shrink-0 mt-0.5" />
           <div className="flex-1">
-            <p className="text-sm font-medium text-red-900">{error}</p>
+            <p className="text-sm font-medium text-red-900 dark:text-red-300">
+              {error}
+            </p>
           </div>
           <Button
             variant="outline"
             size="sm"
             onClick={handleRetry}
-            className="flex-shrink-0 border-red-200 text-red-600 hover:bg-red-100 hover:text-red-700"
+            className="flex-shrink-0 border-red-200 dark:border-red-900/50 text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-950/40 hover:text-red-700 dark:hover:text-red-300 transition-colors duration-300"
           >
             <RotateCcw className="h-4 w-4 mr-1" />
             Reintentar
@@ -150,8 +152,8 @@ export default function Carousel({ onCompaniesLoaded }: CarouselProps) {
         </div>
       )}
 
-      <div className="absolute left-0 top-0 bottom-0 w-20 bg-gradient-to-r from-background to-transparent z-10" />
-      <div className="absolute right-0 top-0 bottom-0 w-20 bg-gradient-to-l from-background to-transparent z-10" />
+      <div className="absolute left-0 top-0 bottom-0 w-20 bg-gradient-to-r from-white dark:from-[#0a1a15] to-transparent z-10" />
+      <div className="absolute right-0 top-0 bottom-0 w-20 bg-gradient-to-l from-white dark:from-[#0a1a15] to-transparent z-10" />
 
       <div
         ref={scrollRef}
@@ -162,7 +164,7 @@ export default function Carousel({ onCompaniesLoaded }: CarouselProps) {
           ? Array.from({ length: 10 }).map((_, index) => (
               <Skeleton
                 key={index}
-                className="flex-shrink-0 w-32 h-32 bg-gray-200 rounded-xl border flex items-center justify-center p-4 hover:shadow-md transition-shadow"
+                className="flex-shrink-0 w-32 h-32 bg-gray-200 dark:bg-[#143E29] rounded-xl border border-gray-300 dark:border-[#68A243]/20 flex items-center justify-center p-4 hover:shadow-md dark:hover:shadow-lg transition-shadow duration-300"
               />
             ))
           : duplicatedCompanies.map((company, index) => {
@@ -171,7 +173,7 @@ export default function Carousel({ onCompaniesLoaded }: CarouselProps) {
               return (
                 <div
                   key={`${company.id}-${index}`}
-                  className="flex-shrink-0 w-32 h-32 bg-gray-100 rounded-xl border border-gray-300 flex items-center justify-center hover:shadow-lg transition-shadow duration-200 overflow-hidden"
+                  className="flex-shrink-0 w-32 h-32 bg-white dark:bg-[#143E29] rounded-xl border border-gray-300 dark:border-[#68A243]/20 flex items-center justify-center hover:shadow-lg dark:hover:shadow-xl transition-shadow duration-200 overflow-hidden"
                 >
                   <img
                     src={company.logo || "/placeholder.svg"}
