@@ -951,25 +951,28 @@ export default function Tables() {
                       <Search className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                     </Button>
                   </PopoverTrigger>
-                  <PopoverContent className="w-full p-0" align="start">
+                  <PopoverContent
+                    className="w-full p-0 dark:bg-[#143E29] dark:border-[#68A243]/20"
+                    align="start"
+                  >
                     {loadingRepresentatives ? (
-                      <div className="p-4 space-y-2">
-                        <Skeleton className="h-8 w-full" />
-                        <Skeleton className="h-10 w-full" />
-                        <Skeleton className="h-10 w-full" />
-                        <Skeleton className="h-10 w-full" />
+                      <div className="p-4 space-y-2 dark:bg-[#143E29]">
+                        <Skeleton className="h-8 w-full dark:bg-[#1a3f30]" />
+                        <Skeleton className="h-10 w-full dark:bg-[#1a3f30]" />
+                        <Skeleton className="h-10 w-full dark:bg-[#1a3f30]" />
+                        <Skeleton className="h-10 w-full dark:bg-[#1a3f30]" />
                       </div>
                     ) : (
-                      <Command>
+                      <Command className="dark:bg-[#143E29]">
                         <CommandInput
                           placeholder="Buscar representante..."
-                          className="h-9"
+                          className="h-9 dark:bg-[#0f2f25] dark:text-white dark:placeholder-gray-400 dark:border-[#68A243]/20"
                         />
-                        <CommandList>
-                          <CommandEmpty>
+                        <CommandList className="dark:bg-[#143E29]">
+                          <CommandEmpty className="dark:text-gray-400">
                             No se encontró ningún representante
                           </CommandEmpty>
-                          <CommandGroup>
+                          <CommandGroup className="dark:text-white">
                             {representatives.map((rep) => {
                               const isOwn =
                                 userFromStore?.is_superuser &&
@@ -985,8 +988,8 @@ export default function Tables() {
                                     setOpenRepresentativeSearch(false);
                                   }}
                                   className={cn(
-                                    "cursor-pointer",
-                                    isOwn && "bg-yellow-50",
+                                    "cursor-pointer dark:hover:bg-[#1a3f30] dark:focus:bg-[#1a3f30] dark:text-white transition-colors duration-200",
+                                    isOwn && "bg-yellow-50 dark:bg-[#1a3f30]",
                                   )}
                                 >
                                   <div className="flex items-center gap-3 flex-1">
@@ -1094,12 +1097,12 @@ export default function Tables() {
           open={showChangeRepDialog}
           onOpenChange={setShowChangeRepDialog}
         >
-          <DialogContent className="sm:max-w-md">
+          <DialogContent className="sm:max-w-md dark:bg-[#143E29] dark:border-[#68A243]/20">
             <DialogHeader>
-              <DialogTitle className="text-[#143E29]">
+              <DialogTitle className="text-[#143E29] dark:text-white transition-colors duration-300">
                 Cambiar Representante
               </DialogTitle>
-              <DialogDescription>
+              <DialogDescription className="dark:text-gray-300 transition-colors duration-300">
                 Esta es tu mesa. Podés cambiar el representante que está
                 sentado.
               </DialogDescription>
@@ -1174,25 +1177,28 @@ export default function Tables() {
                       <Search className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                     </Button>
                   </PopoverTrigger>
-                  <PopoverContent className="w-full p-0" align="start">
+                  <PopoverContent
+                    className="w-full p-0 dark:bg-[#143E29] dark:border-[#68A243]/20"
+                    align="start"
+                  >
                     {loadingRepresentatives ? (
-                      <div className="p-4 space-y-2">
-                        <Skeleton className="h-8 w-full" />
-                        <Skeleton className="h-10 w-full" />
-                        <Skeleton className="h-10 w-full" />
-                        <Skeleton className="h-10 w-full" />
+                      <div className="p-4 space-y-2 dark:bg-[#143E29]">
+                        <Skeleton className="h-8 w-full dark:bg-[#1a3f30]" />
+                        <Skeleton className="h-10 w-full dark:bg-[#1a3f30]" />
+                        <Skeleton className="h-10 w-full dark:bg-[#1a3f30]" />
+                        <Skeleton className="h-10 w-full dark:bg-[#1a3f30]" />
                       </div>
                     ) : (
-                      <Command>
+                      <Command className="dark:bg-[#143E29]">
                         <CommandInput
                           placeholder="Buscar representante..."
-                          className="h-9"
+                          className="h-9 dark:bg-[#0f2f25] dark:text-white dark:placeholder-gray-400 dark:border-[#68A243]/20"
                         />
-                        <CommandList>
-                          <CommandEmpty>
+                        <CommandList className="dark:bg-[#143E29]">
+                          <CommandEmpty className="dark:text-gray-400">
                             No se encontró ningún representante
                           </CommandEmpty>
-                          <CommandGroup>
+                          <CommandGroup className="dark:text-white">
                             {representatives.map((rep) => {
                               const isOwn =
                                 userFromStore?.is_superuser &&
