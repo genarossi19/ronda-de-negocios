@@ -448,7 +448,7 @@ export default function RegisterStep() {
   };
 
   return (
-    <div className="min-h-screen bg-white relative overflow-hidden">
+    <div className="min-h-screen bg-white dark:bg-[#0f141a] relative overflow-hidden">
       {/* Animated gradient background */}
       <div className="absolute inset-0">
         <m.div
@@ -534,8 +534,8 @@ export default function RegisterStep() {
                       isCurrent
                         ? "bg-[#68A243]/10 border-l-4 border-[#68A243]"
                         : isCompleted
-                        ? "text-[#68A243]"
-                        : "text-gray-400"
+                          ? "text-[#68A243]"
+                          : "text-gray-400"
                     }`}
                   >
                     <div
@@ -543,8 +543,8 @@ export default function RegisterStep() {
                         isCompleted
                           ? "bg-[#68A243] text-white"
                           : isCurrent
-                          ? "bg-white text-[#143E29] border-2 border-[#68A243]"
-                          : "bg-gray-100 text-gray-400"
+                            ? "bg-white text-[#143E29] border-2 border-[#68A243]"
+                            : "bg-gray-100 text-gray-400"
                       }`}
                     >
                       {isCompleted ? (
@@ -573,8 +573,8 @@ export default function RegisterStep() {
                         isCompleted
                           ? "bg-[#68A243] border-[#68A243] text-white"
                           : isCurrent
-                          ? "bg-white border-[#68A243] text-[#143E29]"
-                          : "bg-gray-50 border-gray-200 text-gray-400"
+                            ? "bg-white border-[#68A243] text-[#143E29]"
+                            : "bg-gray-50 border-gray-200 text-gray-400"
                       }`}
                     >
                       {step.id}

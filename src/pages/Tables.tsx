@@ -18,7 +18,6 @@ import {
   DialogTitle,
 } from "../components/ui/dialog";
 import { Label } from "../components/ui/label";
-import { Input } from "../components/ui/input";
 import { Skeleton } from "../components/ui/skeleton";
 import {
   ArrowLeft,
@@ -46,6 +45,7 @@ import {
 } from "../components/ui/popover";
 import { cn } from "../lib/utils";
 import { HelpTutorial } from "../components/HelpTutorial";
+import { AddRepresentativeModal } from "../components/AddRepresentativeModal";
 import { useParams, useNavigate } from "react-router";
 import { getMesasByTurnoId } from "../api/MesaService";
 import {
@@ -109,30 +109,50 @@ export default function Tables() {
         "Aquí podés ver todas las mesas disponibles del turno. Cada mesa puede tener hasta 2 empresas para una reunión 1 a 1. Las mesas se muestran con diferentes colores según su estado.",
       icon: (
         <div className="grid grid-cols-4 gap-2">
-          <div className="w-12 h-12 bg-white border-2 border-gray-300 rounded-lg" />
-          <div className="w-12 h-12 bg-[#68A243]/10 border-2 border-[#68A243] rounded-lg" />
-          <div className="w-12 h-12 bg-[#ffb900]/10 border-2 border-[#ffb900] rounded-lg" />
-          <div className="w-12 h-12 bg-gray-200 border-2 border-gray-400 rounded-lg opacity-50" />
+          <div className="w-12 h-12 bg-transparent border-2 border-slate-400 dark:border-slate-500 rounded-lg" />
+          <div className="w-12 h-12 bg-transparent border-2 border-[#68A243] dark:border-[#68A243] rounded-lg" />
+          <div className="w-12 h-12 bg-transparent border-2 border-[#ffb900] dark:border-[#ffb900] rounded-lg" />
+          <div className="w-12 h-12 bg-slate-300 border-2 border-slate-500 dark:bg-slate-700 dark:border-slate-600 rounded-lg" />
         </div>
       ),
     },
     {
-      title: "Mesa Libre (Blanca)",
+      title: (
+        <div className="flex items-center gap-2 flex-wrap">
+          <span>Mesa Libre</span>
+          <div className="w-5 h-5 sm:w-6 sm:h-6 bg-transparent border-2 border-slate-400 dark:border-slate-500 rounded" />
+        </div>
+      ),
       description:
         "Las mesas de color blanco están completamente libres. Si elegís una mesa libre, vas a ser el primero en reservarla y otra empresa podrá unirse después para completar la reunión.",
     },
     {
-      title: "Mesa Parcial (Verde)",
+      title: (
+        <div className="flex items-center gap-2 flex-wrap">
+          <span>Mesa Parcial</span>
+          <div className="w-5 h-5 sm:w-6 sm:h-6 bg-transparent border-2 border-[#68A243] dark:border-[#68A243] rounded" />
+        </div>
+      ),
       description:
         "Las mesas verdes ya tienen una empresa esperando. Si elegís una de estas mesas, vas a unirte directamente con esa empresa para una reunión 1 a 1. Podés ver el logo y nombre de la empresa antes de confirmar.",
     },
     {
-      title: "Tu Empresa Esperando (Naranja)",
+      title: (
+        <div className="flex items-center gap-2 flex-wrap">
+          <span>Tu Empresa Esperando</span>
+          <div className="w-5 h-5 sm:w-6 sm:h-6 bg-transparent border-2 border-[#ffb900] dark:border-[#ffb900] rounded" />
+        </div>
+      ),
       description:
         "Las mesas naranjas tienen un representante de tu empresa esperando. Si elegís una de estas mesas, podrás cambiar el representante de tu empresa que ya está asignado.",
     },
     {
-      title: "Mesa Completa (Gris)",
+      title: (
+        <div className="flex items-center gap-2 flex-wrap">
+          <span>Mesa Completa</span>
+          <div className="w-5 h-5 sm:w-6 sm:h-6 bg-slate-300 border-2 border-slate-500 dark:bg-slate-700 dark:border-slate-600 rounded" />
+        </div>
+      ),
       description:
         "Las mesas grises ya están completas con 2 empresas. No podés seleccionar estas mesas. Buscá otras mesas disponibles (blancas o verdes).",
     },
@@ -483,6 +503,17 @@ export default function Tables() {
     } finally {
       setSubmittingNewRep(false);
     }
+  };
+
+  const handleNewRepChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
+  ) => {
+    const { name, value } = e.target;
+    setNewRepForm((prev) => ({
+      ...prev,
+      [name]: name === "cargo" ? Number(value) : value,
+    }));
+    setNewRepErrors((prev) => ({ ...prev, [name]: undefined }));
   };
 
   const handleConfirmBooking = async () => {
@@ -861,7 +892,7 @@ export default function Tables() {
         </div>
 
         <Dialog open={showConfirmDialog} onOpenChange={setShowConfirmDialog}>
-          <DialogContent className="sm:max-w-md dark:bg-[#143E29] dark:border-[#68A243]/20">
+          <DialogContent className="sm:max-w-md bg-white dark:bg-[#0F141A] text-foreground dark:text-white border-[#669649] dark:border-[#1a5032]">
             <DialogHeader>
               <DialogTitle className="text-[#143E29] dark:text-white transition-colors duration-300">
                 Confirmar Reserva
@@ -1097,7 +1128,7 @@ export default function Tables() {
           open={showChangeRepDialog}
           onOpenChange={setShowChangeRepDialog}
         >
-          <DialogContent className="sm:max-w-md dark:bg-[#143E29] dark:border-[#68A243]/20">
+          <DialogContent className="sm:max-w-md bg-white dark:bg-[#0F141A] text-foreground dark:text-white border-[#669649] dark:border-[#1a5032]">
             <DialogHeader>
               <DialogTitle className="text-[#143E29] dark:text-white transition-colors duration-300">
                 Cambiar Representante
@@ -1323,147 +1354,17 @@ export default function Tables() {
           open={showAddRepresentativeDialog}
           onOpenChange={setShowAddRepresentativeDialog}
         >
-          <DialogContent className="sm:max-w-md dark:bg-[#143E29] dark:border-[#68A243]/20">
-            <DialogHeader>
-              <DialogTitle className="text-[#143E29] dark:text-white transition-colors duration-300">
-                Agregar Representante
-              </DialogTitle>
-              <DialogDescription className="dark:text-gray-300 transition-colors duration-300">
-                Agregá un nuevo representante de tu empresa para esta reunión
-              </DialogDescription>
-            </DialogHeader>
-
-            <form onSubmit={handleAddRepresentative} className="space-y-4">
-              <div>
-                <Label
-                  htmlFor="nombre"
-                  className="text-[#143E29] dark:text-white transition-colors duration-300"
-                >
-                  Nombre *
-                </Label>
-                <Input
-                  id="nombre"
-                  name="nombre"
-                  value={newRepForm.nombre}
-                  onChange={(e) => {
-                    setNewRepForm({ ...newRepForm, nombre: e.target.value });
-                    setNewRepErrors({ ...newRepErrors, nombre: undefined });
-                  }}
-                  placeholder="Nombre"
-                  className={`${newRepErrors.nombre ? "border-red-500" : ""} dark:bg-[#0f2f25] dark:border-[#68A243]/20 dark:text-white dark:placeholder-gray-500 dark:focus:border-[#68A243] transition-colors duration-300`}
-                />
-                {newRepErrors.nombre && (
-                  <p className="text-xs text-red-500 dark:text-red-400 mt-1">
-                    {newRepErrors.nombre}
-                  </p>
-                )}
-              </div>
-
-              <div>
-                <Label
-                  htmlFor="apellido"
-                  className="text-[#143E29] dark:text-white transition-colors duration-300"
-                >
-                  Apellido *
-                </Label>
-                <Input
-                  id="apellido"
-                  name="apellido"
-                  value={newRepForm.apellido}
-                  onChange={(e) => {
-                    setNewRepForm({ ...newRepForm, apellido: e.target.value });
-                    setNewRepErrors({ ...newRepErrors, apellido: undefined });
-                  }}
-                  placeholder="Apellido"
-                  className={`${newRepErrors.apellido ? "border-red-500" : ""} dark:bg-[#0f2f25] dark:border-[#68A243]/20 dark:text-white dark:placeholder-gray-500 dark:focus:border-[#68A243] transition-colors duration-300`}
-                />
-                {newRepErrors.apellido && (
-                  <p className="text-xs text-red-500 dark:text-red-400 mt-1">
-                    {newRepErrors.apellido}
-                  </p>
-                )}
-              </div>
-
-              <div>
-                <Label
-                  htmlFor="email"
-                  className="text-[#143E29] dark:text-white transition-colors duration-300"
-                >
-                  Email *
-                </Label>
-                <Input
-                  id="email"
-                  name="email"
-                  type="email"
-                  value={newRepForm.email}
-                  onChange={(e) => {
-                    setNewRepForm({ ...newRepForm, email: e.target.value });
-                    setNewRepErrors({ ...newRepErrors, email: undefined });
-                  }}
-                  placeholder="email@example.com"
-                  className={`${newRepErrors.email ? "border-red-500" : ""} dark:bg-[#0f2f25] dark:border-[#68A243]/20 dark:text-white dark:placeholder-gray-500 dark:focus:border-[#68A243] transition-colors duration-300`}
-                />
-                {newRepErrors.email && (
-                  <p className="text-xs text-red-500 dark:text-red-400 mt-1">
-                    {newRepErrors.email}
-                  </p>
-                )}
-              </div>
-
-              <div>
-                <Label
-                  htmlFor="cargo"
-                  className="text-[#143E29] dark:text-white transition-colors duration-300"
-                >
-                  Cargo *
-                </Label>
-                <select
-                  id="cargo"
-                  name="cargo"
-                  value={newRepForm.cargo}
-                  onChange={(e) => {
-                    setNewRepForm({
-                      ...newRepForm,
-                      cargo: Number(e.target.value),
-                    });
-                    setNewRepErrors({ ...newRepErrors, cargo: undefined });
-                  }}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#68A243] dark:bg-[#0f2f25] dark:border-[#68A243]/20 dark:text-white dark:focus:ring-[#68A243] transition-colors duration-300"
-                >
-                  <option value="0">Selecciona un cargo</option>
-                  <option value="1">Gerente</option>
-                  <option value="2">Director</option>
-                  <option value="3">Coordinador</option>
-                  <option value="4">Asesor</option>
-                  <option value="5">Otro</option>
-                </select>
-                {newRepErrors.cargo !== undefined &&
-                  newRepErrors.cargo === 0 && (
-                    <p className="text-xs text-red-500 dark:text-red-400 mt-1">
-                      El cargo es requerido
-                    </p>
-                  )}
-              </div>
-
-              <div className="flex gap-3 pt-4">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => setShowAddRepresentativeDialog(false)}
-                  className="flex-1 dark:bg-[#0f2f25] dark:border-[#68A243]/20 dark:text-white dark:hover:bg-[#1a3f30] transition-colors duration-300"
-                >
-                  Cancelar
-                </Button>
-                <Button
-                  type="submit"
-                  disabled={submittingNewRep}
-                  className="flex-1 bg-[#68A243] hover:bg-[#68A243]/90 text-white"
-                >
-                  {submittingNewRep ? "Agregando..." : "Agregar"}
-                </Button>
-              </div>
-            </form>
-          </DialogContent>
+          <AddRepresentativeModal
+            open={showAddRepresentativeDialog}
+            onOpenChange={setShowAddRepresentativeDialog}
+            form={newRepForm}
+            formErrors={newRepErrors}
+            submitting={submittingNewRep}
+            onChange={handleNewRepChange}
+            onSubmit={handleAddRepresentative}
+            title="Nuevo Representante"
+            description="Agregá un nuevo representante de tu empresa para esta reunión"
+          />
         </Dialog>
       </div>
 

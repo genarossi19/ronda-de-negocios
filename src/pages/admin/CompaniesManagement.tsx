@@ -1,40 +1,25 @@
 import { useState, useEffect } from "react";
 import {
-  Edit2,
   Trash2,
   CheckCircle,
-  AlertCircle,
+  Clock,
   Building2,
+  Search,
+  Eye,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
   DialogFooter,
 } from "@/components/ui/dialog";
-import { Skeleton } from "@/components/ui/skeleton";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 import Navbar from "@/components/Navbar";
-import { ThemeToggle } from "@/components/ThemeToggle";
+import Footer from "@/layout/Footer";
 import { toast } from "sonner";
 
 // Mock data types
@@ -106,6 +91,94 @@ const MOCK_COMPANIES: Company[] = [
   },
 ];
 
+function CompanyRow({
+  company,
+  onApprove,
+  onDelete,
+  onView,
+}: {
+  company: Company;
+  onApprove: (c: Company) => void;
+  onDelete: (c: Company) => void;
+  onView: (c: Company) => void;
+}) {
+  return (
+    <div className="bg-white dark:bg-[#143E29] rounded-lg border border-gray-200 dark:border-[#68A243]/20 p-4 hover:border-[#68A243]/50 transition-all">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        {/* Company Info */}
+        <div className="flex-1 min-w-0">
+          <div className="flex items-start gap-3">
+            <div className="h-10 w-10 rounded-lg bg-gray-100 dark:bg-[#68A243]/10 flex items-center justify-center flex-shrink-0">
+              <Building2 className="h-5 w-5 text-gray-600 dark:text-[#68A243]" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <h3 className="font-semibold text-gray-900 dark:text-white truncate">
+                {company.razon_social}
+              </h3>
+              <p className="text-sm text-gray-600 dark:text-gray-400 truncate">
+                {company.email}
+              </p>
+              <p className="text-sm text-gray-600 dark:text-gray-400">
+                {company.telefono_contacto}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* Status & Sector */}
+        <div className="flex flex-wrap gap-2 sm:justify-end">
+          {company.sector && (
+            <Badge className="bg-blue-100 text-blue-800 dark:bg-blue-950/30 dark:text-blue-400">
+              {company.sector}
+            </Badge>
+          )}
+          <Badge
+            className={
+              company.approved
+                ? "bg-green-100 text-green-800 dark:bg-[#68A243]/20 dark:text-[#68A243]"
+                : "bg-amber-100 text-amber-800 dark:bg-amber-950/30 dark:text-amber-400"
+            }
+          >
+            {company.approved ? "Aprobada" : "Pendiente"}
+          </Badge>
+        </div>
+
+        {/* Actions */}
+        <div className="flex gap-2 sm:justify-end">
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => onView(company)}
+            className="border-gray-300 text-gray-700 hover:bg-gray-100 dark:border-[#68A243]/40 dark:text-[#68A243] dark:hover:bg-[#68A243]/10"
+          >
+            <Eye className="h-4 w-4" />
+          </Button>
+
+          {!company.approved && (
+            <Button
+              size="sm"
+              onClick={() => onApprove(company)}
+              className="gap-2 bg-[#68A243] hover:bg-[#5a9038] text-white"
+            >
+              <CheckCircle className="h-4 w-4" />
+              Aprobar
+            </Button>
+          )}
+
+          <Button
+            size="sm"
+            variant="ghost"
+            onClick={() => onDelete(company)}
+            className="text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950/30"
+          >
+            <Trash2 className="h-4 w-4" />
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function CompaniesManagement() {
   const [companies, setCompanies] = useState<Company[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -113,6 +186,10 @@ export default function CompaniesManagement() {
   const [isDetailOpen, setIsDetailOpen] = useState(false);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const [companyToDelete, setCompanyToDelete] = useState<Company | null>(null);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [filterStatus, setFilterStatus] = useState<
+    "all" | "pending" | "approved"
+  >("all");
 
   // Simulate data loading
   useEffect(() => {
@@ -126,6 +203,16 @@ export default function CompaniesManagement() {
 
   const pendingCompanies = companies.filter((c) => !c.approved);
   const approvedCompanies = companies.filter((c) => c.approved);
+
+  const filteredCompanies = companies.filter((company) => {
+    const matchesSearch =
+      company.razon_social.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      company.email.toLowerCase().includes(searchTerm.toLowerCase());
+
+    if (filterStatus === "pending") return !company.approved && matchesSearch;
+    if (filterStatus === "approved") return company.approved && matchesSearch;
+    return matchesSearch;
+  });
 
   const handleApprove = (company: Company) => {
     setCompanies(
@@ -155,393 +242,227 @@ export default function CompaniesManagement() {
     setIsDetailOpen(true);
   };
 
-  const LoadingTable = () => (
-    <div className="space-y-4">
-      {Array(5)
-        .fill(0)
-        .map((_, i) => (
-          <div key={i} className="flex gap-4 p-4">
-            <Skeleton className="h-12 w-12 rounded" />
-            <div className="flex-1 space-y-2">
-              <Skeleton className="h-4 w-1/3" />
-              <Skeleton className="h-4 w-1/2" />
-            </div>
-          </div>
-        ))}
-    </div>
-  );
-
-  const EmptyState = ({
-    icon: Icon,
-    title,
-    description,
-  }: {
-    icon: React.ReactNode;
-    title: string;
-    description: string;
-  }) => (
-    <div className="flex flex-col items-center justify-center py-12 text-center">
-      <div className="text-muted-foreground dark:text-gray-300 mb-4 transition-colors duration-300">
-        {Icon}
-      </div>
-      <h3 className="font-semibold text-sm dark:text-white transition-colors duration-300">
-        {title}
-      </h3>
-      <p className="text-sm text-muted-foreground dark:text-gray-300 transition-colors duration-300">
-        {description}
-      </p>
-    </div>
-  );
-
-  const CompaniesTable = ({ companies: data }: { companies: Company[] }) => (
-    <div className="rounded-lg border dark:border-[#68A243]/20 dark:bg-[#143E29] transition-colors duration-300">
-      <Table>
-        <TableHeader>
-          <TableRow className="bg-muted/50 dark:bg-[#0f2f25] border-b dark:border-[#68A243]/20 transition-colors duration-300">
-            <TableHead className="font-semibold dark:text-gray-200 transition-colors duration-300">
-              Empresa
-            </TableHead>
-            <TableHead className="font-semibold dark:text-gray-200 transition-colors duration-300">
-              Email
-            </TableHead>
-            <TableHead className="font-semibold dark:text-gray-200 transition-colors duration-300">
-              Teléfono
-            </TableHead>
-            <TableHead className="font-semibold dark:text-gray-200 transition-colors duration-300">
-              Sector
-            </TableHead>
-            <TableHead className="text-right font-semibold dark:text-gray-200 transition-colors duration-300">
-              Acciones
-            </TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {data.map((company) => (
-            <TableRow
-              key={company.id}
-              className="hover:bg-muted/50 dark:hover:bg-[#0f2f25] dark:border-[#68A243]/20 transition-colors duration-300"
-            >
-              <TableCell>
-                <div className="flex items-center gap-3">
-                  <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 dark:bg-[#68A243]/20 transition-colors duration-300">
-                    <Building2 className="h-4 w-4 text-primary dark:text-[#68A243]" />
-                  </div>
-                  <div>
-                    <p className="font-medium text-sm dark:text-white transition-colors duration-300">
-                      {company.razon_social}
-                    </p>
-                  </div>
-                </div>
-              </TableCell>
-              <TableCell className="text-sm dark:text-gray-200 transition-colors duration-300">
-                {company.email}
-              </TableCell>
-              <TableCell className="text-sm dark:text-gray-200 transition-colors duration-300">
-                {company.telefono_contacto}
-              </TableCell>
-              <TableCell className="text-sm">
-                {company.sector && (
-                  <Badge
-                    variant="secondary"
-                    className="dark:bg-[#68A243]/20 dark:text-[#68A243] dark:border-[#68A243]/30 transition-colors duration-300"
-                  >
-                    {company.sector}
-                  </Badge>
-                )}
-              </TableCell>
-              <TableCell className="text-right">
-                <div className="flex justify-end gap-2">
-                  {!company.approved && (
-                    <Button
-                      size="sm"
-                      variant="default"
-                      onClick={() => handleApprove(company)}
-                      className="gap-2 dark:bg-[#68A243] dark:hover:bg-[#5a9038] transition-colors duration-300"
-                    >
-                      <CheckCircle className="h-4 w-4" />
-                      Aprobar
-                    </Button>
-                  )}
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => handleViewDetail(company)}
-                    className="dark:border-[#68A243]/60 dark:text-[#68A243] dark:hover:bg-[#68A243]/20 dark:hover:border-[#68A243] transition-colors duration-300"
-                  >
-                    Ver
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    onClick={() => handleDeleteClick(company)}
-                    className="text-red-500 hover:text-red-700 hover:bg-red-50"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </div>
-              </TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
-    </div>
-  );
-
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-background dark:bg-[#0a1a15] transition-colors duration-300">
+      <div className="min-h-screen bg-white dark:bg-[#0a1a15] flex flex-col">
         <Navbar />
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-          <div className="space-y-8">
-            <div className="space-y-2">
-              <Skeleton className="h-8 w-1/4" />
-              <Skeleton className="h-4 w-1/3" />
-            </div>
-            <LoadingTable />
+        <div className="flex-1 flex items-center justify-center">
+          <div className="text-center">
+            <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-gray-300 border-t-[#68A243]" />
+            <p className="mt-4 text-gray-600 dark:text-gray-400">
+              Cargando empresas...
+            </p>
           </div>
         </div>
+        <Footer />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-background dark:bg-[#0a1a15] transition-colors duration-300">
+    <div className="min-h-screen bg-gray-50 dark:bg-[#0a1a15] transition-colors duration-300 flex flex-col">
       <Navbar />
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        {/* Header */}
-        <div className="mb-8 space-y-2 flex items-start justify-between">
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight dark:text-white transition-colors duration-300">
-              Gestión de empresas
+      {/* Main Content */}
+      <div className="flex-1">
+        <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+          {/* Header */}
+          <div className="mb-8">
+            <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-2">
+              Dashboard Administrativo
             </h1>
-            <p className="text-muted-foreground dark:text-gray-300 transition-colors duration-300">
-              Administra empresas pendientes de aprobación y empresas
-              registradas
+            <p className="text-gray-600 dark:text-gray-400">
+              Gestiona las solicitudes de empresas
             </p>
           </div>
-          <ThemeToggle />
-        </div>
 
-        {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-          <Card className="dark:bg-[#143E29] dark:border-[#68A243]/20 transition-colors duration-300">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium text-muted-foreground dark:text-gray-200 transition-colors duration-300">
-                Pendientes de aprobación
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold text-orange-600 dark:text-orange-400 transition-colors duration-300">
-                {pendingCompanies.length}
+          {/* Stats */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+            <div className="bg-white dark:bg-[#143E29] rounded-lg p-6 border border-gray-200 dark:border-[#68A243]/20">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                    Total de Empresas
+                  </p>
+                  <p className="text-3xl font-bold text-gray-900 dark:text-white mt-2">
+                    {companies.length}
+                  </p>
+                </div>
+                <Building2 className="h-12 w-12 text-gray-300 dark:text-[#68A243]/30" />
               </div>
-              <p className="text-xs text-muted-foreground dark:text-gray-300 mt-1 transition-colors duration-300">
-                Requieren revisión
-              </p>
-            </CardContent>
-          </Card>
+            </div>
 
-          <Card className="dark:bg-[#143E29] dark:border-[#68A243]/20 transition-colors duration-300">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium text-muted-foreground dark:text-gray-200 transition-colors duration-300">
-                Empresas aprobadas
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold text-green-600 dark:text-green-400 transition-colors duration-300">
-                {approvedCompanies.length}
+            <div className="bg-white dark:bg-[#143E29] rounded-lg p-6 border border-gray-200 dark:border-[#68A243]/20">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                    Pendientes de Revisión
+                  </p>
+                  <p className="text-3xl font-bold text-amber-600 dark:text-amber-400 mt-2">
+                    {pendingCompanies.length}
+                  </p>
+                </div>
+                <Clock className="h-12 w-12 text-amber-300 dark:text-amber-500/30" />
               </div>
-              <p className="text-xs text-muted-foreground dark:text-gray-300 mt-1 transition-colors duration-300">
-                Activas en la plataforma
-              </p>
-            </CardContent>
-          </Card>
+            </div>
 
-          <Card className="dark:bg-[#143E29] dark:border-[#68A243]/20 transition-colors duration-300">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium text-muted-foreground dark:text-gray-200 transition-colors duration-300">
-                Total de empresas
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold text-primary dark:text-[#68A243] transition-colors duration-300">
-                {companies.length}
+            <div className="bg-white dark:bg-[#143E29] rounded-lg p-6 border border-gray-200 dark:border-[#68A243]/20">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                    Aprobadas
+                  </p>
+                  <p className="text-3xl font-bold text-[#68A243] mt-2">
+                    {approvedCompanies.length}
+                  </p>
+                </div>
+                <CheckCircle className="h-12 w-12 text-[#68A243]/30" />
               </div>
-              <p className="text-xs text-muted-foreground dark:text-gray-300 mt-1 transition-colors duration-300">
-                En el sistema
-              </p>
-            </CardContent>
-          </Card>
-        </div>
+            </div>
+          </div>
 
-        {/* Tabs */}
-        <Tabs defaultValue="pending" className="space-y-6">
-          <TabsList className="grid w-full max-w-md grid-cols-2">
-            <TabsTrigger value="pending" className="relative">
-              Pendientes
-              {pendingCompanies.length > 0 && (
-                <Badge
-                  variant="destructive"
-                  className="ml-2 h-5 w-5 rounded-full p-0 flex items-center justify-center text-xs"
-                >
-                  {pendingCompanies.length}
-                </Badge>
-              )}
-            </TabsTrigger>
-            <TabsTrigger value="approved">Registradas</TabsTrigger>
-          </TabsList>
+          {/* Filters & Search */}
+          <div className="mb-6 space-y-4">
+            <div className="flex flex-col sm:flex-row gap-4">
+              {/* Search */}
+              <div className="flex-1 relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
+                <Input
+                  placeholder="Buscar por nombre o email..."
+                  value={searchTerm}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                    setSearchTerm(e.target.value)
+                  }
+                  className="pl-10 h-11 border-gray-200 dark:border-[#68A243]/20 dark:bg-[#143E29] dark:text-white dark:placeholder-gray-500"
+                />
+              </div>
 
-          {/* Pending Approval Tab */}
-          <TabsContent value="pending" className="space-y-6">
-            {pendingCompanies.length === 0 ? (
-              <Card className="border-amber-200 bg-amber-50/50 dark:border-[#68A243]/20 dark:bg-[#143E29] dark:text-white transition-colors duration-300">
-                <CardContent className="pt-6">
-                  <EmptyState
-                    icon={<CheckCircle className="h-12 w-12 text-green-600" />}
-                    title="Sin empresas pendientes"
-                    description="Todas las empresas han sido aprobadas"
-                  />
-                </CardContent>
-              </Card>
-            ) : (
-              <Card className="border-orange-200 bg-orange-50/30 dark:border-[#68A243]/20 dark:bg-[#143E29] transition-colors duration-300">
-                <CardHeader className="pb-4">
-                  <div className="flex items-center gap-2">
-                    <AlertCircle className="h-5 w-5 text-orange-600" />
-                    <CardTitle className="text-base">
-                      Empresas pendientes de aprobación
-                    </CardTitle>
-                  </div>
-                  <CardDescription>
-                    {pendingCompanies.length}{" "}
-                    {pendingCompanies.length === 1
-                      ? "empresa requiere"
-                      : "empresas requieren"}{" "}
-                    tu revisión
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <CompaniesTable companies={pendingCompanies} />
-                </CardContent>
-              </Card>
-            )}
-          </TabsContent>
+              {/* Filter Buttons */}
+              <div className="flex gap-2">
+                {(["all", "pending", "approved"] as const).map((status) => (
+                  <button
+                    key={status}
+                    onClick={() => setFilterStatus(status)}
+                    className={`px-4 py-2 rounded-lg font-medium transition-colors text-sm ${
+                      filterStatus === status
+                        ? "bg-[#68A243] text-white"
+                        : "bg-white dark:bg-[#143E29] text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-[#68A243]/20 hover:border-[#68A243]/50"
+                    }`}
+                  >
+                    {status === "all" && "Todos"}
+                    {status === "pending" && "Pendientes"}
+                    {status === "approved" && "Aprobadas"}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
 
-          {/* Approved Tab */}
-          <TabsContent value="approved" className="space-y-6">
-            {approvedCompanies.length === 0 ? (
-              <Card className="dark:bg-[#143E29] dark:border-[#68A243]/20 transition-colors duration-300">
-                <CardContent className="pt-6">
-                  <EmptyState
-                    icon={
-                      <Building2 className="h-12 w-12 text-muted-foreground dark:text-gray-300" />
-                    }
-                    title="Sin empresas registradas"
-                    description="No hay empresas aprobadas en el sistema"
-                  />
-                </CardContent>
-              </Card>
-            ) : (
-              <Card className="dark:bg-[#143E29] dark:border-[#68A243]/20 transition-colors duration-300">
-                <CardHeader className="pb-4">
-                  <div className="flex items-center justify-between">
-                    <CardTitle className="text-base dark:text-white transition-colors duration-300">
-                      Empresas registradas
-                    </CardTitle>
-                    <Badge
-                      variant="outline"
-                      className="dark:border-[#68A243]/50 dark:text-[#68A243]"
-                    >
-                      {approvedCompanies.length}
-                    </Badge>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <CompaniesTable companies={approvedCompanies} />
-                </CardContent>
-              </Card>
-            )}
-          </TabsContent>
-        </Tabs>
-      </div>
-
-      {/* Detail Dialog */}
-      <Dialog open={isDetailOpen} onOpenChange={setIsDetailOpen}>
-        <DialogContent className="max-w-md dark:bg-[#143E29] dark:border-[#68A243]/20 transition-colors duration-300">
-          <DialogHeader>
-            <DialogTitle className="dark:text-white transition-colors duration-300">
-              Detalle de empresa
-            </DialogTitle>
-          </DialogHeader>
-          {selectedCompany && (
-            <div className="space-y-4">
-              <div>
-                <h3 className="text-sm font-semibold text-muted-foreground dark:text-gray-200 mb-1 transition-colors duration-300">
-                  Razón social
-                </h3>
-                <p className="font-medium dark:text-white transition-colors duration-300">
-                  {selectedCompany.razon_social}
+          {/* Companies List */}
+          <div className="space-y-3">
+            {filteredCompanies.length === 0 ? (
+              <div className="text-center py-12 bg-white dark:bg-[#143E29] rounded-lg border border-dashed border-gray-300 dark:border-[#68A243]/20">
+                <Building2 className="mx-auto h-12 w-12 text-gray-300 dark:text-gray-600 mb-4" />
+                <p className="text-gray-600 dark:text-gray-400 font-medium">
+                  {searchTerm || filterStatus !== "all"
+                    ? "No se encontraron empresas"
+                    : "No hay empresas registradas"}
                 </p>
               </div>
+            ) : (
+              filteredCompanies.map((company) => (
+                <CompanyRow
+                  key={company.id}
+                  company={company}
+                  onApprove={handleApprove}
+                  onDelete={handleDeleteClick}
+                  onView={handleViewDetail}
+                />
+              ))
+            )}
+          </div>
+        </div>
+      </div>
 
-              <div className="grid grid-cols-2 gap-4">
+      {/* Detail Modal */}
+      <Dialog open={isDetailOpen} onOpenChange={setIsDetailOpen}>
+        <DialogContent className="max-w-2xl border-gray-200 dark:border-[#68A243]/20 bg-white dark:bg-[#143E29]">
+          <DialogHeader>
+            <DialogTitle className="text-2xl text-gray-900 dark:text-white">
+              Información de Empresa
+            </DialogTitle>
+          </DialogHeader>
+
+          {selectedCompany && (
+            <div className="space-y-6">
+              <div className="flex items-start justify-between">
                 <div>
-                  <h3 className="text-sm font-semibold text-muted-foreground dark:text-gray-200 mb-1 transition-colors duration-300">
-                    Email
+                  <h3 className="text-2xl font-bold text-gray-900 dark:text-white">
+                    {selectedCompany.razon_social}
                   </h3>
-                  <p className="text-sm dark:text-gray-300 transition-colors duration-300">
+                  {selectedCompany.sector && (
+                    <Badge className="mt-2 bg-[#68A243]/10 text-[#143E29] dark:bg-[#68A243]/20 dark:text-[#68A243]">
+                      {selectedCompany.sector}
+                    </Badge>
+                  )}
+                </div>
+                <Badge
+                  className={`${
+                    selectedCompany.approved
+                      ? "bg-green-100 text-green-800 dark:bg-[#68A243]/20 dark:text-[#68A243]"
+                      : "bg-amber-100 text-amber-800 dark:bg-amber-950/30 dark:text-amber-400"
+                  }`}
+                >
+                  {selectedCompany.approved ? "Aprobada" : "Pendiente"}
+                </Badge>
+              </div>
+
+              <div className="grid grid-cols-2 gap-6">
+                <div>
+                  <p className="text-xs font-semibold uppercase text-gray-600 dark:text-gray-400">
+                    Email
+                  </p>
+                  <p className="mt-2 text-gray-900 dark:text-white break-all">
                     {selectedCompany.email}
                   </p>
                 </div>
                 <div>
-                  <h3 className="text-sm font-semibold text-muted-foreground dark:text-gray-200 mb-1 transition-colors duration-300">
+                  <p className="text-xs font-semibold uppercase text-gray-600 dark:text-gray-400">
                     Teléfono
-                  </h3>
-                  <p className="text-sm dark:text-gray-300 transition-colors duration-300">
+                  </p>
+                  <p className="mt-2 text-gray-900 dark:text-white">
                     {selectedCompany.telefono_contacto}
                   </p>
                 </div>
               </div>
 
               <div>
-                <h3 className="text-sm font-semibold text-muted-foreground dark:text-gray-200 mb-1 transition-colors duration-300">
+                <p className="text-xs font-semibold uppercase text-gray-600 dark:text-gray-400">
                   Dirección
-                </h3>
-                <p className="text-sm dark:text-gray-300 transition-colors duration-300">
+                </p>
+                <p className="mt-2 text-gray-900 dark:text-white">
                   {selectedCompany.direccion}
                 </p>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              {selectedCompany.sector && (
                 <div>
-                  <h3 className="text-sm font-semibold text-muted-foreground dark:text-gray-200 mb-1 transition-colors duration-300">
+                  <p className="text-xs font-semibold uppercase text-gray-600 dark:text-gray-400">
                     Sector
-                  </h3>
-                  <p className="text-sm dark:text-gray-300 transition-colors duration-300">
-                    {selectedCompany.sector || "No especificado"}
+                  </p>
+                  <p className="mt-2 text-gray-900 dark:text-white">
+                    {selectedCompany.sector}
                   </p>
                 </div>
-                <div>
-                  <h3 className="text-sm font-semibold text-muted-foreground dark:text-gray-200 mb-1 transition-colors duration-300">
-                    Estado
-                  </h3>
-                  <Badge
-                    variant={
-                      selectedCompany.approved ? "default" : "destructive"
-                    }
-                    className="dark:bg-[#68A243] dark:text-white dark:border-none transition-colors duration-300"
-                  >
-                    {selectedCompany.approved ? "Aprobada" : "Pendiente"}
-                  </Badge>
-                </div>
-              </div>
+              )}
             </div>
           )}
-          <DialogFooter className="mt-6">
+
+          <DialogFooter className="gap-3 mt-8 pt-6 border-t border-gray-200 dark:border-[#68A243]/20">
             <Button
               variant="outline"
               onClick={() => setIsDetailOpen(false)}
-              className="dark:border-[#68A243]/60 dark:text-[#68A243] dark:hover:bg-[#68A243]/20 dark:hover:border-[#68A243] transition-colors duration-300"
+              className="border-gray-300 text-gray-700 hover:bg-gray-100 dark:border-[#68A243]/40 dark:text-[#68A243] dark:hover:bg-[#68A243]/10"
             >
               Cerrar
             </Button>
@@ -549,39 +470,42 @@ export default function CompaniesManagement() {
         </DialogContent>
       </Dialog>
 
-      {/* Delete Confirmation Dialog */}
+      {/* Delete Modal */}
       <Dialog open={isDeleteOpen} onOpenChange={setIsDeleteOpen}>
-        <DialogContent className="max-w-sm dark:bg-[#143E29] dark:border-[#68A243]/20 transition-colors duration-300">
+        <DialogContent className="border-gray-200 dark:border-[#68A243]/20 bg-white dark:bg-[#143E29] max-w-md">
           <DialogHeader>
-            <DialogTitle className="dark:text-white transition-colors duration-300">
-              ¿Eliminar empresa?
+            <DialogTitle className="text-gray-900 dark:text-white">
+              Confirmar eliminación
             </DialogTitle>
-            <DialogDescription className="dark:text-gray-300 transition-colors duration-300">
-              Esta acción no se puede deshacer. Se eliminará permanentemente{" "}
-              <span className="font-semibold text-foreground dark:text-white transition-colors duration-300">
+            <DialogDescription className="text-gray-600 dark:text-gray-400">
+              ¿Estás seguro de que deseas eliminar{" "}
+              <span className="font-bold text-gray-900 dark:text-white">
                 {companyToDelete?.razon_social}
-              </span>{" "}
-              del sistema.
+              </span>
+              ? Esta acción no se puede deshacer.
             </DialogDescription>
           </DialogHeader>
-          <DialogFooter className="gap-3 sm:gap-0">
+
+          <DialogFooter className="gap-3">
             <Button
               variant="outline"
               onClick={() => setIsDeleteOpen(false)}
-              className="dark:border-[#68A243]/50 dark:text-[#68A243] dark:hover:bg-[#68A243]/10 transition-colors duration-300"
+              className="border-gray-300 text-gray-700 hover:bg-gray-100 dark:border-[#68A243]/40 dark:text-[#68A243] dark:hover:bg-[#68A243]/10"
             >
               Cancelar
             </Button>
             <Button
               variant="destructive"
               onClick={handleConfirmDelete}
-              className="dark:bg-red-600 dark:hover:bg-red-700 dark:text-white transition-colors duration-300"
+              className="bg-red-600 hover:bg-red-700 text-white"
             >
               Eliminar
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <Footer />
     </div>
   );
 }

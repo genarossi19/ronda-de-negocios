@@ -2,7 +2,7 @@ import type { EmpresaResponse, EmpresaWrite } from "../types/Empresa";
 import api, { publicApi } from "../lib/axios";
 
 export const getCompanies = async () => {
-  const { data } = await publicApi.get("/empresas");
+  const { data } = await api.get("/empresas");
   return data;
 };
 

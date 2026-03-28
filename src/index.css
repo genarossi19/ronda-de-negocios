@@ -16,6 +16,25 @@
   }
 }
 
+@media (prefers-color-scheme: dark) {
+  :root {
+    --popover: #11161d;
+    --popover-foreground: #ffffff;
+    --background: #0f141a;
+    --foreground: #ffffff;
+    --input: #11161d;
+  }
+}
+
+/* Dark mode theme using .dark class */
+.dark {
+  --popover: #11161d;
+  --popover-foreground: #ffffff;
+  --background: #0f141a;
+  --foreground: #ffffff;
+  --input: #11161d;
+}
+
 :root {
   --background: oklch(1 0 0);
   --foreground: oklch(0.145 0 0);
@@ -191,4 +210,52 @@ html {
 
 .animate-slide-in-up {
   animation: slide-in-up 0.6s ease-out;
+}
+
+/* Autofill styling for browser autocomplete */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+input:-webkit-autofill:active {
+  -webkit-box-shadow: 0 0 0 30px white inset !important;
+  box-shadow: 0 0 0 30px white inset !important;
+  -webkit-text-fill-color: #1f2937 !important;
+}
+
+/* Dark mode autofill styling */
+.dark input:-webkit-autofill,
+.dark input:-webkit-autofill:hover,
+.dark input:-webkit-autofill:focus,
+.dark input:-webkit-autofill:active {
+  -webkit-box-shadow: 0 0 0 30px #0f1419 inset !important;
+  box-shadow: 0 0 0 30px #0f1419 inset !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+
+/* Input placeholder styling */
+input::placeholder,
+textarea::placeholder {
+  opacity: 0.55 !important;
+  font-weight: 400 !important;
+}
+
+.dark input::placeholder,
+.dark textarea::placeholder {
+  opacity: 0.45 !important;
+  color: #9ca3af !important;
+  font-weight: 400 !important;
+}
+
+/* Input value styling */
+input:not(:placeholder-shown),
+textarea:not(:placeholder-shown) {
+  font-weight: 500 !important;
+  opacity: 1 !important;
+}
+
+.dark input:not(:placeholder-shown),
+.dark textarea:not(:placeholder-shown) {
+  color: #ffffff !important;
+  font-weight: 500 !important;
+  opacity: 1 !important;
 }

@@ -267,7 +267,7 @@ export default function Navbar() {
                 </DropdownMenuTrigger>
                 <DropdownMenuContent
                   align="end"
-                  className="w-56 dark:bg-[#143E29] dark:border-[#68A243]/20"
+                  className="w-56 border-[#669649] dark:border-[#1a5032]"
                 >
                   <div className="px-2 py-1.5">
                     <p className="text-sm font-semibold text-gray-900 dark:text-white transition-colors duration-300">
@@ -277,27 +277,27 @@ export default function Navbar() {
                       Empresa ID: {user?.empresa_id}
                     </p>
                   </div>
-                  <DropdownMenuSeparator className="dark:bg-[#68A243]/20" />
+                  <DropdownMenuSeparator className="bg-[#669649]/30 dark:bg-[#1a5032]" />
                   <Link to="/perfil">
-                    <DropdownMenuItem className="cursor-pointer dark:hover:bg-[#1a3f30] dark:text-white dark:focus:bg-[#1a3f30] dark:focus:text-white transition-colors duration-200">
+                    <DropdownMenuItem className="cursor-pointer transition-colors duration-200">
                       <span className="text-sm">Mi Perfil</span>
                     </DropdownMenuItem>
                   </Link>
                   <Link to="/representantes">
-                    <DropdownMenuItem className="cursor-pointer dark:hover:bg-[#1a3f30] dark:text-white dark:focus:bg-[#1a3f30] dark:focus:text-white transition-colors duration-200">
+                    <DropdownMenuItem className="cursor-pointer transition-colors duration-200">
                       <User2Icon className="mr-2 h-4 w-4" />
                       <span className="text-sm">Representantes</span>
                     </DropdownMenuItem>
                   </Link>
-                  <DropdownMenuSeparator className="dark:bg-[#68A243]/20" />
+                  <DropdownMenuSeparator className="bg-[#669649]/30 dark:bg-[#1a5032]" />
                   <DropdownMenuItem
                     onClick={() => {
                       logout();
                       navigate("/");
                     }}
-                    className="text-red-600 dark:text-red-400 cursor-pointer dark:hover:bg-red-950/20 dark:focus:bg-red-950/20 dark:focus:text-red-400 transition-colors duration-200"
+                    className="text-red-600 hover:text-red-600! hover:bg-red-300/10! dark:text-red-400 cursor-pointer dark:hover:bg-red-950/20 dark:focus:bg-red-950/20 dark:focus:text-red-400 transition-colors duration-200"
                   >
-                    <LogOut className="mr-2 h-4 w-4" />
+                    <LogOut className="mr-2 h-4 w-4 text-red-600 dark:text-red-400 " />
                     <span className="text-sm">Cerrar sesión</span>
                   </DropdownMenuItem>
                 </DropdownMenuContent>

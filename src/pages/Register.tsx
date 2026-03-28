@@ -502,7 +502,7 @@ export default function Register() {
   };
 
   return (
-    <div className="min-h-screen bg-white relative overflow-hidden">
+    <div className="min-h-screen bg-white dark:bg-[#0f141a] relative overflow-hidden">
       {/* Animated gradient background */}
       <div className="absolute inset-0">
         <m.div
@@ -609,8 +609,8 @@ export default function Register() {
                           isCompleted
                             ? "bg-[#68A243] text-white border-[#68A243]"
                             : isCurrent
-                            ? "bg-white text-[#143E29] border-[#68A243] shadow-lg shadow-[#68A243]/20"
-                            : "bg-gray-100 text-gray-400 border-gray-200"
+                              ? "bg-white text-[#143E29] border-[#68A243] shadow-lg shadow-[#68A243]/20"
+                              : "bg-gray-100 text-gray-400 border-gray-200"
                         }`}
                       >
                         {isCompleted ? (
@@ -624,8 +624,8 @@ export default function Register() {
                           isCurrent
                             ? "text-[#68A243]"
                             : isCompleted
-                            ? "text-[#68A243]"
-                            : "text-gray-400"
+                              ? "text-[#68A243]"
+                              : "text-gray-400"
                         }`}
                       >
                         {step.title}

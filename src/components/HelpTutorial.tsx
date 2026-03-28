@@ -13,7 +13,7 @@ import { Badge } from "../components/ui/badge";
 import { HelpCircle, ChevronLeft, ChevronRight, X } from "lucide-react";
 
 interface Step {
-  title: string;
+  title: string | React.ReactNode;
   description: string;
   icon?: React.ReactNode;
 }
@@ -58,10 +58,10 @@ export function HelpTutorial({ title, steps }: HelpTutorialProps) {
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="sm:max-w-2xl">
           <DialogHeader>
-            <DialogTitle className="text-2xl text-[#143E29]">
+            <DialogTitle className="text-2xl text-[#143E29] dark:text-white">
               {title}
             </DialogTitle>
-            <DialogDescription>
+            <DialogDescription className="dark:text-gray-300">
               Tutorial paso a paso para ayudarte a usar esta sección
             </DialogDescription>
           </DialogHeader>
@@ -90,15 +90,15 @@ export function HelpTutorial({ title, steps }: HelpTutorialProps) {
                   Paso {currentStep + 1}
                 </Badge>
                 <div className="flex-1">
-                  <h3 className="text-xl font-bold text-[#143E29] mb-2">
+                  <h3 className="text-lg sm:text-xl font-bold text-[#143E29] dark:text-white mb-2">
                     {steps[currentStep].title}
                   </h3>
                   {steps[currentStep].icon && (
-                    <div className="mb-4 flex items-center justify-center bg-[#68A243]/10 rounded-lg p-6">
+                    <div className="mb-4 flex items-center justify-center bg-[#68A243]/10 dark:bg-[#1a3f30] rounded-lg p-6">
                       {steps[currentStep].icon}
                     </div>
                   )}
-                  <p className="text-gray-700 leading-relaxed">
+                  <p className="text-gray-700 dark:text-gray-300 leading-relaxed">
                     {steps[currentStep].description}
                   </p>
                 </div>
@@ -117,7 +117,7 @@ export function HelpTutorial({ title, steps }: HelpTutorialProps) {
                 Anterior
               </Button>
 
-              <span className="text-sm text-gray-600">
+              <span className="text-sm text-gray-600 dark:text-gray-400">
                 {currentStep + 1} de {steps.length}
               </span>
 

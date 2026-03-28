@@ -28,7 +28,7 @@ export default function CompanyModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto dark:bg-[#143E29] dark:border-[#68A243]/20 transition-colors">
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto transition-colors bg-white dark:bg-[#0F141A] text-foreground dark:text-white border-[#669649] dark:border-[#1a5032]">
         <DialogHeader>
           <div className="flex flex-col items-center text-center space-y-4 pb-4">
             <img
@@ -102,7 +102,7 @@ export default function CompanyModal({
                   <h3 className="font-semibold">Información de contacto</h3>
                 </div>
                 <div className="pl-6 space-y-3">
-                  <div className="flex items-start gap-3 p-3 rounded-lg bg-muted/30 dark:bg-[#0f2f25] transition-colors">
+                  <div className="flex items-start gap-3 p-3 rounded-lg bg-muted/30 !dark:bg-[#1a1f2e] transition-colors">
                     <Mail className="h-4 w-4 text-[#68A243] mt-0.5" />
                     <div className="flex-1 min-w-0">
                       <p className="text-xs text-muted-foreground dark:text-gray-400 mb-1 transition-colors">
@@ -117,7 +117,7 @@ export default function CompanyModal({
                     </div>
                   </div>
 
-                  <div className="flex items-start gap-3 p-3 rounded-lg bg-muted/30 dark:bg-[#0f2f25] transition-colors">
+                  <div className="flex items-start gap-3 p-3 rounded-lg bg-muted/30 !dark:bg-[#1a1f2e] transition-colors">
                     <Phone className="h-4 w-4 text-[#68A243] mt-0.5" />
                     <div className="flex-1">
                       <p className="text-xs text-muted-foreground dark:text-gray-400 mb-1 transition-colors">
@@ -133,7 +133,7 @@ export default function CompanyModal({
                   </div>
 
                   {company.contactName && (
-                    <div className="flex items-start gap-3 p-3 rounded-lg bg-muted/30 dark:bg-[#0f2f25] transition-colors">
+                    <div className="flex items-start gap-3 p-3 rounded-lg bg-muted/30 !dark:bg-[#1a1f2e] transition-colors">
                       <Building2 className="h-4 w-4 text-[#68A243] mt-0.5" />
                       <div className="flex-1">
                         <p className="text-xs text-muted-foreground dark:text-gray-400 mb-1 transition-colors">
@@ -148,7 +148,7 @@ export default function CompanyModal({
                 </div>
               </div>
 
-              <div className="pt-4 border-t dark:border-[#68A243]/20 transition-colors">
+              <div className="pt-4 border-t !dark:border-[#68A243]/15 transition-colors">
                 <Button
                   className="w-full bg-[#68A243] hover:bg-[#143E29] dark:hover:bg-[#68A243]/80 text-white transition-colors"
                   onClick={() =>

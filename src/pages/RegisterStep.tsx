@@ -6,6 +6,7 @@ import {
   User,
   FileText,
   ChevronRight,
+  ChevronLeft,
   Eye,
   EyeOff,
   Check,
@@ -260,24 +261,24 @@ export default function RegistrationForm() {
 
   if (loadingData) {
     return (
-      <div className="min-h-screen bg-background">
+      <div className="min-h-screen bg-background dark:bg-[#0a1a15]">
         <Navbar />
         <div className="flex items-center justify-center min-h-[calc(100vh-64px)]">
-          <div className="w-8 h-8 border-4 border-primary/30 border-t-primary rounded-full animate-spin" />
+          <div className="w-8 h-8 border-4 border-primary/30 dark:border-[#68A243]/30 border-t-primary dark:border-t-[#68A243] rounded-full animate-spin" />
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background dark:bg-[#0a1a15]">
       <Navbar />
       <div className="pt-12">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 mt-12">
           <Button
             variant="ghost"
             onClick={() => navigate(-1)}
-            className="hover:bg-gray-100 hover:text-primary text-foreground"
+            className="hover:bg-gray-100 dark:hover:bg-slate-800 hover:text-primary text-foreground"
           >
             <ArrowLeft className="mr-2 h-4 w-4" />
             Volver
@@ -300,19 +301,19 @@ export default function RegistrationForm() {
                     <div
                       className={`flex items-start gap-4 p-4 rounded-lg transition-all ${
                         isCurrent
-                          ? "bg-primary text-primary-foreground shadow-lg"
+                          ? "bg-[#68A243] !text-white !shadow-lg dark:bg-[#68A243]"
                           : isCompleted
-                            ? "bg-primary/20 text-primary"
-                            : "bg-muted text-muted-foreground"
+                            ? "bg-[#68A243]/20 !text-[#68A243] dark:bg-[#1a5032] dark:!text-[#68A243]"
+                            : "!bg-slate-200 dark:!bg-slate-700 !text-gray-600 dark:!text-gray-400"
                       }`}
                     >
                       <div
                         className={`flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center font-semibold ${
                           isCurrent
-                            ? "bg-primary-foreground text-primary"
+                            ? "!bg-white !text-[#68A243]"
                             : isCompleted
-                              ? "bg-primary text-primary-foreground"
-                              : "bg-muted-foreground text-muted"
+                              ? "!bg-[#68A243] !text-white dark:bg-[#68A243]"
+                              : "!bg-gray-400 dark:!bg-slate-600 !text-white dark:!text-gray-300"
                         }`}
                       >
                         {isCompleted ? (
@@ -322,16 +323,28 @@ export default function RegistrationForm() {
                         )}
                       </div>
                       <div className="flex-1">
-                        <p className="text-xs font-semibold opacity-75">
+                        <p
+                          className={`text-xs font-semibold ${
+                            isCurrent
+                              ? "!text-white"
+                              : "opacity-75 dark:opacity-90"
+                          }`}
+                        >
                           Paso {step.id}
                         </p>
-                        <p className="font-semibold">{step.title}</p>
+                        <p
+                          className={`font-semibold ${isCurrent ? "!text-white" : "text-foreground dark:text-white"}`}
+                        >
+                          {step.title}
+                        </p>
                       </div>
                     </div>
                     {index < STEPS.length - 1 && (
                       <div
                         className={`h-6 w-0.5 mx-[calc(1.25rem+1.25rem)] my-2 ${
-                          isCompleted ? "bg-primary" : "bg-muted"
+                          isCompleted
+                            ? "!bg-[#68A243]"
+                            : "!bg-slate-300 dark:!bg-slate-600"
                         }`}
                       ></div>
                     )}
@@ -341,14 +354,14 @@ export default function RegistrationForm() {
             </div>
 
             {/* Progress info */}
-            <div className="mt-8 p-4 bg-muted/50 rounded-lg">
-              <p className="text-xs text-muted-foreground">
+            <div className="mt-8 p-4 bg-muted/50 dark:bg-slate-800/50 rounded-lg">
+              <p className="text-xs text-muted-foreground dark:text-gray-400">
                 Progreso: <span className="font-semibold">{currentStep}</span>{" "}
                 de <span className="font-semibold">{STEPS.length}</span>
               </p>
-              <div className="mt-2 w-full bg-muted-foreground/20 rounded-full h-2">
+              <div className="mt-2 w-full bg-muted-foreground/20 dark:bg-slate-700/50 rounded-full h-2">
                 <div
-                  className="bg-primary h-2 rounded-full transition-all duration-300"
+                  className="bg-primary dark:bg-[#68A243] h-2 rounded-full transition-all duration-300"
                   style={{
                     width: `${(currentStep / STEPS.length) * 100}%`,
                   }}
@@ -359,22 +372,27 @@ export default function RegistrationForm() {
 
           {/* Main content */}
           <div className="lg:col-span-3">
-            <Card className="border-secondary/20">
+            <Card className="!border-slate-200/60 dark:!border-[#68A243]/20 !bg-white dark:!bg-[#0a1a15]">
               <CardContent className="p-8">
                 {currentStep === 1 && (
                   <div className="space-y-6">
                     <div>
-                      <h2 className="text-2xl font-bold">
+                      <h2 className="text-2xl font-bold text-foreground dark:text-white">
                         Datos de tu empresa
                       </h2>
-                      <p className="text-sm text-muted-foreground">
+                      <p className="text-sm text-muted-foreground dark:text-gray-400">
                         Información básica y ubicación
                       </p>
                     </div>
 
                     <div className="space-y-4">
                       <div className="space-y-2">
-                        <Label htmlFor="razon_social">Razón social *</Label>
+                        <Label
+                          htmlFor="razon_social"
+                          className="text-gray-700 dark:text-gray-300 font-bold text-sm"
+                        >
+                          Razón social *
+                        </Label>
                         <Input
                           id="razon_social"
                           value={formData.razon_social}
@@ -389,10 +407,10 @@ export default function RegistrationForm() {
                             });
                           }}
                           placeholder="Ej: TechSolutions SA"
-                          className={`h-11 ${
+                          className={`h-11 !bg-white dark:!bg-[#0f1419] !text-foreground dark:!text-white !border-slate-200 dark:!border-[#1a5032] dark:placeholder:!text-gray-500 ${
                             hasFieldError("razon_social")
-                              ? "border-red-500 focus-visible:ring-red-500/50"
-                              : ""
+                              ? "!border-red-500 focus-visible:!ring-red-500/50"
+                              : "focus-visible:border-[#68A243] dark:focus-visible:!border-[#2d7a52]"
                           }`}
                         />
                         {hasFieldError("razon_social") && (
@@ -403,7 +421,12 @@ export default function RegistrationForm() {
                       </div>
 
                       <div className="space-y-2">
-                        <Label htmlFor="cuit">CUIT *</Label>
+                        <Label
+                          htmlFor="cuit"
+                          className="text-gray-700 dark:text-gray-300 font-bold text-sm"
+                        >
+                          CUIT *
+                        </Label>
                         <Input
                           id="cuit"
                           value={formData.cuit}
@@ -412,10 +435,10 @@ export default function RegistrationForm() {
                             setFieldErrors({ ...fieldErrors, cuit: [] });
                           }}
                           placeholder="30-12345678-9"
-                          className={`h-11 ${
+                          className={`h-11 !bg-white dark:!bg-[#0f1419] !text-foreground dark:!text-white !border-slate-200 dark:!border-[#1a5032] dark:placeholder:!text-gray-500 ${
                             hasFieldError("cuit")
-                              ? "border-red-500 focus-visible:ring-red-500/50"
-                              : ""
+                              ? "!border-red-500 focus-visible:!ring-red-500/50"
+                              : "focus-visible:border-[#68A243] dark:focus-visible:!border-[#2d7a52]"
                           }`}
                         />
                         {hasFieldError("cuit") && (
@@ -426,7 +449,12 @@ export default function RegistrationForm() {
                       </div>
 
                       <div className="space-y-2">
-                        <Label htmlFor="direccion">Dirección *</Label>
+                        <Label
+                          htmlFor="direccion"
+                          className="text-gray-700 dark:text-gray-300 font-bold text-sm"
+                        >
+                          Dirección *
+                        </Label>
                         <Input
                           id="direccion"
                           value={formData.direccion}
@@ -438,10 +466,10 @@ export default function RegistrationForm() {
                             setFieldErrors({ ...fieldErrors, direccion: [] });
                           }}
                           placeholder="Ej: Calle Principal 123"
-                          className={`h-11 ${
+                          className={`h-11 !bg-white dark:!bg-[#0f1419] !text-foreground dark:!text-white !border-slate-200 dark:!border-[#1a5032] dark:placeholder:!text-gray-500 ${
                             hasFieldError("direccion")
-                              ? "border-red-500 focus-visible:ring-red-500/50"
-                              : ""
+                              ? "!border-red-500 focus-visible:!ring-red-500/50"
+                              : "focus-visible:border-[#68A243] dark:focus-visible:!border-[#2d7a52]"
                           }`}
                         />
                         {hasFieldError("direccion") && (
@@ -453,7 +481,12 @@ export default function RegistrationForm() {
 
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div className="space-y-2">
-                          <Label htmlFor="provincia">Provincia *</Label>
+                          <Label
+                            htmlFor="provincia"
+                            className="text-gray-700 dark:text-gray-300 font-bold text-sm"
+                          >
+                            Provincia *
+                          </Label>
                           <Select
                             value={
                               formData.provincia_id === 0
@@ -473,10 +506,10 @@ export default function RegistrationForm() {
                             }}
                           >
                             <SelectTrigger
-                              className={`h-11 w-full ${
+                              className={`h-11 w-full !bg-white dark:!bg-[#0f1419] !text-foreground dark:!text-white !border-slate-200 dark:!border-[#1a5032] ${
                                 hasFieldError("provincia_id")
-                                  ? "border-red-500"
-                                  : ""
+                                  ? "!border-red-500"
+                                  : "dark:focus-visible:!border-[#2d7a52]"
                               }`}
                             >
                               <SelectValue placeholder="Seleccioná una provincia" />
@@ -504,7 +537,12 @@ export default function RegistrationForm() {
                         </div>
 
                         <div className="space-y-2">
-                          <Label htmlFor="localidad">Localidad *</Label>
+                          <Label
+                            htmlFor="localidad"
+                            className="text-gray-700 dark:text-gray-300 font-bold text-sm"
+                          >
+                            Localidad *
+                          </Label>
                           <Select
                             value={
                               formData.localidad === 0
@@ -524,10 +562,10 @@ export default function RegistrationForm() {
                             disabled={formData.provincia_id === 0}
                           >
                             <SelectTrigger
-                              className={`h-11 w-full disabled:opacity-50 ${
+                              className={`h-11 w-full !bg-white dark:!bg-[#0f1419] !text-foreground dark:!text-white !border-slate-200 dark:!border-[#1a5032] disabled:!opacity-50 ${
                                 hasFieldError("localidad")
-                                  ? "border-red-500"
-                                  : ""
+                                  ? "!border-red-500"
+                                  : "dark:focus-visible:!border-[#2d7a52]"
                               }`}
                             >
                               <SelectValue placeholder="Seleccioná una localidad" />
@@ -559,15 +597,22 @@ export default function RegistrationForm() {
                 {currentStep === 2 && (
                   <div className="space-y-6">
                     <div>
-                      <h2 className="text-2xl font-bold">Sector y marca</h2>
-                      <p className="text-sm text-muted-foreground">
+                      <h2 className="text-2xl font-bold text-foreground dark:text-white">
+                        Sector y marca
+                      </h2>
+                      <p className="text-sm text-muted-foreground dark:text-gray-400">
                         ¿A qué se dedica tu empresa?
                       </p>
                     </div>
 
                     <div className="space-y-6">
                       <div className="space-y-2">
-                        <Label htmlFor="sector">Seleccioná el sector *</Label>
+                        <Label
+                          htmlFor="sector"
+                          className="text-gray-700 dark:text-gray-300 font-bold text-sm"
+                        >
+                          Seleccioná el sector *
+                        </Label>
                         <Select
                           value={
                             formData.sector === 0 ? "" : String(formData.sector)
@@ -578,8 +623,10 @@ export default function RegistrationForm() {
                           }}
                         >
                           <SelectTrigger
-                            className={`h-11 ${
-                              hasFieldError("sector") ? "border-red-500" : ""
+                            className={`h-11 !bg-white dark:!bg-[#0f1419] !text-foreground dark:!text-white !border-slate-200 dark:!border-[#1a5032] ${
+                              hasFieldError("sector")
+                                ? "!border-red-500"
+                                : "dark:focus-visible:!border-[#2d7a52]"
                             }`}
                           >
                             <SelectValue placeholder="Seleccioná un sector" />
@@ -603,7 +650,12 @@ export default function RegistrationForm() {
                       </div>
 
                       <div className="space-y-2">
-                        <Label htmlFor="descripcion">Descripción</Label>
+                        <Label
+                          htmlFor="descripcion"
+                          className="text-gray-700 dark:text-gray-300 font-bold text-sm"
+                        >
+                          Descripción
+                        </Label>
                         <Textarea
                           id="descripcion"
                           value={formData.descripcion}
@@ -618,10 +670,10 @@ export default function RegistrationForm() {
                             });
                           }}
                           placeholder="Cuéntanos más sobre tu empresa..."
-                          className={`${
+                          className={`!bg-white dark:!bg-[#0f1419] !text-foreground dark:!text-white !border-slate-200 dark:!border-[#1a5032] dark:placeholder:!text-gray-500 ${
                             hasFieldError("descripcion")
-                              ? "border-red-500 focus-visible:ring-red-500/50"
-                              : ""
+                              ? "!border-red-500 focus-visible:!ring-red-500/50"
+                              : "dark:focus-visible:!ring-[#68A243]/50"
                           }`}
                         />
                         {hasFieldError("descripcion") && (
@@ -631,7 +683,7 @@ export default function RegistrationForm() {
                         )}
                       </div>
 
-                      <div className="space-y-3 pt-4 border-t">
+                      <div className="space-y-3 pt-4 border-t dark:border-[#2a3d4d]">
                         <ImageCropperNew
                           onImageSelect={handleImageUpload}
                           initialBlob={logoBlob}
@@ -650,17 +702,22 @@ export default function RegistrationForm() {
                 {currentStep === 3 && (
                   <div className="space-y-6">
                     <div>
-                      <h2 className="text-2xl font-bold">
+                      <h2 className="text-2xl font-bold text-foreground dark:text-white">
                         Persona de contacto
                       </h2>
-                      <p className="text-sm text-muted-foreground">
+                      <p className="text-sm text-muted-foreground dark:text-gray-400">
                         Información del representante principal
                       </p>
                     </div>
 
                     <div className="grid sm:grid-cols-2 gap-4">
                       <div className="space-y-2">
-                        <Label htmlFor="email">Email *</Label>
+                        <Label
+                          htmlFor="email"
+                          className="text-gray-700 dark:text-gray-300 font-bold text-sm"
+                        >
+                          Email *
+                        </Label>
                         <Input
                           id="email"
                           type="email"
@@ -670,10 +727,10 @@ export default function RegistrationForm() {
                             setFieldErrors({ ...fieldErrors, email: [] });
                           }}
                           placeholder="contacto@empresa.com"
-                          className={`h-11 ${
+                          className={`h-11 !bg-white dark:!bg-[#0f1419] !text-foreground dark:!text-white !border-slate-200 dark:!border-[#1a5032] dark:placeholder:!text-gray-500 ${
                             hasFieldError("email")
-                              ? "border-red-500 focus-visible:ring-red-500/50"
-                              : ""
+                              ? "!border-red-500 focus-visible:!ring-red-500/50"
+                              : "focus-visible:border-[#68A243] dark:focus-visible:!border-[#2d7a52]"
                           }`}
                         />
                         {hasFieldError("email") && (
@@ -684,7 +741,12 @@ export default function RegistrationForm() {
                       </div>
 
                       <div className="space-y-2">
-                        <Label htmlFor="telefono_contacto">Teléfono *</Label>
+                        <Label
+                          htmlFor="telefono_contacto"
+                          className="text-gray-700 dark:text-gray-300 font-bold text-sm"
+                        >
+                          Teléfono *
+                        </Label>
                         <Input
                           id="telefono_contacto"
                           type="tel"
@@ -700,10 +762,10 @@ export default function RegistrationForm() {
                             });
                           }}
                           placeholder="+54 11 1234-5678"
-                          className={`h-11 ${
+                          className={`h-11 !bg-white dark:!bg-[#0f1419] !text-foreground dark:!text-white !border-slate-200 dark:!border-[#1a5032] dark:placeholder:!text-gray-500 ${
                             hasFieldError("telefono_contacto")
-                              ? "border-red-500 focus-visible:ring-red-500/50"
-                              : ""
+                              ? "!border-red-500 focus-visible:!ring-red-500/50"
+                              : "dark:focus-visible:!ring-[#68A243]/30"
                           }`}
                         />
                         {hasFieldError("telefono_contacto") && (
@@ -719,8 +781,10 @@ export default function RegistrationForm() {
                 {currentStep === 4 && (
                   <div className="space-y-6">
                     <div>
-                      <h2 className="text-2xl font-bold">Crea tu contraseña</h2>
-                      <p className="text-sm text-muted-foreground">
+                      <h2 className="text-2xl font-bold text-foreground dark:text-white">
+                        Crea tu contraseña
+                      </h2>
+                      <p className="text-sm text-muted-foreground dark:text-gray-400">
                         Esta será tu contraseña de acceso a la plataforma
                       </p>
                     </div>
@@ -728,7 +792,12 @@ export default function RegistrationForm() {
                     <div className="space-y-5">
                       <div className="grid sm:grid-cols-2 gap-4">
                         <div className="space-y-2">
-                          <Label htmlFor="password">Contraseña *</Label>
+                          <Label
+                            htmlFor="password"
+                            className="text-gray-700 dark:text-gray-300 font-bold text-sm"
+                          >
+                            Contraseña *
+                          </Label>
                           <div className="relative">
                             <Input
                               id="password"
@@ -745,16 +814,16 @@ export default function RegistrationForm() {
                                 });
                               }}
                               placeholder="••••••••"
-                              className={`h-11 pr-10 ${
+                              className={`h-11 pr-10 !bg-white dark:!bg-[#0f1419] !text-foreground dark:!text-white !border-slate-200 dark:!border-[#1a5032] dark:placeholder:!text-gray-500 ${
                                 hasFieldError("password") || passwordsMismatch()
-                                  ? "border-red-500 focus-visible:ring-red-500/50"
-                                  : ""
+                                  ? "!border-red-500 focus-visible:!ring-red-500/50"
+                                  : "dark:focus-visible:!ring-[#68A243]/50"
                               }`}
                             />
                             <button
                               type="button"
                               onClick={() => setShowPassword(!showPassword)}
-                              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-600 hover:text-primary transition-colors"
+                              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-600 dark:text-gray-400 hover:text-primary dark:hover:text-[#68A243] transition-colors"
                             >
                               {showPassword ? (
                                 <EyeOff className="h-4 w-4" />
@@ -771,7 +840,10 @@ export default function RegistrationForm() {
                         </div>
 
                         <div className="space-y-2">
-                          <Label htmlFor="password_confirm">
+                          <Label
+                            htmlFor="password_confirm"
+                            className="text-gray-700 dark:text-gray-300 font-bold text-sm"
+                          >
                             Repetir contraseña *
                           </Label>
                           <Input
@@ -789,10 +861,10 @@ export default function RegistrationForm() {
                               });
                             }}
                             placeholder="••••••••"
-                            className={`h-11 ${
+                            className={`h-11 !bg-white dark:!bg-[#0f1419] !text-foreground dark:!text-white !border-slate-200 dark:!border-[#1a5032] dark:placeholder:!text-gray-500 ${
                               hasFieldError("password2") || passwordsMismatch()
-                                ? "border-red-500 focus-visible:ring-red-500/50"
-                                : ""
+                                ? "!border-red-500 focus-visible:!ring-red-500/50"
+                                : "dark:focus-visible:!ring-[#68A243]/50"
                             }`}
                           />
                           {hasFieldError("password2") && (
@@ -813,8 +885,9 @@ export default function RegistrationForm() {
                         type="button"
                         variant="outline"
                         onClick={prevStep}
-                        className="flex-1 h-11"
+                        className="flex-1 h-11 bg-transparent text-black border-black/30 dark:text-white  hover:bg-accent hover:border-accent hover:text-white transition-colors duration-200 ease-in-out"
                       >
+                        <ChevronLeft className="mr-2 h-4 w-4" />
                         Anterior
                       </Button>
                     )}
@@ -824,7 +897,7 @@ export default function RegistrationForm() {
                       disabled={!isStepComplete() || isLoading}
                       className={`${
                         currentStep === 1 ? "w-full" : "flex-1"
-                      } bg-primary hover:bg-primary-strong h-11 font-semibold disabled:opacity-50 disabled:cursor-not-allowed`}
+                      } bg-primary dark:bg-[#68A243] hover:bg-primary-strong dark:hover:bg-[#5a8f38] h-11 font-semibold disabled:opacity-50 disabled:cursor-not-allowed text-white`}
                     >
                       {isLoading ? (
                         <span className="flex items-center gap-2">

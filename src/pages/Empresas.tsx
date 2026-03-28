@@ -55,6 +55,7 @@ export default function Companies() {
       try {
         const data = await getCompanies(); // llama a tu API real
         setCompanies(data);
+        console.log(data);
       } catch (err) {
         console.error(err);
         setError("No se pudieron obtener las empresas.");
