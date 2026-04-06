@@ -5,8 +5,8 @@ import { useUserStore } from "../store/userStore";
 const TOKEN_COOKIE_NAME = "token";
 
 const api = axios.create({
-  baseURL: "https://incomprehensive-nedra-subthoracic.ngrok-free.dev",
-  //baseURL: "http://100.100.34.104",
+  // baseURL: "https://incomprehensive-nedra-subthoracic.ngrok-free.dev",
+  baseURL: "http://ronda.local",
   timeout: 20000,
   headers: {
     "Content-Type": "application/json",
@@ -16,8 +16,8 @@ const api = axios.create({
 
 // Instancia pública sin interceptor de token (para endpoints abiertos como /empresas)
 export const publicApi = axios.create({
-  baseURL: "https://incomprehensive-nedra-subthoracic.ngrok-free.dev",
-  //baseURL: "http://100.100.34.104",
+  // baseURL: "https://incomprehensive-nedra-subthoracic.ngrok-free.dev",
+  baseURL: "http://ronda.local",
   timeout: 20000,
   headers: {
     "Content-Type": "application/json",
