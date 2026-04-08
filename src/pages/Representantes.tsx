@@ -27,10 +27,12 @@ import {
   getRepresentantes,
   createRepresentante,
 } from "../api/RepresentanteService";
+import { getCargos } from "../api/CargoService";
 import type {
   RepresentanteResponse,
   RepresentanteWrite,
 } from "../types/Representante";
+import type { GenericType } from "../types/GenericType";
 import { useCurrentUser } from "../hooks/useCurrentUser";
 import { toast } from "sonner";
 
@@ -49,6 +51,7 @@ export default function Representantes() {
   const [ownRepresentantes, setOwnRepresentantes] = useState<
     RepresentanteResponse[]
   >([]);
+  const [cargos, setCargos] = useState<GenericType[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -81,8 +84,35 @@ export default function Representantes() {
   }, [user?.is_superuser, user?.empresa_id]);
 
   useEffect(() => {
-    fetchRepresentantes();
-  }, [fetchRepresentantes]);
+    const loadData = async () => {
+      try {
+        const [repsData, cargosData] = await Promise.all([
+          getRepresentantes(user?.is_superuser ? { all: true } : {}),
+          getCargos(),
+        ]);
+        setCargos(cargosData);
+
+        if (user?.is_superuser && user?.empresa_id) {
+          const own = repsData.filter(
+            (rep) => rep.empresa_id === user.empresa_id,
+          );
+          const others = repsData.filter(
+            (rep) => rep.empresa_id !== user.empresa_id,
+          );
+          setOwnRepresentantes(own);
+          setRepresentantes(others);
+        } else {
+          setRepresentantes(repsData);
+        }
+        setLoading(false);
+      } catch {
+        setError("No se pudieron cargar los representantes. Intentá de nuevo.");
+        setLoading(false);
+      }
+    };
+
+    loadData();
+  }, [user?.is_superuser, user?.empresa_id]);
 
   const validate = (): boolean => {
     const errors: Partial<RepresentanteWrite> = {};
@@ -101,7 +131,21 @@ export default function Representantes() {
     if (!validate()) return;
     setSubmitting(true);
     try {
-      const nuevo = await createRepresentante(form);
+      let nuevo = await createRepresentante(form);
+
+      // Asegurar que el cargo sea un objeto completo {id, nombre}
+      if (nuevo.cargo && typeof nuevo.cargo === "number") {
+        const cargoCompleto = cargos.find((c) => c.id === nuevo.cargo);
+        nuevo = { ...nuevo, cargo: cargoCompleto as any };
+      } else if (
+        !nuevo.cargo ||
+        (typeof nuevo.cargo === "object" && !nuevo.cargo.nombre)
+      ) {
+        // Si cargo no tiene nombre, buscar en la lista de cargos por ID
+        const cargoCompleto = cargos.find((c) => c.id === form.cargo);
+        nuevo = { ...nuevo, cargo: cargoCompleto as any };
+      }
+
       // Actualizar la lista correctamente
       if (user?.is_superuser && user?.empresa_id) {
         if (nuevo.empresa_id === user.empresa_id) {
@@ -228,6 +272,7 @@ export default function Representantes() {
                 submitting={submitting}
                 onChange={handleChange}
                 onSubmit={handleSubmit}
+                cargos={cargos}
               />
             </Dialog>
           </div>

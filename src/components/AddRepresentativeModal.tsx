@@ -16,14 +16,7 @@ import {
   SelectValue,
 } from "./ui/select";
 import type { RepresentanteWrite } from "../types/Representante";
-
-const CARGOS = [
-  { id: 1, nombre: "Gerente" },
-  { id: 2, nombre: "Director" },
-  { id: 3, nombre: "Coordinador" },
-  { id: 4, nombre: "Asesor" },
-  { id: 5, nombre: "Otro" },
-];
+import type { GenericType } from "../types/GenericType";
 
 interface AddRepresentativeModalProps {
   open: boolean;
@@ -35,6 +28,7 @@ interface AddRepresentativeModalProps {
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
   ) => void;
   onSubmit: (e: React.FormEvent) => void;
+  cargos: GenericType[];
   title?: string;
   description?: string;
 }
@@ -47,6 +41,7 @@ export function AddRepresentativeModal({
   submitting,
   onChange,
   onSubmit,
+  cargos,
   title = "Nuevo representante",
   description = "Completá los datos del representante de tu empresa.",
 }: AddRepresentativeModalProps) {
@@ -156,7 +151,7 @@ export function AddRepresentativeModal({
                 <SelectValue placeholder="Seleccioná un cargo" />
               </SelectTrigger>
               <SelectContent>
-                {CARGOS.map((c) => (
+                {cargos.map((c) => (
                   <SelectItem key={c.id} value={String(c.id)}>
                     {c.nombre}
                   </SelectItem>
