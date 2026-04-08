@@ -6,22 +6,22 @@ const TOKEN_COOKIE_NAME = "token";
 
 const api = axios.create({
   // baseURL: "https://incomprehensive-nedra-subthoracic.ngrok-free.dev",
-  baseURL: "http://ronda.local",
+  baseURL: "https://rondadenegocios-api.trenquelauquen.gov.ar",
   timeout: 20000,
   headers: {
     "Content-Type": "application/json",
-    "ngrok-skip-browser-warning": "true",
+    //"ngrok-skip-browser-warning": "true",
   },
 });
 
 // Instancia pública sin interceptor de token (para endpoints abiertos como /empresas)
 export const publicApi = axios.create({
   // baseURL: "https://incomprehensive-nedra-subthoracic.ngrok-free.dev",
-  baseURL: "http://ronda.local",
+  baseURL: "https://rondadenegocios-api.trenquelauquen.gov.ar",
   timeout: 20000,
   headers: {
     "Content-Type": "application/json",
-    "ngrok-skip-browser-warning": "true",
+    //"ngrok-skip-browser-warning": "true",
   },
 });
 
