@@ -97,6 +97,7 @@ export default function Navbar() {
     : "bg-white border-b border-gray-100 shadow-sm";
 
   const getUserInitials = () => {
+    if (user?.is_superuser) return "A";
     if (!user?.razon_social) return "U";
     return user.razon_social
       .split(" ")
@@ -104,6 +105,11 @@ export default function Navbar() {
       .join("")
       .toUpperCase()
       .slice(0, 2);
+  };
+
+  const getUserDisplayName = () => {
+    if (user?.is_superuser) return "Admin";
+    return user?.razon_social || "Usuario";
   };
 
   const isAdmin = user?.is_superuser || false;
@@ -261,7 +267,7 @@ export default function Navbar() {
                         isDarkTheme ? "text-white" : "text-[#143E29]"
                       }`}
                     >
-                      {user?.razon_social}
+                      {getUserDisplayName()}
                     </span>
                   </button>
                 </DropdownMenuTrigger>
@@ -271,11 +277,13 @@ export default function Navbar() {
                 >
                   <div className="px-2 py-1.5">
                     <p className="text-sm font-semibold text-gray-900 dark:text-white transition-colors duration-300">
-                      {user?.razon_social}
+                      {getUserDisplayName()}
                     </p>
-                    <p className="text-xs text-gray-500 dark:text-gray-400 transition-colors duration-300">
-                      Empresa ID: {user?.empresa_id}
-                    </p>
+                    {!user?.is_superuser && (
+                      <p className="text-xs text-gray-500 dark:text-gray-400 transition-colors duration-300">
+                        Empresa ID: {user?.empresa_id}
+                      </p>
+                    )}
                   </div>
                   <DropdownMenuSeparator className="bg-[#669649]/30 dark:bg-[#1a5032]" />
                   <Link to="/perfil">
