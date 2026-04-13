@@ -18,6 +18,7 @@ import CompaniesManagement from "./pages/admin/CompaniesManagement";
 import Representantes from "./pages/Representantes";
 import NotFound from "./pages/NotFound";
 import { Toaster } from "./components/ui/sonner";
+import ValidarEmail from "./pages/ValidarEmail";
 
 function AppRoutes() {
   useAuth();
@@ -30,6 +31,10 @@ function AppRoutes() {
         <Route path="/empresas" element={<Empresas />} />
         <Route path="/empresas/:id" element={<EmpresasDetail />} />
         <Route path="/register" element={<Register />} />
+        <Route
+          path="/verificar-email/:uidb64/:token"
+          element={<ValidarEmail />}
+        />
         <Route
           path="/turnos"
           element={

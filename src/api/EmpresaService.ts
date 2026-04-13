@@ -13,13 +13,21 @@ export const getCompanyById = async (
   return data;
 };
 
-export const approveCompany = async (id: number) => {
-  const { data } = await api.patch(`/empresas/${id}/`, { aprobada: true });
+export const approveCompany = async (id: number, aprobada: boolean) => {
+  const { data } = await api.patch(
+    `/empresas/cambiar-estado/${id}/${aprobada}/`,
+  );
   return data;
 };
 
 export const deleteCompany = async (id: number) => {
-  await api.delete(`/empresas/${id}/`);
+  const { data } = await api.patch(`/empresas/${id}/`, { eliminado: true });
+  return data;
+};
+
+export const validarEmail = async (uidb64: string, token: string) => {
+  const { data } = await api.get(`/verificar-email/${uidb64}/${token}/`);
+  return data;
 };
 
 export const createCompany = async (company: EmpresaWrite) => {

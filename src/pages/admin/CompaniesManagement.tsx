@@ -3,6 +3,7 @@ import { useNavigate } from "react-router";
 import {
   Trash2,
   CheckCircle,
+  XCircle,
   Clock,
   Building2,
   Search,
@@ -93,27 +94,34 @@ function CompanyRow({
           )}
           <Badge
             className={
-              company.aprobada
-                ? "bg-green-100 text-green-800 dark:bg-[#68A243]/20 dark:text-[#68A243]"
-                : "bg-amber-100 text-amber-800 dark:bg-amber-950/30 dark:text-amber-400"
+              company.eliminado
+                ? "bg-red-100 text-red-800 dark:bg-red-950/30 dark:text-red-400"
+                : company.aprobada
+                  ? "bg-green-100 text-green-800 dark:bg-[#68A243]/20 dark:text-[#68A243]"
+                  : "bg-amber-100 text-amber-800 dark:bg-amber-950/30 dark:text-amber-400"
             }
           >
-            {company.aprobada ? "Aprobada" : "Pendiente"}
+            {company.eliminado
+              ? "Eliminada"
+              : company.aprobada
+                ? "Aprobada"
+                : "Pendiente"}
           </Badge>
         </div>
 
         {/* Actions */}
         <div className="flex gap-2 sm:justify-end">
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={() => onView(company)}
-            className="border-gray-300 text-gray-700 hover:bg-gray-100 dark:border-[#68A243]/40 dark:text-[#68A243] dark:hover:bg-[#68A243]/10"
-          >
-            <Eye className="h-4 w-4" />
-          </Button>
-
-          {!company.aprobada && (
+          {company.aprobada ? (
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => onApprove(company)}
+              className="gap-2 border-gray-300 text-gray-700 hover:bg-gray-100 dark:border-[#68A243]/40 dark:text-[#68A243] dark:hover:bg-[#68A243]/10"
+            >
+              <XCircle className="h-4 w-4" />
+              Desaprobar
+            </Button>
+          ) : (
             <Button
               size="sm"
               onClick={() => onApprove(company)}
@@ -123,6 +131,15 @@ function CompanyRow({
               Aprobar
             </Button>
           )}
+
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => onView(company)}
+            className="border-gray-300 text-gray-700 hover:bg-gray-100 dark:border-[#68A243]/40 dark:text-[#68A243] dark:hover:bg-[#68A243]/10"
+          >
+            <Eye className="h-4 w-4" />
+          </Button>
 
           <Button
             size="sm"
@@ -154,7 +171,7 @@ export default function CompaniesManagement() {
     useState<EmpresaResponse | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [filterStatus, setFilterStatus] = useState<
-    "all" | "pending" | "approved"
+    "all" | "pending" | "approved" | "deleted"
   >("all");
 
   // Proteger: solo admin puede acceder
@@ -193,9 +210,14 @@ export default function CompaniesManagement() {
         (company.cuit &&
           company.cuit.toLowerCase().includes(searchTerm.toLowerCase()));
 
-      if (filterStatus === "pending") return !company.aprobada && matchesSearch;
-      if (filterStatus === "approved") return company.aprobada && matchesSearch;
-      return matchesSearch;
+      if (filterStatus === "deleted")
+        return !!company.eliminado && matchesSearch;
+      if (filterStatus === "pending")
+        return !company.eliminado && !company.aprobada && matchesSearch;
+      if (filterStatus === "approved")
+        return !company.eliminado && !!company.aprobada && matchesSearch;
+      // "all": excluir eliminadas
+      return !company.eliminado && matchesSearch;
     })
     .sort((a, b) => {
       if (filterStatus !== "all") return 0;
@@ -209,26 +231,22 @@ export default function CompaniesManagement() {
 
   const handleConfirmApprove = async () => {
     if (companyToApprove) {
-      // Validar que no esté ya aprobada
-      if (companyToApprove.aprobada) {
-        toast.info(`${companyToApprove.razon_social} ya ha sido aprobada`);
-        setIsApproveOpen(false);
-        setCompanyToApprove(null);
-        return;
-      }
+      const nuevoEstado = !companyToApprove.aprobada;
 
       try {
-        await approveCompany(companyToApprove.id);
+        await approveCompany(companyToApprove.id, nuevoEstado);
 
         // Actualizar UI automáticamente
         setCompanies(
           companies.map((c) =>
-            c.id === companyToApprove.id ? { ...c, aprobada: true } : c,
+            c.id === companyToApprove.id ? { ...c, aprobada: nuevoEstado } : c,
           ),
         );
 
         toast.success(
-          `${companyToApprove.razon_social} ha sido aprobada correctamente`,
+          nuevoEstado
+            ? `${companyToApprove.razon_social} ha sido aprobada correctamente`
+            : `${companyToApprove.razon_social} ha sido desaprobada correctamente`,
         );
         setIsApproveOpen(false);
         setCompanyToApprove(null);
@@ -263,7 +281,11 @@ export default function CompaniesManagement() {
         await deleteCompany(companyToDelete.id);
 
         // Actualizar UI automáticamente
-        setCompanies(companies.filter((c) => c.id !== companyToDelete.id));
+        setCompanies(
+          companies.map((c) =>
+            c.id === companyToDelete.id ? { ...c, eliminado: true } : c,
+          ),
+        );
 
         toast.success(
           `${companyToDelete.razon_social} ha sido eliminada correctamente`,
@@ -394,22 +416,27 @@ export default function CompaniesManagement() {
               </div>
 
               {/* Filter Buttons */}
-              <div className="flex gap-2">
-                {(["all", "pending", "approved"] as const).map((status) => (
-                  <button
-                    key={status}
-                    onClick={() => setFilterStatus(status)}
-                    className={`px-4 py-2 rounded-lg font-medium transition-colors text-sm ${
-                      filterStatus === status
-                        ? "bg-[#68A243] text-white"
-                        : "bg-white dark:bg-[#143E29] text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-[#68A243]/20 hover:border-[#68A243]/50"
-                    }`}
-                  >
-                    {status === "all" && "Todos"}
-                    {status === "pending" && "Pendientes"}
-                    {status === "approved" && "Aprobadas"}
-                  </button>
-                ))}
+              <div className="flex gap-2 flex-wrap">
+                {(["all", "pending", "approved", "deleted"] as const).map(
+                  (status) => (
+                    <button
+                      key={status}
+                      onClick={() => setFilterStatus(status)}
+                      className={`px-4 py-2 rounded-lg font-medium transition-colors text-sm ${
+                        filterStatus === status
+                          ? status === "deleted"
+                            ? "bg-red-600 text-white"
+                            : "bg-[#68A243] text-white"
+                          : "bg-white dark:bg-[#143E29] text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-[#68A243]/20 hover:border-[#68A243]/50"
+                      }`}
+                    >
+                      {status === "all" && "Todos"}
+                      {status === "pending" && "Pendientes"}
+                      {status === "approved" && "Aprobadas"}
+                      {status === "deleted" && "Eliminadas"}
+                    </button>
+                  ),
+                )}
               </div>
             </div>
           </div>
@@ -637,14 +664,28 @@ export default function CompaniesManagement() {
         <DialogContent className="border-gray-200 dark:border-[#68A243]/20 bg-white dark:bg-[#143E29] max-w-md">
           <DialogHeader>
             <DialogTitle className="text-gray-900 dark:text-white">
-              Confirmar aprobación
+              {companyToApprove?.aprobada
+                ? "Confirmar desaprobación"
+                : "Confirmar aprobación"}
             </DialogTitle>
             <DialogDescription className="text-gray-600 dark:text-gray-400">
-              ¿Estás seguro de que deseas aprobar a{" "}
-              <span className="font-bold text-gray-900 dark:text-white">
-                {companyToApprove?.razon_social}
-              </span>
-              ? Su información aparecerá pública en la lista de empresas.
+              {companyToApprove?.aprobada ? (
+                <>
+                  ¿Estás seguro de que deseas desaprobar a{" "}
+                  <span className="font-bold text-gray-900 dark:text-white">
+                    {companyToApprove?.razon_social}
+                  </span>
+                  ? Su información dejará de ser pública.
+                </>
+              ) : (
+                <>
+                  ¿Estás seguro de que deseas aprobar a{" "}
+                  <span className="font-bold text-gray-900 dark:text-white">
+                    {companyToApprove?.razon_social}
+                  </span>
+                  ? Su información aparecerá pública en la lista de empresas.
+                </>
+              )}
             </DialogDescription>
           </DialogHeader>
 
@@ -658,9 +699,13 @@ export default function CompaniesManagement() {
             </Button>
             <Button
               onClick={handleConfirmApprove}
-              className="bg-[#68A243] hover:bg-[#5a9038] text-white"
+              className={`text-white ${
+                companyToApprove?.aprobada
+                  ? "bg-amber-500 hover:bg-amber-600"
+                  : "bg-[#68A243] hover:bg-[#5a9038]"
+              }`}
             >
-              Aprobar
+              {companyToApprove?.aprobada ? "Desaprobar" : "Aprobar"}
             </Button>
           </DialogFooter>
         </DialogContent>
