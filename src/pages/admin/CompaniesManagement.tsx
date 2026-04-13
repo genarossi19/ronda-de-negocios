@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router";
 import {
   Trash2,
   CheckCircle,
@@ -6,9 +7,13 @@ import {
   Building2,
   Search,
   Eye,
+  MapPin,
+  Phone,
+  FileText,
+  Tag,
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
+import { Button } from "../../components/ui/button";
+import { Badge } from "../../components/ui/badge";
 import {
   Dialog,
   DialogContent,
@@ -16,80 +21,18 @@ import {
   DialogTitle,
   DialogDescription,
   DialogFooter,
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import Navbar from "@/components/Navbar";
-import Footer from "@/layout/Footer";
+} from "../../components/ui/dialog";
+import { Input } from "../../components/ui/input";
+import Navbar from "../../components/Navbar";
+import Footer from "../../layout/Footer";
 import { toast } from "sonner";
-
-// Mock data types
-interface Company {
-  id: number;
-  razon_social: string;
-  email: string;
-  telefono_contacto: string;
-  direccion: string;
-  sector?: string;
-  approved: boolean;
-}
-
-// Mock companies data
-const MOCK_COMPANIES: Company[] = [
-  {
-    id: 1,
-    razon_social: "TechSolutions SA",
-    email: "contact@techsolutions.com",
-    telefono_contacto: "+54 11 1234-5678",
-    direccion: "Calle Principal 123, Buenos Aires",
-    sector: "Tecnología",
-    approved: false,
-  },
-  {
-    id: 2,
-    razon_social: "IndustriaGlobal ltda",
-    email: "info@industriaglobal.com",
-    telefono_contacto: "+54 11 2345-6789",
-    direccion: "Av. Córdoba 456, Buenos Aires",
-    sector: "Manufactura",
-    approved: false,
-  },
-  {
-    id: 3,
-    razon_social: "ComercioExprés Inc",
-    email: "ventas@comercioexpres.com",
-    telefono_contacto: "+54 11 3456-7890",
-    direccion: "Ruta Nacional 9 km 50, CABA",
-    sector: "Comercio",
-    approved: true,
-  },
-  {
-    id: 4,
-    razon_social: "Consulting Pro",
-    email: "admin@consultingpro.ar",
-    telefono_contacto: "+54 11 4567-8901",
-    direccion: "Piso 10, Torre Financiera, Buenos Aires",
-    sector: "Consultoría",
-    approved: true,
-  },
-  {
-    id: 5,
-    razon_social: "Logística Andes",
-    email: "logistics@andes.com",
-    telefono_contacto: "+54 11 5678-9012",
-    direccion: "Parque Industrial, La Plata",
-    sector: "Logística",
-    approved: false,
-  },
-  {
-    id: 6,
-    razon_social: "Agro Innovación",
-    email: "info@agroinnovacion.com",
-    telefono_contacto: "+54 11 6789-0123",
-    direccion: "Ruta 5 km 150, Provincia de Buenos Aires",
-    sector: "Agricultura",
-    approved: true,
-  },
-];
+import {
+  getCompanies,
+  approveCompany,
+  deleteCompany,
+} from "../../api/EmpresaService";
+import type { EmpresaResponse } from "../../types/Empresa";
+import { useCurrentUser } from "../../hooks/useCurrentUser";
 
 function CompanyRow({
   company,
@@ -97,30 +40,45 @@ function CompanyRow({
   onDelete,
   onView,
 }: {
-  company: Company;
-  onApprove: (c: Company) => void;
-  onDelete: (c: Company) => void;
-  onView: (c: Company) => void;
+  company: EmpresaResponse;
+  onApprove: (c: EmpresaResponse) => void;
+  onDelete: (c: EmpresaResponse) => void;
+  onView: (c: EmpresaResponse) => void;
 }) {
   return (
     <div className="bg-white dark:bg-[#143E29] rounded-lg border border-gray-200 dark:border-[#68A243]/20 p-4 hover:border-[#68A243]/50 transition-all">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        {/* Company Info */}
+        {/* Company Info with Logo/Icon */}
         <div className="flex-1 min-w-0">
-          <div className="flex items-start gap-3">
-            <div className="h-10 w-10 rounded-lg bg-gray-100 dark:bg-[#68A243]/10 flex items-center justify-center flex-shrink-0">
-              <Building2 className="h-5 w-5 text-gray-600 dark:text-[#68A243]" />
-            </div>
+          <div className="flex items-center gap-4">
+            {/* Logo o Icono */}
+            {company.logo ? (
+              <div className="h-20 w-20 rounded-lg overflow-hidden border-2 border-[#68A243]/30 flex-shrink-0 shadow-md">
+                <img
+                  src={company.logo}
+                  alt={company.razon_social}
+                  className="w-full h-full object-cover"
+                />
+              </div>
+            ) : (
+              <div className="h-20 w-20 rounded-lg bg-gray-100 dark:bg-[#68A243]/20 flex items-center justify-center flex-shrink-0 border-2 border-dashed border-gray-300 dark:border-[#68A243]/30">
+                <Building2 className="h-10 w-10 text-gray-400 dark:text-[#68A243]/50" />
+              </div>
+            )}
+
+            {/* Company Details */}
             <div className="flex-1 min-w-0">
-              <h3 className="font-semibold text-gray-900 dark:text-white truncate">
+              <h3 className="font-bold text-lg text-gray-900 dark:text-white truncate">
                 {company.razon_social}
               </h3>
-              <p className="text-sm text-gray-600 dark:text-gray-400 truncate">
-                {company.email}
-              </p>
-              <p className="text-sm text-gray-600 dark:text-gray-400">
-                {company.telefono_contacto}
-              </p>
+              <div className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300 truncate">
+                <Building2 className="h-3 w-3 flex-shrink-0" />
+                <span className="truncate">CUIT: {company.cuit}</span>
+              </div>
+              <div className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300 truncate">
+                <Phone className="h-3 w-3 flex-shrink-0" />
+                <span className="truncate">{company.telefono_contacto}</span>
+              </div>
             </div>
           </div>
         </div>
@@ -129,17 +87,17 @@ function CompanyRow({
         <div className="flex flex-wrap gap-2 sm:justify-end">
           {company.sector && (
             <Badge className="bg-blue-100 text-blue-800 dark:bg-blue-950/30 dark:text-blue-400">
-              {company.sector}
+              {company.sector.nombre}
             </Badge>
           )}
           <Badge
             className={
-              company.approved
+              company.aprobada
                 ? "bg-green-100 text-green-800 dark:bg-[#68A243]/20 dark:text-[#68A243]"
                 : "bg-amber-100 text-amber-800 dark:bg-amber-950/30 dark:text-amber-400"
             }
           >
-            {company.approved ? "Aprobada" : "Pendiente"}
+            {company.aprobada ? "Aprobada" : "Pendiente"}
           </Badge>
         </div>
 
@@ -154,7 +112,7 @@ function CompanyRow({
             <Eye className="h-4 w-4" />
           </Button>
 
-          {!company.approved && (
+          {!company.aprobada && (
             <Button
               size="sm"
               onClick={() => onApprove(company)}
@@ -180,67 +138,103 @@ function CompanyRow({
 }
 
 export default function CompaniesManagement() {
-  const [companies, setCompanies] = useState<Company[]>([]);
+  const navigate = useNavigate();
+  const { isAdmin } = useCurrentUser();
+  const [companies, setCompanies] = useState<EmpresaResponse[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [selectedCompany, setSelectedCompany] = useState<Company | null>(null);
+  const [selectedCompany, setSelectedCompany] =
+    useState<EmpresaResponse | null>(null);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
-  const [companyToDelete, setCompanyToDelete] = useState<Company | null>(null);
+  const [companyToDelete, setCompanyToDelete] =
+    useState<EmpresaResponse | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [filterStatus, setFilterStatus] = useState<
     "all" | "pending" | "approved"
   >("all");
 
-  // Simulate data loading
+  // Proteger: solo admin puede acceder
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setCompanies(MOCK_COMPANIES);
-      setIsLoading(false);
-    }, 800);
+    if (!isAdmin) {
+      navigate("/", { replace: true });
+    }
+  }, [isAdmin, navigate]);
 
-    return () => clearTimeout(timer);
+  // Cargar empresas desde el backend
+  useEffect(() => {
+    const fetchCompanies = async () => {
+      try {
+        setIsLoading(true);
+        const data = await getCompanies();
+        setCompanies(data);
+      } catch (err) {
+        console.error("Error loading companies:", err);
+        toast.error("Error al cargar las empresas");
+        setCompanies([]);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchCompanies();
   }, []);
 
-  const pendingCompanies = companies.filter((c) => !c.approved);
-  const approvedCompanies = companies.filter((c) => c.approved);
+  const pendingCompanies = companies.filter((c) => !c.aprobada);
+  const approvedCompanies = companies.filter((c) => c.aprobada);
 
   const filteredCompanies = companies.filter((company) => {
     const matchesSearch =
       company.razon_social.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      company.email.toLowerCase().includes(searchTerm.toLowerCase());
+      (company.cuit &&
+        company.cuit.toLowerCase().includes(searchTerm.toLowerCase()));
 
-    if (filterStatus === "pending") return !company.approved && matchesSearch;
-    if (filterStatus === "approved") return company.approved && matchesSearch;
+    if (filterStatus === "pending") return !company.aprobada && matchesSearch;
+    if (filterStatus === "approved") return company.aprobada && matchesSearch;
     return matchesSearch;
   });
 
-  const handleApprove = (company: Company) => {
-    setCompanies(
-      companies.map((c) =>
-        c.id === company.id ? { ...c, approved: true } : c,
-      ),
-    );
-    toast.success(`${company.razon_social} ha sido aprobada`);
+  const handleApprove = async (company: EmpresaResponse) => {
+    try {
+      await approveCompany(company.id);
+      setCompanies(
+        companies.map((c) =>
+          c.id === company.id ? { ...c, aprobada: true } : c,
+        ),
+      );
+      toast.success(`${company.razon_social} ha sido aprobada`);
+    } catch (err) {
+      console.error("Error approving company:", err);
+      toast.error("Error al aprobar la empresa");
+    }
   };
 
-  const handleDeleteClick = (company: Company) => {
+  const handleDeleteClick = (company: EmpresaResponse) => {
     setCompanyToDelete(company);
     setIsDeleteOpen(true);
   };
 
-  const handleConfirmDelete = () => {
+  const handleConfirmDelete = async () => {
     if (companyToDelete) {
-      setCompanies(companies.filter((c) => c.id !== companyToDelete.id));
-      toast.success(`${companyToDelete.razon_social} ha sido eliminada`);
-      setIsDeleteOpen(false);
-      setCompanyToDelete(null);
+      try {
+        await deleteCompany(companyToDelete.id);
+        setCompanies(companies.filter((c) => c.id !== companyToDelete.id));
+        toast.success(`${companyToDelete.razon_social} ha sido eliminada`);
+        setIsDeleteOpen(false);
+        setCompanyToDelete(null);
+      } catch (err) {
+        console.error("Error deleting company:", err);
+        toast.error("Error al eliminar la empresa");
+      }
     }
   };
 
-  const handleViewDetail = (company: Company) => {
+  const handleViewDetail = (company: EmpresaResponse) => {
     setSelectedCompany(company);
     setIsDetailOpen(true);
   };
+
+  // No renderizar si no es admin
+  if (!isAdmin) return null;
 
   if (isLoading) {
     return (
@@ -328,7 +322,7 @@ export default function CompaniesManagement() {
               <div className="flex-1 relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
                 <Input
-                  placeholder="Buscar por nombre o email..."
+                  placeholder="Buscar por nombre o CUIT..."
                   value={searchTerm}
                   onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                     setSearchTerm(e.target.value)
@@ -386,87 +380,158 @@ export default function CompaniesManagement() {
 
       {/* Detail Modal */}
       <Dialog open={isDetailOpen} onOpenChange={setIsDetailOpen}>
-        <DialogContent className="max-w-2xl border-gray-200 dark:border-[#68A243]/20 bg-white dark:bg-[#143E29]">
-          <DialogHeader>
-            <DialogTitle className="text-2xl text-gray-900 dark:text-white">
-              Información de Empresa
-            </DialogTitle>
-          </DialogHeader>
-
+        <DialogContent className="max-w-4xl! border-gray-200 dark:border-[#68A243]/20 bg-white dark:bg-[#143E29] p-0! max-h-[95vh]!">
           {selectedCompany && (
-            <div className="space-y-6">
-              <div className="flex items-start justify-between">
-                <div>
-                  <h3 className="text-2xl font-bold text-gray-900 dark:text-white">
-                    {selectedCompany.razon_social}
-                  </h3>
-                  {selectedCompany.sector && (
-                    <Badge className="mt-2 bg-[#68A243]/10 text-[#143E29] dark:bg-[#68A243]/20 dark:text-[#68A243]">
-                      {selectedCompany.sector}
-                    </Badge>
+            <>
+              {/* Header con Logo y Status */}
+              <div className="bg-gradient-to-r from-[#68A243]/10 to-[#143E29]/10 dark:from-[#68A243]/20 dark:to-[#143E29]/30 p-8 border-b border-gray-200 dark:border-[#68A243]/20 flex items-start justify-between gap-8">
+                <div className="flex items-start gap-6 flex-1">
+                  {/* Logo */}
+                  {selectedCompany.logo ? (
+                    <div className="h-32 w-32 rounded-lg overflow-hidden border-2 border-[#68A243]/30 flex-shrink-0 shadow-md">
+                      <img
+                        src={selectedCompany.logo}
+                        alt={selectedCompany.razon_social}
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                  ) : (
+                    <div className="h-32 w-32 rounded-lg bg-gray-100 dark:bg-[#68A243]/20 flex items-center justify-center flex-shrink-0 border-2 border-dashed border-gray-300 dark:border-[#68A243]/30">
+                      <Building2 className="h-16 w-16 text-gray-400 dark:text-[#68A243]/50" />
+                    </div>
+                  )}
+
+                  {/* Título e Información Principal */}
+                  <div className="flex-1 min-w-0">
+                    <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-3">
+                      {selectedCompany.razon_social}
+                    </h2>
+                    <p className="text-sm font-semibold text-gray-600 dark:text-gray-400 mb-3">
+                      CUIT:{" "}
+                      <span className="text-gray-900 dark:text-white font-mono">
+                        {selectedCompany.cuit}
+                      </span>
+                    </p>
+                    <div className="flex flex-wrap gap-2">
+                      {selectedCompany.sector && (
+                        <Badge className="bg-blue-100 text-blue-800 dark:bg-blue-950/40 dark:text-blue-400 text-sm">
+                          <Tag className="h-3 w-3 mr-1" />
+                          {selectedCompany.sector.nombre}
+                        </Badge>
+                      )}
+                      <Badge
+                        className={`text-sm ${
+                          selectedCompany.aprobada
+                            ? "bg-green-100 text-green-800 dark:bg-[#68A243]/30 dark:text-[#68A243]"
+                            : "bg-amber-100 text-amber-800 dark:bg-amber-950/30 dark:text-amber-400"
+                        }`}
+                      >
+                        <CheckCircle className="h-3 w-3 mr-1" />
+                        {selectedCompany.aprobada ? "Aprobada" : "Pendiente"}
+                      </Badge>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Contenido en Grid */}
+              <div className="p-8 overflow-y-auto max-h-[calc(95vh-200px)]">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  {/* Columna Izquierda - Contacto y Ubicación */}
+                  <div className="space-y-6">
+                    {/* Información de Contacto */}
+                    <div>
+                      <h3 className="text-base font-semibold text-gray-900 dark:text-white mb-3 flex items-center gap-2">
+                        <Phone className="h-4 w-4 text-[#68A243]" />
+                        Contacto
+                      </h3>
+                      <div className="bg-gray-50 dark:bg-[#0f2f25]/50 p-4 rounded-lg space-y-2">
+                        <div>
+                          <p className="text-xs font-semibold uppercase text-gray-600 dark:text-gray-400 mb-1">
+                            Teléfono
+                          </p>
+                          <p className="text-sm text-gray-900 dark:text-white font-medium">
+                            {selectedCompany.telefono_contacto}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Ubicación */}
+                    <div>
+                      <h3 className="text-base font-semibold text-gray-900 dark:text-white mb-3 flex items-center gap-2">
+                        <MapPin className="h-4 w-4 text-[#68A243]" />
+                        Ubicación
+                      </h3>
+                      <div className="bg-gray-50 dark:bg-[#0f2f25]/50 p-4 rounded-lg space-y-2">
+                        <div>
+                          <p className="text-xs font-semibold uppercase text-gray-600 dark:text-gray-400 mb-1">
+                            Dirección
+                          </p>
+                          <p className="text-sm text-gray-900 dark:text-white">
+                            {selectedCompany.direccion}
+                          </p>
+                        </div>
+                        <div>
+                          <p className="text-xs font-semibold uppercase text-gray-600 dark:text-gray-400 mb-1">
+                            Localidad
+                          </p>
+                          <p className="text-sm text-gray-900 dark:text-white">
+                            {selectedCompany.localidad.nombre},{" "}
+                            {selectedCompany.localidad.provincia.nombre}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Información Adicional - Compacta */}
+                    <div>
+                      <h3 className="text-base font-semibold text-gray-900 dark:text-white mb-3">
+                        Información
+                      </h3>
+                      <div className="bg-gray-50 dark:bg-[#0f2f25]/50 p-4 rounded-lg space-y-2 text-xs">
+                        <div>
+                          <p className="font-semibold uppercase text-gray-600 dark:text-gray-400 mb-1">
+                            Fecha
+                          </p>
+                          <p className="text-gray-900 dark:text-white">
+                            {selectedCompany.fecha_registro
+                              ? new Date(
+                                  selectedCompany.fecha_registro,
+                                ).toLocaleDateString("es-AR")
+                              : "N/A"}
+                          </p>
+                        </div>
+                        <div>
+                          <p className="font-semibold uppercase text-gray-600 dark:text-gray-400 mb-1">
+                            Estado
+                          </p>
+                          <p className="text-gray-900 dark:text-white">
+                            {selectedCompany.eliminado ? "Eliminada" : "Activa"}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Columna Derecha - Descripción */}
+                  {selectedCompany.descripcion && (
+                    <div>
+                      <h3 className="text-base font-semibold text-gray-900 dark:text-white mb-3 flex items-center gap-2">
+                        <FileText className="h-4 w-4 text-[#68A243]" />
+                        Descripción
+                      </h3>
+                      <div className="bg-gray-50 dark:bg-[#0f2f25]/50 p-4 rounded-lg border-l-4 border-[#68A243]">
+                        <p className="text-sm text-gray-900 dark:text-white leading-relaxed">
+                          {selectedCompany.descripcion}
+                        </p>
+                      </div>
+                    </div>
                   )}
                 </div>
-                <Badge
-                  className={`${
-                    selectedCompany.approved
-                      ? "bg-green-100 text-green-800 dark:bg-[#68A243]/20 dark:text-[#68A243]"
-                      : "bg-amber-100 text-amber-800 dark:bg-amber-950/30 dark:text-amber-400"
-                  }`}
-                >
-                  {selectedCompany.approved ? "Aprobada" : "Pendiente"}
-                </Badge>
               </div>
-
-              <div className="grid grid-cols-2 gap-6">
-                <div>
-                  <p className="text-xs font-semibold uppercase text-gray-600 dark:text-gray-400">
-                    Email
-                  </p>
-                  <p className="mt-2 text-gray-900 dark:text-white break-all">
-                    {selectedCompany.email}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-xs font-semibold uppercase text-gray-600 dark:text-gray-400">
-                    Teléfono
-                  </p>
-                  <p className="mt-2 text-gray-900 dark:text-white">
-                    {selectedCompany.telefono_contacto}
-                  </p>
-                </div>
-              </div>
-
-              <div>
-                <p className="text-xs font-semibold uppercase text-gray-600 dark:text-gray-400">
-                  Dirección
-                </p>
-                <p className="mt-2 text-gray-900 dark:text-white">
-                  {selectedCompany.direccion}
-                </p>
-              </div>
-
-              {selectedCompany.sector && (
-                <div>
-                  <p className="text-xs font-semibold uppercase text-gray-600 dark:text-gray-400">
-                    Sector
-                  </p>
-                  <p className="mt-2 text-gray-900 dark:text-white">
-                    {selectedCompany.sector}
-                  </p>
-                </div>
-              )}
-            </div>
+            </>
           )}
-
-          <DialogFooter className="gap-3 mt-8 pt-6 border-t border-gray-200 dark:border-[#68A243]/20">
-            <Button
-              variant="outline"
-              onClick={() => setIsDetailOpen(false)}
-              className="border-gray-300 text-gray-700 hover:bg-gray-100 dark:border-[#68A243]/40 dark:text-[#68A243] dark:hover:bg-[#68A243]/10"
-            >
-              Cerrar
-            </Button>
-          </DialogFooter>
         </DialogContent>
       </Dialog>
 

@@ -1,5 +1,5 @@
 import type { EmpresaResponse, EmpresaWrite } from "../types/Empresa";
-import api, { publicApi } from "../lib/axios";
+import api from "../lib/axios";
 
 export const getCompanies = async () => {
   const { data } = await api.get("/empresas");
@@ -11,6 +11,15 @@ export const getCompanyById = async (
 ): Promise<EmpresaResponse> => {
   const { data } = await api.get(`/empresas/${id}`);
   return data;
+};
+
+export const approveCompany = async (id: number) => {
+  const { data } = await api.patch(`/empresas/${id}/`, { aprobada: true });
+  return data;
+};
+
+export const deleteCompany = async (id: number) => {
+  await api.delete(`/empresas/${id}/`);
 };
 
 export const createCompany = async (company: EmpresaWrite) => {
