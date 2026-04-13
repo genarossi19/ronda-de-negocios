@@ -17,17 +17,23 @@ import {
 import { Button } from "../../components/ui/button";
 import Navbar from "../../components/Navbar";
 import { motion as m } from "motion/react";
+import { useEffect } from "react";
+import { useNavigate } from "react-router";
 import { useCurrentUser } from "../../hooks/useCurrentUser";
 
 export default function AdminDashboard() {
   const { isAdmin } = useCurrentUser();
   const navigate = useNavigate();
 
-  // useEffect(() => {
-  //   if (!isAdmin) {
-  //     window.location.href = "#landing";
-  //   }
-  // }, [isAdmin]);
+  // Proteger el dashboard: solo admin puede acceder
+  useEffect(() => {
+    if (!isAdmin) {
+      navigate("/", { replace: true });
+    }
+  }, [isAdmin, navigate]);
+
+  // Retornar null mientras se verifica y redirecciona si no es admin
+  if (!isAdmin) return null;
 
   const stats = [
     {
@@ -84,8 +90,6 @@ export default function AdminDashboard() {
       href: "#admin-meetings",
     },
   ];
-
-  // if (!isAdmin) return null;
 
   const containerVariants = {
     hidden: { opacity: 0 },

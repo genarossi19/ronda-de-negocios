@@ -7,6 +7,6 @@ import { useUserStore } from "../store/userStore";
 export const useCurrentUser = () => {
   const { user, isAuthenticated } = useUserStore();
   const isAdmin = user?.is_superuser ?? false;
-  console.log("[useCurrentUser] user:", user, "isAdmin:", isAdmin);
+  // console.log("[useCurrentUser] user:", user, "isAdmin:", isAdmin);
   return { user, isAuthenticated, isAdmin };
 };

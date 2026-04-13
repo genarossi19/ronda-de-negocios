@@ -46,14 +46,14 @@ export default function Companies() {
   const [searchQuery, setSearchQuery] = useState("");
   const [isLoading, setIsLoading] = useState(true);
 
-  // Debug: Log para verificar el estado de autenticación
-  useEffect(() => {
-    console.log("=== DEBUG EMPRESAS ===");
-    console.log("isAdmin:", isAdmin);
-    console.log("isAuthenticated:", isAuthenticated);
-    console.log("user:", user);
-    console.log("====================");
-  }, [isAdmin, isAuthenticated, user]);
+  // Debug: Desactivado - usar solo si es necesario diagnosticar autenticación
+  // useEffect(() => {
+  //   console.log("=== DEBUG EMPRESAS ===");
+  //   console.log("isAdmin:", isAdmin);
+  //   console.log("isAuthenticated:", isAuthenticated);
+  //   console.log("user:", user);
+  //   console.log("====================");
+  // }, [isAdmin, isAuthenticated, user]);
 
   const [selectedCompany, setSelectedCompany] =
     useState<EmpresaResponse | null>(null);
@@ -64,7 +64,6 @@ export default function Companies() {
       try {
         const data = await getCompanies(); // llama a tu API real
         setCompanies(data);
-        console.log(data);
       } catch (err) {
         console.error(err);
         setError("No se pudieron obtener las empresas.");
