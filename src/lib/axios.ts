@@ -42,31 +42,20 @@ api.interceptors.request.use(
 api.interceptors.response.use(
   (response) => response,
   (error) => {
+    // Detectar errores de autenticación
     if (error.response?.status === 401 || error.response?.status === 403) {
       const token = Cookies.get(TOKEN_COOKIE_NAME);
-      const errorData = error.response?.data as {
-        code?: string;
-        messages?: Array<{ message: string }>;
-      };
-
-      // Detectar si es específicamente un token expirado
-      const isTokenExpired =
-        errorData?.code === "token_not_valid" ||
-        errorData?.messages?.some((msg) => msg.message === "Token is expired");
 
       if (token) {
         // Guardar en localStorage que la sesión expiró (persiste entre reloads)
         localStorage.setItem("sessionExpired", "true");
 
-        // Limpiar cookie y store de Zustand ANTES del redirect
+        // Limpiar cookie y store de Zustand
         Cookies.remove(TOKEN_COOKIE_NAME);
         useUserStore.getState().clearUser();
 
-        // NO mostrar toast aquí (se pierde con el hard refresh)
-        // El toast se mostrará en Login.tsx cuando detecte la flag
-
-        // Redirect a login refresca pagina y no permite cargar el toast
-        //window.location.href = "/login";
+        // Redirect a login inmediatamente
+        window.location.href = "/login";
       }
     }
     return Promise.reject(error);

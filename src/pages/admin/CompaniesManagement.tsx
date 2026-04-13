@@ -26,6 +26,7 @@ import { Input } from "../../components/ui/input";
 import Navbar from "../../components/Navbar";
 import Footer from "../../layout/Footer";
 import { toast } from "sonner";
+import axios from "axios";
 import {
   getCompanies,
   approveCompany,
@@ -148,6 +149,9 @@ export default function CompaniesManagement() {
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const [companyToDelete, setCompanyToDelete] =
     useState<EmpresaResponse | null>(null);
+  const [isApproveOpen, setIsApproveOpen] = useState(false);
+  const [companyToApprove, setCompanyToApprove] =
+    useState<EmpresaResponse | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [filterStatus, setFilterStatus] = useState<
     "all" | "pending" | "approved"
@@ -193,18 +197,53 @@ export default function CompaniesManagement() {
     return matchesSearch;
   });
 
-  const handleApprove = async (company: EmpresaResponse) => {
-    try {
-      await approveCompany(company.id);
-      setCompanies(
-        companies.map((c) =>
-          c.id === company.id ? { ...c, aprobada: true } : c,
-        ),
-      );
-      toast.success(`${company.razon_social} ha sido aprobada`);
-    } catch (err) {
-      console.error("Error approving company:", err);
-      toast.error("Error al aprobar la empresa");
+  const handleApproveClick = (company: EmpresaResponse) => {
+    setCompanyToApprove(company);
+    setIsApproveOpen(true);
+  };
+
+  const handleConfirmApprove = async () => {
+    if (companyToApprove) {
+      // Validar que no esté ya aprobada
+      if (companyToApprove.aprobada) {
+        toast.info(`${companyToApprove.razon_social} ya ha sido aprobada`);
+        setIsApproveOpen(false);
+        setCompanyToApprove(null);
+        return;
+      }
+
+      try {
+        await approveCompany(companyToApprove.id);
+
+        // Actualizar UI automáticamente
+        setCompanies(
+          companies.map((c) =>
+            c.id === companyToApprove.id ? { ...c, aprobada: true } : c,
+          ),
+        );
+
+        toast.success(
+          `${companyToApprove.razon_social} ha sido aprobada correctamente`,
+        );
+        setIsApproveOpen(false);
+        setCompanyToApprove(null);
+      } catch (err) {
+        // Manejar errores de axios con respuesta del backend
+        if (axios.isAxiosError(err)) {
+          const errorMessage =
+            err.response?.data?.detail ||
+            err.response?.data?.message ||
+            err.message ||
+            "Ha ocurrido un error. Intenta de nuevo más tarde";
+
+          toast.error(errorMessage);
+        } else {
+          // Error desconocido
+          toast.error("Ha ocurrido un error. Intenta de nuevo más tarde");
+        }
+
+        console.error("Error approving company:", err);
+      }
     }
   };
 
@@ -217,13 +256,31 @@ export default function CompaniesManagement() {
     if (companyToDelete) {
       try {
         await deleteCompany(companyToDelete.id);
+
+        // Actualizar UI automáticamente
         setCompanies(companies.filter((c) => c.id !== companyToDelete.id));
-        toast.success(`${companyToDelete.razon_social} ha sido eliminada`);
+
+        toast.success(
+          `${companyToDelete.razon_social} ha sido eliminada correctamente`,
+        );
         setIsDeleteOpen(false);
         setCompanyToDelete(null);
       } catch (err) {
+        // Manejar errores de axios con respuesta del backend
+        if (axios.isAxiosError(err)) {
+          const errorMessage =
+            err.response?.data?.detail ||
+            err.response?.data?.message ||
+            err.message ||
+            "Ha ocurrido un error. Intenta de nuevo más tarde";
+
+          toast.error(errorMessage);
+        } else {
+          // Error desconocido
+          toast.error("Ha ocurrido un error. Intenta de nuevo más tarde");
+        }
+
         console.error("Error deleting company:", err);
-        toast.error("Error al eliminar la empresa");
       }
     }
   };
@@ -368,7 +425,7 @@ export default function CompaniesManagement() {
                 <CompanyRow
                   key={company.id}
                   company={company}
-                  onApprove={handleApprove}
+                  onApprove={handleApproveClick}
                   onDelete={handleDeleteClick}
                   onView={handleViewDetail}
                 />
@@ -565,6 +622,40 @@ export default function CompaniesManagement() {
               className="bg-red-600 hover:bg-red-700 text-white"
             >
               Eliminar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Approve Confirmation Modal */}
+      <Dialog open={isApproveOpen} onOpenChange={setIsApproveOpen}>
+        <DialogContent className="border-gray-200 dark:border-[#68A243]/20 bg-white dark:bg-[#143E29] max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-gray-900 dark:text-white">
+              Confirmar aprobación
+            </DialogTitle>
+            <DialogDescription className="text-gray-600 dark:text-gray-400">
+              ¿Estás seguro de que deseas aprobar a{" "}
+              <span className="font-bold text-gray-900 dark:text-white">
+                {companyToApprove?.razon_social}
+              </span>
+              ? Su información aparecerá pública en la lista de empresas.
+            </DialogDescription>
+          </DialogHeader>
+
+          <DialogFooter className="gap-3">
+            <Button
+              variant="outline"
+              onClick={() => setIsApproveOpen(false)}
+              className="border-gray-300 text-gray-700 hover:bg-gray-100 dark:border-[#68A243]/40 dark:text-[#68A243] dark:hover:bg-[#68A243]/10"
+            >
+              Cancelar
+            </Button>
+            <Button
+              onClick={handleConfirmApprove}
+              className="bg-[#68A243] hover:bg-[#5a9038] text-white"
+            >
+              Aprobar
             </Button>
           </DialogFooter>
         </DialogContent>
