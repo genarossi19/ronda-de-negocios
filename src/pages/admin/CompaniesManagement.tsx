@@ -186,16 +186,21 @@ export default function CompaniesManagement() {
   const pendingCompanies = companies.filter((c) => !c.aprobada);
   const approvedCompanies = companies.filter((c) => c.aprobada);
 
-  const filteredCompanies = companies.filter((company) => {
-    const matchesSearch =
-      company.razon_social.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (company.cuit &&
-        company.cuit.toLowerCase().includes(searchTerm.toLowerCase()));
+  const filteredCompanies = companies
+    .filter((company) => {
+      const matchesSearch =
+        company.razon_social.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (company.cuit &&
+          company.cuit.toLowerCase().includes(searchTerm.toLowerCase()));
 
-    if (filterStatus === "pending") return !company.aprobada && matchesSearch;
-    if (filterStatus === "approved") return company.aprobada && matchesSearch;
-    return matchesSearch;
-  });
+      if (filterStatus === "pending") return !company.aprobada && matchesSearch;
+      if (filterStatus === "approved") return company.aprobada && matchesSearch;
+      return matchesSearch;
+    })
+    .sort((a, b) => {
+      if (filterStatus !== "all") return 0;
+      return Number(a.aprobada) - Number(b.aprobada);
+    });
 
   const handleApproveClick = (company: EmpresaResponse) => {
     setCompanyToApprove(company);
