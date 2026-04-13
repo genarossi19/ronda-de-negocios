@@ -17,12 +17,10 @@ import {
 import { Button } from "../../components/ui/button";
 import Navbar from "../../components/Navbar";
 import { motion as m } from "motion/react";
-import { useAuth } from "../../context/AuthContext";
-import { useEffect } from "react";
-import { useNavigate } from "react-router";
+import { useCurrentUser } from "../../hooks/useCurrentUser";
 
 export default function AdminDashboard() {
-  const { isAdmin } = useAuth();
+  const { isAdmin } = useCurrentUser();
   const navigate = useNavigate();
 
   // useEffect(() => {

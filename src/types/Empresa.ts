@@ -9,6 +9,14 @@ export interface EmpresaResponse {
   sector: GenericType;
   localidad: LocalidadResponse;
   readOnly?: boolean;
+  aprobada?: boolean;
+  eliminado?: boolean;
+  fecha_eliminado?: string | null;
+  fecha_registro?: string;
+  cuit?: string;
+  telefono_contacto?: string;
+  direccion?: string;
+  user?: number;
 }
 
 export interface EmpresaWrite {

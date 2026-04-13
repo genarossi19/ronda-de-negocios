@@ -22,10 +22,15 @@ import {
 } from "../components/ui/dropdown-menu";
 import { Avatar, AvatarFallback } from "../components/ui/avatar";
 import { useState, useEffect, useRef } from "react";
-import { useAuth } from "../context/AuthContext";
+import { useAuth } from "../hooks/useAuth";
+import { useCurrentUser } from "../hooks/useCurrentUser";
+import { useNavigate } from "react-router";
 
 export default function Navbar() {
-  const { user, isAuthenticated, logout, isAdmin } = useAuth();
+  const { logout } = useAuth();
+  const { user, isAuthenticated, isAdmin } = useCurrentUser();
+  const navigate = useNavigate();
+
   const [isOpen, setIsOpen] = useState(false);
   const [isVisible, setIsVisible] = useState(true);
   const [theme, setTheme] = useState<"light" | "dark">("light");
@@ -39,7 +44,7 @@ export default function Navbar() {
         entries.forEach((entry) => {
           if (entry.isIntersecting) {
             const sectionTheme = entry.target.getAttribute(
-              "data-navbar-theme"
+              "data-navbar-theme",
             ) as "light" | "dark";
             setTheme(sectionTheme);
           }
@@ -48,7 +53,7 @@ export default function Navbar() {
       {
         threshold: 0.3,
         rootMargin: "-80px 0px 0px 0px",
-      }
+      },
     );
 
     sections.forEach((section) => observer.observe(section));
@@ -95,8 +100,8 @@ export default function Navbar() {
     theme === "light" ? "text-white" : "text-[#143E29]";
 
   const getUserInitials = () => {
-    if (!user?.companyName) return "U";
-    return user.companyName
+    if (!user?.razon_social) return "U";
+    return user.razon_social
       .split(" ")
       .map((word) => word[0])
       .join("")
@@ -194,16 +199,18 @@ export default function Navbar() {
                         theme === "light" ? "text-white" : "text-[#143E29]"
                       }`}
                     >
-                      {user?.companyName}
+                      {user?.razon_social}
                     </span>
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-56">
                   <DropdownMenuLabel>
                     <div className="flex flex-col space-y-1">
-                      <p className="text-sm font-medium">{user?.companyName}</p>
+                      <p className="text-sm font-medium">
+                        {user?.razon_social}
+                      </p>
                       <p className="text-xs text-muted-foreground">
-                        {user?.email}
+                        ID: {user?.user_id}
                       </p>
                     </div>
                   </DropdownMenuLabel>
@@ -304,9 +311,11 @@ export default function Navbar() {
                         </Avatar>
                         <div>
                           <p className="text-white font-semibold">
-                            {user?.companyName}
+                            {user?.razon_social}
                           </p>
-                          <p className="text-sm text-gray-300">{user?.email}</p>
+                          <p className="text-sm text-gray-300">
+                            ID: {user?.user_id}
+                          </p>
                         </div>
                       </div>
                     </div>

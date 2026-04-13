@@ -20,7 +20,7 @@ import {
 import { getCompanies } from "../api/EmpresaService";
 import type { EmpresaResponse } from "../types/Empresa";
 
-import { useAuth } from "../context/AuthContext";
+import { useCurrentUser } from "../hooks/useCurrentUser";
 import { useNavigate } from "react-router";
 
 function CompanyCardSkeleton() {
@@ -38,13 +38,22 @@ function CompanyCardSkeleton() {
 }
 
 export default function Companies() {
-  const { isAuthenticated, isAdmin } = useAuth();
+  const { isAuthenticated, isAdmin, user } = useCurrentUser();
   const navigate = useNavigate();
   const [companies, setCompanies] = useState<EmpresaResponse[]>([]);
 
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [isLoading, setIsLoading] = useState(true);
+
+  // Debug: Log para verificar el estado de autenticación
+  useEffect(() => {
+    console.log("=== DEBUG EMPRESAS ===");
+    console.log("isAdmin:", isAdmin);
+    console.log("isAuthenticated:", isAuthenticated);
+    console.log("user:", user);
+    console.log("====================");
+  }, [isAdmin, isAuthenticated, user]);
 
   const [selectedCompany, setSelectedCompany] =
     useState<EmpresaResponse | null>(null);
@@ -179,7 +188,11 @@ export default function Companies() {
                   className="animate-fade-in-up"
                   style={{ animationDelay: `${index * 50}ms` }}
                 >
-                  <CompanyCard company={company} onClick={handleCompanyClick} />
+                  <CompanyCard
+                    company={company}
+                    onClick={handleCompanyClick}
+                    isAdmin={isAdmin}
+                  />
                 </div>
               ))}
             </div>

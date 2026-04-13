@@ -1,25 +1,61 @@
 import { Card } from "../components/ui/card";
+import { Badge } from "../components/ui/badge";
 import type { EmpresaResponse } from "../types/Empresa";
-import { Building2 } from "lucide-react";
+import { Building2, XCircle, Clock } from "lucide-react";
 
 interface CompanyCardProps {
   company: EmpresaResponse;
   onClick?: (company: EmpresaResponse) => void;
+  isAdmin?: boolean;
 }
 
-export default function CompanyCard({ company, onClick }: CompanyCardProps) {
+export default function CompanyCard({
+  company,
+  onClick,
+  isAdmin,
+}: CompanyCardProps) {
   const handleClick = () => {
     if (onClick) {
       onClick(company);
     }
   };
 
+  const isDeleted = company.eliminado === true;
+  const isNotApproved = company.aprobada === false;
+  const showStatusBadges = isAdmin && (isDeleted || isNotApproved);
+
   return (
     <Card
-      className="cursor-pointer border border-gray-200 dark:border-[#68A243]/20 rounded-xl shadow-sm hover:shadow-xl hover:-translate-y-1 hover:border-[#68A243] dark:bg-[#143E29] dark:hover:border-[#68A243]/60 transition-all duration-300 group p-4"
+      className={`cursor-pointer border border-gray-200 dark:border-[#68A243]/20 rounded-xl shadow-sm hover:shadow-xl hover:-translate-y-1 hover:border-[#68A243] dark:bg-[#143E29] dark:hover:border-[#68A243]/60 transition-all duration-300 group p-4 ${
+        isDeleted ? "opacity-60 dark:opacity-50" : ""
+      }`}
       onClick={handleClick}
     >
-      <div className="flex flex-col items-center text-center">
+      <div className="flex flex-col items-center text-center relative">
+        {/* Status Badges - Solo visible para Admin */}
+        {showStatusBadges && (
+          <div className="absolute top-0 right-0 flex flex-col gap-1.5">
+            {isDeleted && (
+              <Badge
+                variant="destructive"
+                className="bg-red-500/90 hover:bg-red-600 text-white text-xs gap-1 flex items-center"
+              >
+                <XCircle className="h-3 w-3" />
+                Eliminada
+              </Badge>
+            )}
+            {isNotApproved && (
+              <Badge
+                variant="secondary"
+                className="bg-yellow-500/90 hover:bg-yellow-600 text-white text-xs gap-1 flex items-center"
+              >
+                <Clock className="h-3 w-3" />
+                Pendiente
+              </Badge>
+            )}
+          </div>
+        )}
+
         {/* Imagen */}
         <div className="w-28 h-28 rounded-xl bg-gray-200 dark:bg-[#0f2f25] flex items-center justify-center overflow-hidden mb-3 group-hover:bg-[#68A243]/10 dark:group-hover:bg-[#68A243]/20 transition-colors duration-300 relative">
           {company.logo ? (
