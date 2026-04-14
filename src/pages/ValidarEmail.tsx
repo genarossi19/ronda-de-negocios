@@ -1,7 +1,13 @@
-import { useEffect, useState } from "react";
-import { Link, useParams } from "react-router";
+import { useEffect, useRef, useState } from "react";
+import { Link, useNavigate, useParams } from "react-router";
 import { motion as m } from "motion/react";
-import { CheckCircle2, MailCheck, XCircle, Loader2, ArrowLeft } from "lucide-react";
+import {
+  CheckCircle2,
+  MailCheck,
+  XCircle,
+  Loader2,
+  ArrowLeft,
+} from "lucide-react";
 import { toast } from "sonner";
 import axios from "axios";
 import Navbar from "../components/Navbar";
@@ -13,11 +19,17 @@ type ValidationStatus = "loading" | "success" | "error";
 
 export default function ValidarEmail() {
   const { uidb64, token } = useParams<{ uidb64: string; token: string }>();
+  const navigate = useNavigate();
   const [status, setStatus] = useState<ValidationStatus>("loading");
   const [message, setMessage] = useState("Estamos validando tu correo...");
+  const [countdown, setCountdown] = useState<number | null>(null);
+  const hasRun = useRef(false);
 
   useEffect(() => {
     const runValidation = async () => {
+      if (hasRun.current) return;
+      hasRun.current = true;
+
       if (!uidb64 || !token) {
         setStatus("error");
         setMessage("El enlace de validacion es invalido o esta incompleto.");
@@ -38,7 +50,8 @@ export default function ValidarEmail() {
 
         let backendMessage: string | undefined;
         if (axios.isAxiosError(err)) {
-          backendMessage = err.response?.data?.detail || err.response?.data?.message;
+          backendMessage =
+            err.response?.data?.detail || err.response?.data?.message;
         }
 
         const finalMessage =
@@ -52,6 +65,31 @@ export default function ValidarEmail() {
 
     runValidation();
   }, [uidb64, token]);
+
+  useEffect(() => {
+    if (status !== "success") {
+      setCountdown(null);
+      return;
+    }
+
+    setCountdown(10);
+
+    const intervalId = setInterval(() => {
+      setCountdown((prev) => {
+        if (prev === null) return null;
+
+        if (prev <= 1) {
+          clearInterval(intervalId);
+          navigate("/login");
+          return 0;
+        }
+
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(intervalId);
+  }, [status, navigate]);
 
   return (
     <div className="min-h-screen bg-white dark:bg-[#0a1a15] transition-colors duration-300 flex flex-col">
@@ -125,8 +163,15 @@ export default function ValidarEmail() {
               )}
 
               <div className="flex flex-col sm:flex-row gap-3">
-                <Button asChild className="bg-[#68A243] hover:bg-[#5a9038] text-white">
-                  <Link to="/login">Ir a iniciar sesion</Link>
+                <Button
+                  asChild
+                  className="bg-[#68A243] hover:bg-[#5a9038] text-white"
+                >
+                  <Link to="/login">
+                    {status === "success" && countdown !== null
+                      ? `Ir a iniciar sesion (${countdown}s)`
+                      : "Ir a iniciar sesion"}
+                  </Link>
                 </Button>
                 <Button
                   asChild
