@@ -27,7 +27,6 @@ import { Input } from "../../components/ui/input";
 import Navbar from "../../components/Navbar";
 import Footer from "../../layout/Footer";
 import { toast } from "sonner";
-import axios from "axios";
 import {
   getCompanies,
   approveCompany,
@@ -35,6 +34,7 @@ import {
 } from "../../api/EmpresaService";
 import type { EmpresaResponse } from "../../types/Empresa";
 import { useCurrentUser } from "../../hooks/useCurrentUser";
+import { getApiErrorMessage, isSessionExpiredError } from "../../lib/axios";
 
 function CompanyRow({
   company,
@@ -190,7 +190,9 @@ export default function CompaniesManagement() {
         setCompanies(data);
       } catch (err) {
         console.error("Error loading companies:", err);
-        toast.error("Error al cargar las empresas");
+        if (!isSessionExpiredError(err)) {
+          toast.error("Error al cargar las empresas");
+        }
         setCompanies([]);
       } finally {
         setIsLoading(false);
@@ -251,18 +253,12 @@ export default function CompaniesManagement() {
         setIsApproveOpen(false);
         setCompanyToApprove(null);
       } catch (err) {
-        // Manejar errores de axios con respuesta del backend
-        if (axios.isAxiosError(err)) {
-          const errorMessage =
-            err.response?.data?.detail ||
-            err.response?.data?.message ||
-            err.message ||
-            "Ha ocurrido un error. Intenta de nuevo más tarde";
-
+        const errorMessage = getApiErrorMessage(
+          err,
+          "Ha ocurrido un error. Intenta de nuevo más tarde",
+        );
+        if (errorMessage) {
           toast.error(errorMessage);
-        } else {
-          // Error desconocido
-          toast.error("Ha ocurrido un error. Intenta de nuevo más tarde");
         }
 
         console.error("Error approving company:", err);
@@ -293,18 +289,12 @@ export default function CompaniesManagement() {
         setIsDeleteOpen(false);
         setCompanyToDelete(null);
       } catch (err) {
-        // Manejar errores de axios con respuesta del backend
-        if (axios.isAxiosError(err)) {
-          const errorMessage =
-            err.response?.data?.detail ||
-            err.response?.data?.message ||
-            err.message ||
-            "Ha ocurrido un error. Intenta de nuevo más tarde";
-
+        const errorMessage = getApiErrorMessage(
+          err,
+          "Ha ocurrido un error. Intenta de nuevo más tarde",
+        );
+        if (errorMessage) {
           toast.error(errorMessage);
-        } else {
-          // Error desconocido
-          toast.error("Ha ocurrido un error. Intenta de nuevo más tarde");
         }
 
         console.error("Error deleting company:", err);

@@ -20,15 +20,26 @@ import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
 import Navbar from "../components/Navbar";
 import { useAuth } from "../hooks/useAuth";
-import { Link, useNavigate } from "react-router";
+import { Link, useLocation, useNavigate } from "react-router";
 import { motion as m } from "motion/react";
 import { toast } from "sonner";
 import { useTheme } from "../context/ThemeContext";
+import {
+  SESSION_EXPIRED_MESSAGE,
+  SESSION_EXPIRED_REASON,
+  SESSION_EXPIRED_STORAGE_KEY,
+} from "../lib/axios";
+
+type LoginLocationState = {
+  sessionExpired?: boolean;
+  message?: string;
+};
 
 export default function Login() {
   const { login } = useAuth();
   const { resolvedTheme } = useTheme();
   const navigate = useNavigate();
+  const location = useLocation();
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -42,21 +53,36 @@ export default function Login() {
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
 
   useEffect(() => {
-    // Mostrar notificación si la sesión fue expirada (desde localStorage)
-    const sessionExpired = localStorage.getItem("sessionExpired");
-    if (sessionExpired === "true") {
-      toast.info(
-        "Tu sesión anterior fue cerrada. Por favor, iniciá sesión nuevamente.",
-        {
-          duration: 6000,
-          description:
-            "Esto puede haber ocurrido por inactividad o cambios de seguridad.",
-        },
-      );
-      // Limpiar la bandera después de mostrar el toast
-      localStorage.removeItem("sessionExpired");
+    const locationState = (location.state as LoginLocationState | null) ?? null;
+    const query = new URLSearchParams(location.search);
+    const sessionExpired = localStorage.getItem(SESSION_EXPIRED_STORAGE_KEY);
+    const shouldShowToast =
+      locationState?.sessionExpired === true ||
+      sessionExpired === "true" ||
+      query.get("reason") === SESSION_EXPIRED_REASON;
+
+    if (shouldShowToast) {
+      toast.error(locationState?.message ?? SESSION_EXPIRED_MESSAGE, {
+        duration: 5000,
+      });
+      localStorage.removeItem(SESSION_EXPIRED_STORAGE_KEY);
+
+      if (
+        locationState?.sessionExpired ||
+        query.get("reason") === SESSION_EXPIRED_REASON
+      ) {
+        query.delete("reason");
+        const nextSearch = query.toString();
+        navigate(
+          {
+            pathname: location.pathname,
+            search: nextSearch ? `?${nextSearch}` : "",
+          },
+          { replace: true, state: null },
+        );
+      }
     }
-  }, []);
+  }, [location.pathname, location.search, location.state, navigate]);
 
   // Cursor trail effect
   useEffect(() => {

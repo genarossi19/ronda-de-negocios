@@ -1,8 +1,131 @@
-import axios from "axios";
+import axios, { type AxiosError } from "axios";
 import Cookies from "js-cookie";
 import { useUserStore } from "../store/userStore";
 
 const TOKEN_COOKIE_NAME = "token";
+export const SESSION_EXPIRED_STORAGE_KEY = "sessionExpired";
+export const SESSION_EXPIRED_MESSAGE =
+  "Su sesion expiro. Vuelve a iniciar sesion";
+export const SESSION_EXPIRED_REASON = "session-expired";
+export const AUTH_SESSION_EXPIRED_EVENT = "auth:session-expired";
+const AUTH_REDIRECT_HANDLED_FLAG = "__authRedirectHandled";
+const AUTH_MESSAGE_FRAGMENTS = [
+  "authentication credentials were not provided",
+  "given token not valid",
+  "token is invalid or expired",
+  "token not valid",
+  "not authenticated",
+  "credenciales de autenticacion no se proveyeron",
+];
+
+type AxiosErrorWithAuthFlag = AxiosError & {
+  [AUTH_REDIRECT_HANDLED_FLAG]?: boolean;
+};
+
+function collectErrorMessages(payload: unknown): string[] {
+  if (typeof payload === "string") {
+    return [payload];
+  }
+
+  if (Array.isArray(payload)) {
+    return payload.flatMap((item) => collectErrorMessages(item));
+  }
+
+  if (payload && typeof payload === "object") {
+    return Object.values(payload).flatMap((value) =>
+      collectErrorMessages(value),
+    );
+  }
+
+  return [];
+}
+
+function getResponseMessages(error: AxiosError): string[] {
+  return collectErrorMessages(error.response?.data).filter(Boolean);
+}
+
+function hasAuthenticationMessage(messages: string[]) {
+  return messages.some((message) => {
+    const normalized = message.toLowerCase();
+    return AUTH_MESSAGE_FRAGMENTS.some((fragment) =>
+      normalized.includes(fragment),
+    );
+  });
+}
+
+function markAuthRedirectHandled(error: AxiosError) {
+  (error as AxiosErrorWithAuthFlag)[AUTH_REDIRECT_HANDLED_FLAG] = true;
+}
+
+function redirectToLogin() {
+  localStorage.setItem(SESSION_EXPIRED_STORAGE_KEY, "true");
+  Cookies.remove(TOKEN_COOKIE_NAME);
+  useUserStore.getState().clearUser();
+
+  const authEvent = new CustomEvent(AUTH_SESSION_EXPIRED_EVENT, {
+    cancelable: true,
+    detail: {
+      message: SESSION_EXPIRED_MESSAGE,
+      reason: SESSION_EXPIRED_REASON,
+    },
+  });
+
+  const handledByRouter = !window.dispatchEvent(authEvent);
+
+  if (!handledByRouter && window.location.pathname !== "/login") {
+    window.location.assign(`/login?reason=${SESSION_EXPIRED_REASON}`);
+  }
+}
+
+function isAuthenticationFailure(error: unknown): error is AxiosError {
+  if (!axios.isAxiosError(error)) {
+    return false;
+  }
+
+  const status = error.response?.status;
+  const messages = getResponseMessages(error);
+
+  if (status === 401) {
+    return true;
+  }
+
+  if (
+    (status === 403 || status === 400) &&
+    hasAuthenticationMessage(messages)
+  ) {
+    return true;
+  }
+
+  return false;
+}
+
+export function isSessionExpiredError(error: unknown) {
+  if (!axios.isAxiosError(error)) {
+    return false;
+  }
+
+  return (
+    Boolean((error as AxiosErrorWithAuthFlag)[AUTH_REDIRECT_HANDLED_FLAG]) ||
+    isAuthenticationFailure(error)
+  );
+}
+
+export function getApiErrorMessage(error: unknown, fallback: string) {
+  if (isSessionExpiredError(error)) {
+    return null;
+  }
+
+  if (axios.isAxiosError(error)) {
+    const [firstMessage] = getResponseMessages(error);
+    return firstMessage || error.message || fallback;
+  }
+
+  if (error instanceof Error && error.message) {
+    return error.message;
+  }
+
+  return fallback;
+}
 
 const api = axios.create({
   // baseURL: "https://incomprehensive-nedra-subthoracic.ngrok-free.dev",
@@ -42,22 +165,11 @@ api.interceptors.request.use(
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    // Detectar errores de autenticación
-    if (error.response?.status === 401 || error.response?.status === 403) {
-      const token = Cookies.get(TOKEN_COOKIE_NAME);
-
-      if (token) {
-        // Guardar en localStorage que la sesión expiró (persiste entre reloads)
-        localStorage.setItem("sessionExpired", "true");
-
-        // Limpiar cookie y store de Zustand
-        Cookies.remove(TOKEN_COOKIE_NAME);
-        useUserStore.getState().clearUser();
-
-        // Redirect a login inmediatamente
-        window.location.href = "/login";
-      }
+    if (isAuthenticationFailure(error)) {
+      markAuthRedirectHandled(error);
+      redirectToLogin();
     }
+
     return Promise.reject(error);
   },
 );

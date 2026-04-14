@@ -75,7 +75,7 @@ export default function AdminDashboard() {
       title: "Gestionar Rondas",
       description: "Crear, editar y cerrar rondas de negocios",
       icon: Calendar,
-      href: "#admin-rounds",
+      href: "/gestionar-rondas",
     },
     {
       title: "Aprobar Empresas",

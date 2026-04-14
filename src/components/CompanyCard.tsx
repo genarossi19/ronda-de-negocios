@@ -1,3 +1,4 @@
+import { useMemo, useState } from "react";
 import { Card } from "../components/ui/card";
 import { Badge } from "../components/ui/badge";
 import type { EmpresaResponse } from "../types/Empresa";
@@ -14,11 +15,23 @@ export default function CompanyCard({
   onClick,
   isAdmin,
 }: CompanyCardProps) {
+  const [imageError, setImageError] = useState(false);
+
   const handleClick = () => {
     if (onClick) {
       onClick(company);
     }
   };
+
+  const companyInitials = useMemo(() => {
+    return company.razon_social
+      .trim()
+      .split(/\s+/)
+      .filter(Boolean)
+      .slice(0, 2)
+      .map((word) => word[0]?.toUpperCase() ?? "")
+      .join("");
+  }, [company.razon_social]);
 
   const isDeleted = company.eliminado === true;
   const isNotApproved = company.aprobada === false;
@@ -58,18 +71,22 @@ export default function CompanyCard({
 
         {/* Imagen */}
         <div className="w-28 h-28 rounded-xl bg-gray-200 dark:bg-[#0f2f25] flex items-center justify-center overflow-hidden mb-3 group-hover:bg-[#68A243]/10 dark:group-hover:bg-[#68A243]/20 transition-colors duration-300 relative">
-          {company.logo ? (
+          {company.logo && !imageError ? (
             <img
               src={company.logo}
               alt={company.razon_social}
+              onError={() => setImageError(true)}
               className="absolute inset-0 w-full h-full object-cover"
             />
           ) : (
-            <img
-              src="/placeholder.svg"
-              alt="placeholder"
-              className="w-16 h-16 object-contain"
-            />
+            <div
+              aria-label={company.razon_social}
+              className="absolute inset-0 flex items-center justify-center bg-[#68A243]/20 dark:bg-[#68A243]/35 text-[#143E29] dark:text-[#d7efc8]"
+            >
+              <span className="text-3xl font-bold tracking-wide">
+                {companyInitials || "?"}
+              </span>
+            </div>
           )}
         </div>
 

@@ -2,7 +2,7 @@ import { CompanyProvider } from "../src/context/CompanyContext";
 import Landing from "../src/pages/Landing";
 import Empresas from "./pages/Empresas";
 import EmpresasDetail from "./pages/EmpresasDetail";
-import { Routes, Route } from "react-router";
+import { Routes, Route, useLocation, useNavigate } from "react-router";
 import Register from "./pages/RegisterStep";
 import Shifts from "./pages/Shifts";
 import { BookingProvider } from "./context/BookingContext";
@@ -15,16 +15,67 @@ import { ProtectedRoute } from "./components/ProtectedRoute";
 import { useAuth } from "./hooks/useAuth";
 import Dashboard from "./pages/admin/Dashboard";
 import CompaniesManagement from "./pages/admin/CompaniesManagement";
+import GestionarRondas from "./pages/admin/GestionarRondas";
 import Representantes from "./pages/Representantes";
 import NotFound from "./pages/NotFound";
 import { Toaster } from "./components/ui/sonner";
 import ValidarEmail from "./pages/ValidarEmail";
+import { useEffect } from "react";
+import {
+  AUTH_SESSION_EXPIRED_EVENT,
+  SESSION_EXPIRED_MESSAGE,
+  SESSION_EXPIRED_REASON,
+} from "./lib/axios";
+
+type SessionExpiredEventDetail = {
+  message?: string;
+  reason?: string;
+};
+
+function AuthRedirectHandler() {
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  useEffect(() => {
+    const handleSessionExpired = (event: Event) => {
+      event.preventDefault();
+
+      const customEvent = event as CustomEvent<SessionExpiredEventDetail>;
+      const reason = customEvent.detail?.reason ?? SESSION_EXPIRED_REASON;
+      const message = customEvent.detail?.message ?? SESSION_EXPIRED_MESSAGE;
+
+      navigate(`/login?reason=${reason}`, {
+        replace: true,
+        state: {
+          sessionExpired: true,
+          message,
+          redirectedFrom: location.pathname,
+        },
+      });
+    };
+
+    window.addEventListener(
+      AUTH_SESSION_EXPIRED_EVENT,
+      handleSessionExpired as EventListener,
+    );
+
+    return () => {
+      window.removeEventListener(
+        AUTH_SESSION_EXPIRED_EVENT,
+        handleSessionExpired as EventListener,
+      );
+    };
+  }, [location.pathname, navigate]);
+
+  return null;
+}
 
 function AppRoutes() {
   useAuth();
 
   return (
     <ThemeProvider>
+      <AuthRedirectHandler />
       <Routes>
         <Route path="/login" element={<Login />} />
         <Route path="/" element={<Landing />} />
@@ -54,15 +105,23 @@ function AppRoutes() {
         <Route
           path="/panel-administrador"
           element={
-            <ProtectedRoute>
+            <ProtectedRoute requiredAdmin>
               <Dashboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/gestionar-rondas"
+          element={
+            <ProtectedRoute requiredAdmin>
+              <GestionarRondas />
             </ProtectedRoute>
           }
         />
         <Route
           path="/panel-administrador/empresas"
           element={
-            <ProtectedRoute>
+            <ProtectedRoute requiredAdmin>
               <CompaniesManagement />
             </ProtectedRoute>
           }

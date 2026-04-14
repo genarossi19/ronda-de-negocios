@@ -78,6 +78,9 @@ export default function Companies() {
   const filteredCompanies = companies.filter((company) =>
     company.razon_social.toLowerCase().includes(searchQuery.toLowerCase()),
   );
+  const activeCompaniesCount = companies.filter(
+    (company) => company.aprobada === true,
+  ).length;
 
   const handleCompanyClick = (company: EmpresaResponse) => {
     setSelectedCompany(company);
@@ -124,7 +127,7 @@ export default function Companies() {
                   className="border-white/30 text-white px-2.5 py-0.5 text-xs font-medium"
                 >
                   <TrendingUp className="mr-1 h-3 w-3" />
-                  Activas
+                  {activeCompaniesCount} Activas
                 </Badge>
               </div>
             </div>

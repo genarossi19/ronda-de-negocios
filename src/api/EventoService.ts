@@ -6,8 +6,21 @@ export const getEventos = async (): Promise<EventoResponse[]> => {
 };
 
 export async function createEvento(
-  payload: EventoWrite
+  payload: EventoWrite,
 ): Promise<EventoResponse> {
-  const { data } = await api.post<EventoResponse>("/eventos", payload);
+  const { data } = await api.post<EventoResponse>("/eventos/", payload);
+  return data;
+}
+
+export async function updateEvento(
+  id: number,
+  payload: Partial<EventoWrite>,
+): Promise<EventoResponse> {
+  const { data } = await api.patch<EventoResponse>(`/eventos/${id}/`, payload);
+  return data;
+}
+
+export async function deleteEvento(id: number) {
+  const { data } = await api.delete(`/eventos/${id}/`);
   return data;
 }

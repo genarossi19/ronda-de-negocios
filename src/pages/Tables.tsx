@@ -60,6 +60,7 @@ import type {
 } from "../types/Representante";
 import { toast } from "sonner";
 import { useUserStore } from "../store/userStore";
+import { getApiErrorMessage, isSessionExpiredError } from "../lib/axios";
 
 interface TableUIData {
   id: number;
@@ -207,7 +208,9 @@ export default function Tables() {
         setError(null);
       } catch (err) {
         console.error("Error cargando mesas:", err);
-        setError("Error al cargar las mesas");
+        if (!isSessionExpiredError(err)) {
+          setError("Error al cargar las mesas");
+        }
       } finally {
         setLoading(false);
       }
@@ -236,6 +239,9 @@ export default function Tables() {
       }
     } catch (err) {
       console.error("Error cargando representantes:", err);
+      if (!isSessionExpiredError(err)) {
+        toast.error("No se pudieron cargar los representantes.");
+      }
     } finally {
       setLoadingRepresentatives(false);
     }
@@ -586,33 +592,13 @@ export default function Tables() {
       }, 3000);
     } catch (err) {
       console.error("Error confirmando reserva:", err);
-
-      // Intentar extraer el mensaje de error del backend
-      let errorMessage = "Error al confirmar la reserva";
-
-      const axiosError = err as {
-        response?: { data?: Record<string, string[]> };
-        message?: string;
-      };
-
-      // Primero, intentar obtener el error específico del backend
-      if (
-        axiosError.response?.data &&
-        typeof axiosError.response.data === "object"
-      ) {
-        const errorData = axiosError.response.data;
-        // Obtener el primer array de errores del objeto
-        const firstErrorArray = Object.values(errorData)[0];
-        if (Array.isArray(firstErrorArray) && firstErrorArray.length > 0) {
-          errorMessage = firstErrorArray[0];
-        }
+      const errorMessage = getApiErrorMessage(
+        err,
+        "Error al confirmar la reserva",
+      );
+      if (errorMessage) {
+        toast.error(errorMessage);
       }
-      // Si no hay error del backend, usar el mensaje de axios
-      else if (err instanceof Error) {
-        errorMessage = err.message;
-      }
-
-      toast.error(errorMessage);
     } finally {
       setSubmittingBooking(false);
     }
@@ -677,33 +663,13 @@ export default function Tables() {
       }, 2000);
     } catch (err) {
       console.error("Error cambiando representante:", err);
-
-      // Intentar extraer el mensaje de error del backend
-      let errorMessage = "Error al cambiar el representante";
-
-      const axiosError = err as {
-        response?: { data?: Record<string, string[]> };
-        message?: string;
-      };
-
-      // Primero, intentar obtener el error específico del backend
-      if (
-        axiosError.response?.data &&
-        typeof axiosError.response.data === "object"
-      ) {
-        const errorData = axiosError.response.data;
-        // Obtener el primer array de errores del objeto
-        const firstErrorArray = Object.values(errorData)[0];
-        if (Array.isArray(firstErrorArray) && firstErrorArray.length > 0) {
-          errorMessage = firstErrorArray[0];
-        }
+      const errorMessage = getApiErrorMessage(
+        err,
+        "Error al cambiar el representante",
+      );
+      if (errorMessage) {
+        toast.error(errorMessage);
       }
-      // Si no hay error del backend, usar el mensaje de axios
-      else if (err instanceof Error) {
-        errorMessage = err.message;
-      }
-
-      toast.error(errorMessage);
     } finally {
       setSubmittingBooking(false);
     }

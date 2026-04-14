@@ -13,6 +13,10 @@ interface ImageAspectRatio {
   [key: string]: "wide" | "tall" | "normal";
 }
 
+interface ImageErrors {
+  [key: string]: boolean;
+}
+
 export default function Carousel({ onCompaniesLoaded }: CarouselProps) {
   const [companies, setCompanies] = useState<EmpresaResponse[]>([]);
   const [loading, isLoading] = useState(false);
@@ -23,6 +27,7 @@ export default function Carousel({ onCompaniesLoaded }: CarouselProps) {
   const [imageAspectRatios, setImageAspectRatios] = useState<ImageAspectRatio>(
     {},
   );
+  const [imageErrors, setImageErrors] = useState<ImageErrors>({});
   const scrollRef = useRef<HTMLDivElement>(null);
 
   // Traer empresas desde la API
@@ -108,6 +113,15 @@ export default function Carousel({ onCompaniesLoaded }: CarouselProps) {
     }));
   };
 
+  const getCompanyInitials = (name: string) =>
+    name
+      .trim()
+      .split(/\s+/)
+      .filter(Boolean)
+      .slice(0, 2)
+      .map((word) => word[0]?.toUpperCase() ?? "")
+      .join("");
+
   // Reintentar cargar empresas
   const handleRetry = () => {
     const fetchCompanies = async () => {
@@ -168,30 +182,47 @@ export default function Carousel({ onCompaniesLoaded }: CarouselProps) {
               />
             ))
           : duplicatedCompanies.map((company, index) => {
-              const aspectClass = imageAspectRatios[company.id] || "normal";
+              const companyKey = String(company.id);
+              const aspectClass = imageAspectRatios[companyKey] || "normal";
+              const showImage =
+                Boolean(company.logo) && !imageErrors[companyKey];
+              const initials = getCompanyInitials(company.razon_social);
 
               return (
                 <div
                   key={`${company.id}-${index}`}
-                  className="flex-shrink-0 w-32 h-32 bg-white dark:bg-[#143E29] rounded-xl border border-gray-300 dark:border-[#68A243]/20 flex items-center justify-center hover:shadow-lg dark:hover:shadow-xl transition-shadow duration-200 overflow-hidden"
+                  className="relative flex-shrink-0 w-32 h-32 bg-white dark:bg-[#143E29] rounded-xl border border-gray-300 dark:border-[#68A243]/20 flex items-center justify-center hover:shadow-lg dark:hover:shadow-xl transition-shadow duration-200 overflow-hidden"
                 >
-                  <img
-                    src={company.logo || "/placeholder.svg"}
-                    alt={company.razon_social}
-                    loading="lazy"
-                    onLoad={(e) => handleImageLoad(company.id, e)}
-                    onError={(e) => {
-                      const target = e.target as HTMLImageElement;
-                      target.src = "/placeholder.svg";
-                    }}
-                    className={`w-full h-full object-cover object-center ${
-                      aspectClass === "wide"
-                        ? "h-full w-auto"
-                        : aspectClass === "tall"
-                          ? "w-full h-auto"
-                          : ""
-                    }`}
-                  />
+                  {showImage ? (
+                    <img
+                      src={company.logo}
+                      alt={company.razon_social}
+                      loading="lazy"
+                      onLoad={(e) => handleImageLoad(companyKey, e)}
+                      onError={() => {
+                        setImageErrors((prev) => ({
+                          ...prev,
+                          [companyKey]: true,
+                        }));
+                      }}
+                      className={`w-full h-full object-cover object-center ${
+                        aspectClass === "wide"
+                          ? "h-full w-auto"
+                          : aspectClass === "tall"
+                            ? "w-full h-auto"
+                            : ""
+                      }`}
+                    />
+                  ) : (
+                    <div
+                      aria-label={company.razon_social}
+                      className="absolute inset-0 flex items-center justify-center bg-[#68A243]/20 dark:bg-[#68A243]/35 text-[#143E29] dark:text-[#d7efc8]"
+                    >
+                      <span className="text-3xl font-bold tracking-wide">
+                        {initials || "?"}
+                      </span>
+                    </div>
+                  )}
                 </div>
               );
             })}
