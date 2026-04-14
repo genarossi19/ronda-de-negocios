@@ -16,6 +16,7 @@ import { useAuth } from "./hooks/useAuth";
 import Dashboard from "./pages/admin/Dashboard";
 import CompaniesManagement from "./pages/admin/CompaniesManagement";
 import GestionarRondas from "./pages/admin/GestionarRondas";
+import GestionarTurnos from "./pages/admin/GestionarTurnos";
 import Representantes from "./pages/Representantes";
 import NotFound from "./pages/NotFound";
 import { Toaster } from "./components/ui/sonner";
@@ -123,6 +124,14 @@ function AppRoutes() {
           element={
             <ProtectedRoute requiredAdmin>
               <CompaniesManagement />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/panel-administrador/turnos/:eventoId"
+          element={
+            <ProtectedRoute requiredAdmin>
+              <GestionarTurnos />
             </ProtectedRoute>
           }
         />

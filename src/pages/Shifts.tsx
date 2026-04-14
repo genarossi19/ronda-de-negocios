@@ -46,9 +46,9 @@ export default function Shifts() {
 
   const filteredShifts = shifts;
 
-  const getStatusBadge = (status: string) => {
+  const getStatusBadge = (status: TurnoResponse["estado"]) => {
     switch (status) {
-      case "available":
+      case "abierto":
         return (
           <Badge className="bg-[#68A243] hover:bg-[#68A243]/90">
             Disponible
@@ -56,21 +56,11 @@ export default function Shifts() {
         );
       case "full":
         return <Badge variant="destructive">Completo</Badge>;
-      case "finished":
-        return <Badge variant="secondary">Finalizado</Badge>;
+      case "cerrado":
+        return <Badge variant="secondary">Cerrado</Badge>;
       default:
         return null;
     }
-  };
-
-  const formatDate = (dateStr: string) => {
-    const date = new Date(dateStr + "T00:00:00");
-    return date.toLocaleDateString("es-AR", {
-      weekday: "long",
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-    });
   };
 
   const tutorialSteps = [

@@ -48,7 +48,6 @@ import {
   updateEvento,
 } from "../../api/EventoService";
 import type { EventoResponse, EventoWrite } from "../../types/Evento";
-import { useCurrentUser } from "../../hooks/useCurrentUser";
 import { getApiErrorMessage, isSessionExpiredError } from "../../lib/axios";
 
 type EstadoEvento = EventoWrite["estado"];
@@ -242,7 +241,6 @@ function RoundListSkeleton() {
 
 export default function GestionarRondas() {
   const navigate = useNavigate();
-  const { isAdmin } = useCurrentUser();
   const [eventos, setEventos] = useState<EventoResponse[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
@@ -258,12 +256,6 @@ export default function GestionarRondas() {
   );
   const [formData, setFormData] = useState<EventoWrite>(initialFormState);
   const isEditingStateOnly = Boolean(eventoEnEdicion);
-
-  useEffect(() => {
-    if (!isAdmin) {
-      navigate("/", { replace: true });
-    }
-  }, [isAdmin, navigate]);
 
   useEffect(() => {
     const fetchEventos = async () => {
@@ -432,10 +424,6 @@ export default function GestionarRondas() {
       setIsSaving(false);
     }
   };
-
-  if (!isAdmin) {
-    return null;
-  }
 
   if (isLoading) {
     return (
@@ -616,6 +604,18 @@ export default function GestionarRondas() {
                         <span>{rondaActual.ubicacion}</span>
                       </div>
                     </div>
+
+                    <Button
+                      className="w-full bg-[#68A243] hover:bg-[#5a9038] text-white"
+                      onClick={() =>
+                        navigate(
+                          `/panel-administrador/turnos/${rondaActual.id}`,
+                        )
+                      }
+                    >
+                      <Clock3 className="h-4 w-4" />
+                      Gestionar turnos
+                    </Button>
 
                     <Button
                       variant="outline"

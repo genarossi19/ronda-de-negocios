@@ -6,7 +6,7 @@ export interface TurnoResponse {
   hora_fin: string;
   cant_mesas: number;
   mesas_max_empresa?: number;
-  estado: "activo" | "finalizado" | "full";
+  estado: "abierto" | "cerrado" | "full";
   evento: number;
 }
 
@@ -15,12 +15,12 @@ export interface TurnoWrite {
   hora_fin: string;
   cant_mesas: number;
   evento: number;
-  estado: "activo" | "finalizado";
+  estado: "abierto" | "cerrado";
 }
 
 export type TurnoUpdate = Partial<Omit<TurnoResponse, "id">> & { id: number };
 
 export interface TurnoEditar {
-  estado?: "activo" | "finalizado";
+  estado?: "abierto" | "cerrado";
   cant_mesas?: number;
 }

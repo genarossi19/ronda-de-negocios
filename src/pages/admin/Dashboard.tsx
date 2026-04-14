@@ -3,6 +3,7 @@
 import {
   LayoutDashboard,
   Calendar,
+  Clock3,
   Users,
   CheckCircle,
   TrendingUp,
@@ -17,23 +18,34 @@ import {
 import { Button } from "../../components/ui/button";
 import Navbar from "../../components/Navbar";
 import { motion as m } from "motion/react";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router";
-import { useCurrentUser } from "../../hooks/useCurrentUser";
+import { getEventos } from "../../api/EventoService";
+import { toast } from "sonner";
+import { isSessionExpiredError } from "../../lib/axios";
 
 export default function AdminDashboard() {
-  const { isAdmin } = useCurrentUser();
   const navigate = useNavigate();
+  const [activeEventId, setActiveEventId] = useState<number | null>(null);
 
-  // Proteger el dashboard: solo admin puede acceder
   useEffect(() => {
-    if (!isAdmin) {
-      navigate("/", { replace: true });
-    }
-  }, [isAdmin, navigate]);
+    const fetchActiveEvent = async () => {
+      try {
+        const eventos = await getEventos();
+        const eventoActivo = eventos.find(
+          (evento) => evento.estado === "activo",
+        );
+        setActiveEventId(eventoActivo?.id ?? null);
+      } catch (error) {
+        console.error("Error loading active event:", error);
+        if (!isSessionExpiredError(error)) {
+          setActiveEventId(null);
+        }
+      }
+    };
 
-  // Retornar null mientras se verifica y redirecciona si no es admin
-  if (!isAdmin) return null;
+    fetchActiveEvent();
+  }, []);
 
   const stats = [
     {
@@ -89,7 +101,26 @@ export default function AdminDashboard() {
       icon: CheckCircle,
       href: "#admin-meetings",
     },
+    {
+      title: "Gestionar Turnos",
+      description: activeEventId
+        ? "Crear y actualizar turnos de la ronda activa"
+        : "Necesitás una ronda activa para administrar turnos",
+      icon: Clock3,
+      href: activeEventId
+        ? `/panel-administrador/turnos/${activeEventId}`
+        : "/gestionar-rondas",
+      requiresActiveEvent: true,
+    },
   ];
+
+  const handleQuickActionClick = (action: (typeof quickActions)[number]) => {
+    if (action.requiresActiveEvent && !activeEventId) {
+      toast.info("Primero activá una ronda para poder gestionar sus turnos");
+    }
+
+    navigate(action.href);
+  };
 
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -186,7 +217,7 @@ export default function AdminDashboard() {
               variants={containerVariants}
               initial="hidden"
               animate="visible"
-              className="grid grid-cols-1 md:grid-cols-3 gap-6"
+              className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6"
             >
               {quickActions.map((action, index) => (
                 <m.div
@@ -197,7 +228,7 @@ export default function AdminDashboard() {
                 >
                   <Card
                     className="border-[#68A243]/20 hover:border-[#68A243] transition-all hover:shadow-lg cursor-pointer group dark:border-[#68A243]/30 dark:bg-[#143E29] dark:hover:border-[#68A243]/50 dark:hover:shadow-xl dark:hover:shadow-[#68A243]/10"
-                    onClick={() => navigate(action.href)}
+                    onClick={() => handleQuickActionClick(action)}
                   >
                     <CardHeader>
                       <div className="flex items-center gap-3 mb-2">

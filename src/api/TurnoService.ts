@@ -2,7 +2,7 @@ import type { TurnoEditar, TurnoResponse, TurnoWrite } from "../types/Turno";
 import api from "../lib/axios";
 
 export async function getTurnoByEventoId(
-  eventoId: number
+  eventoId: number,
 ): Promise<TurnoResponse[]> {
   const { data } = await api.get<TurnoResponse[]>(`/turnos/listar/${eventoId}`);
   return data;
@@ -10,16 +10,16 @@ export async function getTurnoByEventoId(
 
 export async function editTurno(
   turnoId: number,
-  payload: TurnoEditar
+  payload: TurnoEditar,
 ): Promise<TurnoResponse> {
   const { data } = await api.patch<TurnoResponse>(
     `/turnos/editar/${turnoId}`,
-    payload
+    payload,
   );
   return data;
 }
 
 export async function createTurno(payload: TurnoWrite): Promise<TurnoResponse> {
-  const { data } = await api.post<TurnoResponse>("/turnos", payload);
+  const { data } = await api.post<TurnoResponse>("/turnos/", payload);
   return data;
 }
