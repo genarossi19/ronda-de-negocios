@@ -14,9 +14,12 @@ export async function createEvento(
 
 export async function updateEvento(
   id: number,
-  payload: Partial<EventoWrite>,
+  payload: Pick<EventoWrite, "estado">,
 ): Promise<EventoResponse> {
-  const { data } = await api.patch<EventoResponse>(`/eventos/${id}/`, payload);
+  const { data } = await api.patch<EventoResponse>(
+    `/eventos/cambiar-estado/${id}/`,
+    payload,
+  );
   return data;
 }
 
