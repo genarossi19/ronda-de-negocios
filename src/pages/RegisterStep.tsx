@@ -50,7 +50,7 @@ export default function RegistrationForm() {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [loadingData, setLoadingData] = useState(true);
-  const [logoBlob, setLogoBlob] = useState<Blob | null>(null);
+  const [logoFile, setLogoFile] = useState<File | null>(null);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string[]>>({});
   const navigate = useNavigate();
 
@@ -87,8 +87,8 @@ export default function RegistrationForm() {
     fetchData();
   }, []);
 
-  const handleImageUpload = (croppedBlob: Blob) => {
-    setLogoBlob(croppedBlob);
+  const handleImageUpload = (croppedFile: File) => {
+    setLogoFile(croppedFile);
     toast.success("Logo guardado correctamente");
   };
 
@@ -187,8 +187,8 @@ export default function RegistrationForm() {
         ...(formData.descripcion && {
           descripcion: formData.descripcion,
         }),
-        ...(logoBlob && {
-          logo: new File([logoBlob], "logo.png", { type: "image/png" }),
+        ...(logoFile && {
+          logo: logoFile,
         }),
       };
 
@@ -686,7 +686,7 @@ export default function RegistrationForm() {
                       <div className="space-y-3 pt-4 border-t dark:border-[#2a3d4d]">
                         <ImageCropperNew
                           onImageSelect={handleImageUpload}
-                          initialBlob={logoBlob}
+                          initialBlob={logoFile}
                           maxFileSize={5}
                           acceptedFormats={[
                             "image/png",

@@ -27,11 +27,11 @@ export default function PublicCompanyModal({
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <div className="flex flex-col items-center text-center space-y-4 pb-4">
-            <div className="p-4 bg-gradient-to-br from-[#143E29] to-[#1a5236] rounded-xl">
+            <div className="h-28 w-28 rounded-xl overflow-hidden flex items-center justify-center">
               <img
                 src={company.logo || "/placeholder.svg"}
                 alt={company.razon_social}
-                className="h-20 w-20 object-contain"
+                className="h-full w-full object-cover object-center rounded-xl"
               />
             </div>
             <div>

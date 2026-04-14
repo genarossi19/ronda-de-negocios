@@ -8,7 +8,7 @@ import { Label } from "./ui/label";
 import { X, Upload, Check, Edit2, ZoomIn, ZoomOut } from "lucide-react";
 
 interface ImageCropperNewProps {
-  onImageSelect?: (imageBlob: Blob) => void;
+  onImageSelect?: (imageFile: File) => void;
   maxFileSize?: number;
   acceptedFormats?: string[];
   initialBlob?: Blob | null;
@@ -20,6 +20,42 @@ const CROP_SIZE = 280;
 const MIN_ZOOM = 1;
 const MAX_ZOOM = 3;
 const ZOOM_STEP = 0.1;
+const MIME_EXTENSION_MAP: Record<string, string> = {
+  "image/jpeg": "jpg",
+  "image/png": "png",
+  "image/webp": "webp",
+};
+
+function getOutputMimeType(sourceMimeType: string) {
+  if (sourceMimeType === "image/webp") {
+    return "image/webp";
+  }
+
+  if (sourceMimeType === "image/jpeg") {
+    return "image/jpeg";
+  }
+
+  return "image/png";
+}
+
+function buildOutputFileName(sourceFileName: string, mimeType: string) {
+  const extension = MIME_EXTENSION_MAP[mimeType] ?? "png";
+  const baseName = sourceFileName.includes(".")
+    ? sourceFileName.slice(0, sourceFileName.lastIndexOf("."))
+    : sourceFileName;
+
+  return `${baseName || "logo"}.${extension}`;
+}
+
+function canvasToBlob(
+  canvas: HTMLCanvasElement,
+  mimeType: string,
+  quality?: number,
+) {
+  return new Promise<Blob | null>((resolve) => {
+    canvas.toBlob((blob) => resolve(blob), mimeType, quality);
+  });
+}
 
 export default function ImageCropperNew({
   onImageSelect,
@@ -49,6 +85,8 @@ export default function ImageCropperNew({
   const [imageLoaded, setImageLoaded] = useState(false);
   const [scale, setScale] = useState<number>(1);
   const [imageKey, setImageKey] = useState<string>("");
+  const [sourceFileName, setSourceFileName] = useState("logo.png");
+  const [sourceMimeType, setSourceMimeType] = useState("image/png");
 
   // Cleanup blob URLs when component unmounts
   useEffect(() => {
@@ -63,7 +101,7 @@ export default function ImageCropperNew({
         URL.revokeObjectURL(croppedBlobUrl);
       }
     };
-  }, []);
+  }, [croppedBlobUrl, imageSrc, originalImageSrc]);
 
   // Restaurar estado si hay initialBlob (imagen guardada anteriormente)
   // SOLO si estamos en upload o si no hay imagen en edición
@@ -81,6 +119,13 @@ export default function ImageCropperNew({
       setMode("preview");
     }
   }, [initialBlob, croppedBlobUrl, imageSrc, mode]);
+
+  useEffect(() => {
+    if (initialBlob instanceof File) {
+      setSourceFileName(initialBlob.name);
+      setSourceMimeType(initialBlob.type || "image/png");
+    }
+  }, [initialBlob]);
 
   // Resetear crop cuando imageSrc cambia
   useEffect(() => {
@@ -121,6 +166,9 @@ export default function ImageCropperNew({
       isChangingImageRef.current = false;
       return;
     }
+
+    setSourceFileName(file.name);
+    setSourceMimeType(file.type || "image/png");
 
     // Limpiar URLs blob anteriores
     if (imageSrc && imageSrc.startsWith("blob:")) {
@@ -207,7 +255,7 @@ export default function ImageCropperNew({
       return;
     }
 
-    const ctx = canvas.getContext("2d");
+    const ctx = canvas.getContext("2d", { alpha: true });
     if (!ctx) {
       setError("No se pudo obtener el contexto del canvas");
       return;
@@ -220,6 +268,7 @@ export default function ImageCropperNew({
 
     ctx.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0);
     ctx.imageSmoothingQuality = "high";
+    ctx.clearRect(0, 0, CROP_SIZE, CROP_SIZE);
 
     // Con scale CSS, ReactCrop reporta coordenadas en el espacio sin escalar
     // Necesitamos ajustar por el scale y convertir al espacio natural
@@ -241,6 +290,8 @@ export default function ImageCropperNew({
       return;
     }
 
+    ctx.save();
+    ctx.globalCompositeOperation = "copy";
     ctx.drawImage(
       image,
       sourceX,
@@ -252,6 +303,7 @@ export default function ImageCropperNew({
       CROP_SIZE,
       CROP_SIZE,
     );
+    ctx.restore();
   };
 
   const handleCrop = async () => {
@@ -286,24 +338,42 @@ export default function ImageCropperNew({
       await generateCroppedImage(cropToUse);
 
       if (canvasRef.current) {
-        canvasRef.current.toBlob(
-          (blob) => {
-            if (blob) {
-              const url = URL.createObjectURL(blob);
-              setCroppedBlobUrl(url);
-              if (onImageSelect) {
-                onImageSelect(blob);
-              }
-              setMode("preview");
-              setCompletedCrop(null); // Resetear para la siguiente edición
-            } else {
-              setError("Error al generar la imagen recortada");
-            }
-            setIsProcessing(false);
-          },
-          "image/png",
-          0.95,
+        const preferredMimeType = getOutputMimeType(sourceMimeType);
+        let blob = await canvasToBlob(
+          canvasRef.current,
+          preferredMimeType,
+          preferredMimeType === "image/jpeg" ? 0.92 : 0.95,
         );
+        let finalMimeType = blob?.type || preferredMimeType;
+
+        if (!blob && preferredMimeType === "image/webp") {
+          blob = await canvasToBlob(canvasRef.current, "image/png", 0.95);
+          finalMimeType = blob?.type || "image/png";
+        }
+
+        if (!blob) {
+          setError("Error al generar la imagen recortada");
+          setIsProcessing(false);
+          return;
+        }
+
+        const outputFile = new File(
+          [blob],
+          buildOutputFileName(sourceFileName, finalMimeType),
+          {
+            type: finalMimeType,
+            lastModified: Date.now(),
+          },
+        );
+
+        const url = URL.createObjectURL(outputFile);
+        setCroppedBlobUrl(url);
+        if (onImageSelect) {
+          onImageSelect(outputFile);
+        }
+        setMode("preview");
+        setCompletedCrop(null); // Resetear para la siguiente edición
+        setIsProcessing(false);
       }
     } catch (err) {
       console.error("Error en handleCrop:", err);

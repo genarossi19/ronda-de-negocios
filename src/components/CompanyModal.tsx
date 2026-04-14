@@ -1,4 +1,3 @@
-import { useState } from "react";
 import {
   Dialog,
   DialogContent,
@@ -31,11 +30,13 @@ export default function CompanyModal({
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto transition-colors bg-white dark:bg-[#0F141A] text-foreground dark:text-white border-[#669649] dark:border-[#1a5032]">
         <DialogHeader>
           <div className="flex flex-col items-center text-center space-y-4 pb-4">
-            <img
-              src={company.logo || "/placeholder.svg"}
-              alt={company.razon_social}
-              className="h-24 w-24 object-contain"
-            />
+            <div className="h-24 w-24 rounded-xl overflow-hidden flex items-center justify-center">
+              <img
+                src={company.logo || "/placeholder.svg"}
+                alt={company.razon_social}
+                className="h-full w-full object-cover object-center rounded-xl"
+              />
+            </div>
             <div>
               <DialogTitle className="text-2xl font-bold text-[#143E29] dark:text-white mb-2 transition-colors">
                 {company.razon_social}

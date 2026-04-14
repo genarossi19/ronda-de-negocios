@@ -70,13 +70,13 @@ export default function CompanyCard({
         )}
 
         {/* Imagen */}
-        <div className="w-28 h-28 rounded-xl bg-gray-200 dark:bg-[#0f2f25] flex items-center justify-center overflow-hidden mb-3 group-hover:bg-[#68A243]/10 dark:group-hover:bg-[#68A243]/20 transition-colors duration-300 relative">
+        <div className="w-28 h-28 rounded-xl flex items-center justify-center overflow-hidden mb-3 transition-colors duration-300 relative">
           {company.logo && !imageError ? (
             <img
               src={company.logo}
               alt={company.razon_social}
               onError={() => setImageError(true)}
-              className="absolute inset-0 w-full h-full object-cover"
+              className="absolute inset-0 w-full h-full object-cover object-center rounded-xl"
             />
           ) : (
             <div

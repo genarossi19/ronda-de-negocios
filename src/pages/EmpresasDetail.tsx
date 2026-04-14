@@ -214,11 +214,11 @@ export default function CompanyDetail() {
             <Card className="border-2 border-[#68A243]/20 animate-fade-in-up">
               <CardContent className="pt-6">
                 <div className="text-center space-y-4">
-                  <div className="inline-block p-4 bg-gradient-to-br from-[#143E29] to-[#1a5236] rounded-xl">
+                  <div className="inline-flex h-28 w-28 items-center justify-center overflow-hidden rounded-xl">
                     <img
                       src={company.logo || "/placeholder.svg"}
                       alt={company.razon_social}
-                      className="h-20 w-20 object-contain"
+                      className="h-full w-full object-cover object-center rounded-xl"
                     />
                   </div>
                   <div>

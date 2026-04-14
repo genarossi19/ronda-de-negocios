@@ -63,11 +63,11 @@ function CompanyRow({
           <div className="flex items-center gap-4">
             {/* Logo o Icono */}
             {company.logo ? (
-              <div className="h-20 w-20 rounded-lg overflow-hidden border-2 border-[#68A243]/30 flex-shrink-0 shadow-md">
+              <div className="h-20 w-20 rounded-lg overflow-hidden flex-shrink-0 shadow-md">
                 <img
                   src={company.logo}
                   alt={company.razon_social}
-                  className="w-full h-full object-cover"
+                  className="w-full h-full object-cover object-center rounded-lg"
                 />
               </div>
             ) : (
@@ -597,11 +597,11 @@ export default function CompaniesManagement() {
                 <div className="flex items-start gap-6 flex-1">
                   {/* Logo */}
                   {selectedCompany.logo ? (
-                    <div className="h-32 w-32 rounded-lg overflow-hidden border-2 border-[#68A243]/30 flex-shrink-0 shadow-md">
+                    <div className="h-32 w-32 rounded-lg overflow-hidden flex-shrink-0 shadow-md">
                       <img
                         src={selectedCompany.logo}
                         alt={selectedCompany.razon_social}
-                        className="w-full h-full object-cover"
+                        className="w-full h-full object-cover object-center rounded-lg"
                       />
                     </div>
                   ) : (
