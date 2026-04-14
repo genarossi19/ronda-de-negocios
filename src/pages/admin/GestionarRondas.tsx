@@ -339,17 +339,16 @@ export default function GestionarRondas() {
           <section className="rounded-3xl bg-gradient-to-br from-[#143E29] via-[#1a5236] to-[#143E29] px-6 py-8 md:px-8 text-white shadow-xl shadow-[#143E29]/10">
             <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
               <div className="max-w-3xl">
-                <div className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-3 py-1 text-sm font-medium backdrop-blur-sm mb-4">
-                  <CalendarDays className="h-4 w-4 text-[#9FD27B]" />
-                  Administración de eventos
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-white/10 text-[#9FD27B] ring-1 ring-white/15 backdrop-blur-sm">
+                    <CalendarDays className="h-5 w-5" />
+                  </div>
+                  <h1 className="text-3xl sm:text-4xl font-semibold">
+                    Gestionar rondas
+                  </h1>
                 </div>
-                <h1 className="text-3xl sm:text-4xl font-semibold mb-2">
-                  Gestionar rondas de negocios
-                </h1>
                 <p className="text-white/80 text-base max-w-2xl">
-                  Creá nuevas rondas, actualizá sus datos y mantené visible cuál
-                  es la ronda activa frente al historial ya finalizado o
-                  cancelado.
+                  Creá nuevas rondas y gestioná rápidamente cuál es la activa.
                 </p>
               </div>
 
@@ -364,63 +363,74 @@ export default function GestionarRondas() {
           </section>
 
           <section className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
-            <Card className="border-[#68A243]/20">
-              <CardHeader className="pb-2">
+            <Card className="!gap-2 !py-3 border-[#68A243]/20">
+              <CardHeader className="!px-5 !pb-0">
                 <CardTitle className="text-sm text-muted-foreground dark:text-gray-300">
                   Total de rondas
                 </CardTitle>
               </CardHeader>
-              <CardContent>
-                <div className="text-3xl font-bold text-[#143E29] dark:text-white">
-                  {stats.total}
+              <CardContent className="!px-5 !pt-0">
+                <div className="flex items-center justify-between gap-3">
+                  <div className="text-3xl font-bold leading-none text-[#143E29] dark:text-white">
+                    {stats.total}
+                  </div>
+                  <div className="rounded-full bg-[#143E29]/8 p-2 dark:bg-[#143E29]/35">
+                    <CalendarDays className="h-3.5 w-3.5 text-[#143E29] dark:text-white" />
+                  </div>
                 </div>
               </CardContent>
             </Card>
 
-            <Card className="border-[#68A243]/20">
-              <CardHeader className="pb-2">
+            <Card className="!gap-2 !py-3 border-[#68A243]/20">
+              <CardHeader className="!px-5 !pb-0">
                 <CardTitle className="text-sm text-muted-foreground dark:text-gray-300">
                   Activas
                 </CardTitle>
               </CardHeader>
-              <CardContent className="flex items-center justify-between gap-4">
-                <div className="text-3xl font-bold text-[#68A243]">
-                  {stats.activas}
-                </div>
-                <div className="rounded-full bg-[#68A243]/10 p-3 dark:bg-[#68A243]/20">
-                  <CheckCircle2 className="h-5 w-5 text-[#68A243]" />
+              <CardContent className="!px-5 !pt-0">
+                <div className="flex items-center justify-between gap-3">
+                  <div className="text-3xl font-bold leading-none text-[#68A243]">
+                    {stats.activas}
+                  </div>
+                  <div className="rounded-full bg-[#68A243]/10 p-2 dark:bg-[#68A243]/20">
+                    <CheckCircle2 className="h-3.5 w-3.5 text-[#68A243]" />
+                  </div>
                 </div>
               </CardContent>
             </Card>
 
-            <Card className="border-[#68A243]/20">
-              <CardHeader className="pb-2">
+            <Card className="!gap-2 !py-3 border-[#68A243]/20">
+              <CardHeader className="!px-5 !pb-0">
                 <CardTitle className="text-sm text-muted-foreground dark:text-gray-300">
                   Finalizadas
                 </CardTitle>
               </CardHeader>
-              <CardContent className="flex items-center justify-between gap-4">
-                <div className="text-3xl font-bold text-[#143E29] dark:text-white">
-                  {stats.finalizadas}
-                </div>
-                <div className="rounded-full bg-[#143E29]/10 p-3 dark:bg-[#143E29]/40">
-                  <Clock3 className="h-5 w-5 text-[#143E29] dark:text-white" />
+              <CardContent className="!px-5 !pt-0">
+                <div className="flex items-center justify-between gap-3">
+                  <div className="text-3xl font-bold leading-none text-[#143E29] dark:text-white">
+                    {stats.finalizadas}
+                  </div>
+                  <div className="rounded-full bg-[#143E29]/10 p-2 dark:bg-[#143E29]/40">
+                    <Clock3 className="h-3.5 w-3.5 text-[#143E29] dark:text-white" />
+                  </div>
                 </div>
               </CardContent>
             </Card>
 
-            <Card className="border-[#68A243]/20">
-              <CardHeader className="pb-2">
+            <Card className="!gap-2 !py-3 border-[#68A243]/20">
+              <CardHeader className="!px-5 !pb-0">
                 <CardTitle className="text-sm text-muted-foreground dark:text-gray-300">
                   Canceladas
                 </CardTitle>
               </CardHeader>
-              <CardContent className="flex items-center justify-between gap-4">
-                <div className="text-3xl font-bold text-red-600 dark:text-red-300">
-                  {stats.canceladas}
-                </div>
-                <div className="rounded-full bg-red-100 p-3 dark:bg-red-950/30">
-                  <XCircle className="h-5 w-5 text-red-600 dark:text-red-300" />
+              <CardContent className="!px-5 !pt-0">
+                <div className="flex items-center justify-between gap-3">
+                  <div className="text-3xl font-bold leading-none text-red-600 dark:text-red-300">
+                    {stats.canceladas}
+                  </div>
+                  <div className="rounded-full bg-red-100 p-2 dark:bg-red-950/30">
+                    <XCircle className="h-3.5 w-3.5 text-red-600 dark:text-red-300" />
+                  </div>
                 </div>
               </CardContent>
             </Card>
@@ -510,7 +520,7 @@ export default function GestionarRondas() {
                       value={searchTerm}
                       onChange={(event) => setSearchTerm(event.target.value)}
                       placeholder="Buscar por nombre o ubicación"
-                      className="w-full sm:w-64 border-[#68A243]/20 focus-visible:border-[#68A243] focus-visible:ring-[#68A243]/20 dark:border-[#68A243]/20 dark:text-white"
+                      className="w-full sm:w-64 border-[#68A243]/20 focus-visible:border-[#68A243] focus-visible:ring-[#68A243]/20 dark:bg-[#143E29] dark:border-[#68A243]/20 dark:text-white dark:placeholder-gray-400 transition-colors"
                     />
 
                     <Select
@@ -519,7 +529,7 @@ export default function GestionarRondas() {
                         setFilterStatus(value as FiltroEstado)
                       }
                     >
-                      <SelectTrigger className="w-full sm:w-44 border-[#68A243]/20 dark:border-[#68A243]/20">
+                      <SelectTrigger className="w-full sm:w-44 border-[#68A243]/20 dark:bg-[#143E29] dark:border-[#68A243]/20 dark:text-white transition-colors">
                         <SelectValue placeholder="Filtrar estado" />
                       </SelectTrigger>
                       <SelectContent>
@@ -634,14 +644,14 @@ export default function GestionarRondas() {
           }
         }}
       >
-        <DialogContent className="sm:max-w-xl">
+        <DialogContent className="sm:max-w-xl border-gray-200 dark:border-[#68A243]/20 bg-white dark:bg-[#11161d]">
           <DialogHeader>
             <DialogTitle className="text-[#143E29] dark:text-white">
               {eventoEnEdicion
                 ? "Cambiar estado de la ronda"
                 : "Crear nueva ronda"}
             </DialogTitle>
-            <DialogDescription>
+            <DialogDescription className="dark:text-gray-300">
               {eventoEnEdicion
                 ? "El backend solo permite actualizar el estado. Los demás datos se muestran como referencia."
                 : "Definí el nombre, la fecha, la ubicación y el estado del evento."}
@@ -681,14 +691,14 @@ export default function GestionarRondas() {
                 </div>
 
                 <div className="grid gap-2">
-                  <Label>Nuevo estado</Label>
+                  <Label className="dark:text-white">Nuevo estado</Label>
                   <Select
                     value={formData.estado}
                     onValueChange={(value) =>
                       handleFormChange("estado", value as EstadoEvento)
                     }
                   >
-                    <SelectTrigger className="w-full border-[#68A243]/20 focus-visible:border-[#68A243] focus-visible:ring-[#68A243]/20">
+                    <SelectTrigger className="w-full border-[#68A243]/20 focus-visible:border-[#68A243] focus-visible:ring-[#68A243]/20 dark:bg-[#143E29] dark:border-[#68A243]/20 dark:text-white transition-colors">
                       <SelectValue placeholder="Seleccionar estado" />
                     </SelectTrigger>
                     <SelectContent>
@@ -704,7 +714,9 @@ export default function GestionarRondas() {
             ) : (
               <>
                 <div className="grid gap-2">
-                  <Label htmlFor="nombre">Nombre</Label>
+                  <Label htmlFor="nombre" className="dark:text-white">
+                    Nombre
+                  </Label>
                   <div className="flex flex-col sm:flex-row gap-2">
                     <Input
                       id="nombre"
@@ -713,7 +725,7 @@ export default function GestionarRondas() {
                         handleFormChange("nombre", event.target.value)
                       }
                       placeholder="Ej: Ronda de Negocios Otoño 2026"
-                      className="border-[#68A243]/20 focus-visible:border-[#68A243] focus-visible:ring-[#68A243]/20"
+                      className="border-[#68A243]/20 focus-visible:border-[#68A243] focus-visible:ring-[#68A243]/20 dark:bg-[#143E29] dark:border-[#68A243]/20 dark:text-white dark:placeholder-gray-400 transition-colors"
                     />
                     <Button
                       type="button"
@@ -730,7 +742,9 @@ export default function GestionarRondas() {
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="grid gap-2">
-                    <Label htmlFor="fecha">Fecha</Label>
+                    <Label htmlFor="fecha" className="dark:text-white">
+                      Fecha
+                    </Label>
                     <Input
                       id="fecha"
                       type="date"
@@ -738,19 +752,19 @@ export default function GestionarRondas() {
                       onChange={(event) =>
                         handleFormChange("fecha", event.target.value)
                       }
-                      className="border-[#68A243]/20 focus-visible:border-[#68A243] focus-visible:ring-[#68A243]/20"
+                      className="border-[#68A243]/20 focus-visible:border-[#68A243] focus-visible:ring-[#68A243]/20 dark:bg-[#143E29] dark:border-[#68A243]/20 dark:text-white transition-colors [color-scheme:light] dark:[color-scheme:dark]"
                     />
                   </div>
 
                   <div className="grid gap-2">
-                    <Label>Estado</Label>
+                    <Label className="dark:text-white">Estado</Label>
                     <Select
                       value={formData.estado}
                       onValueChange={(value) =>
                         handleFormChange("estado", value as EstadoEvento)
                       }
                     >
-                      <SelectTrigger className="w-full border-[#68A243]/20 focus-visible:border-[#68A243] focus-visible:ring-[#68A243]/20">
+                      <SelectTrigger className="w-full border-[#68A243]/20 focus-visible:border-[#68A243] focus-visible:ring-[#68A243]/20 dark:bg-[#143E29] dark:border-[#68A243]/20 dark:text-white transition-colors">
                         <SelectValue placeholder="Seleccionar estado" />
                       </SelectTrigger>
                       <SelectContent>
@@ -765,7 +779,9 @@ export default function GestionarRondas() {
                 </div>
 
                 <div className="grid gap-2">
-                  <Label htmlFor="ubicacion">Ubicación</Label>
+                  <Label htmlFor="ubicacion" className="dark:text-white">
+                    Ubicación
+                  </Label>
                   <Input
                     id="ubicacion"
                     value={formData.ubicacion}
@@ -773,7 +789,7 @@ export default function GestionarRondas() {
                       handleFormChange("ubicacion", event.target.value)
                     }
                     placeholder="Ej: Polo Científico Tecnológico"
-                    className="border-[#68A243]/20 focus-visible:border-[#68A243] focus-visible:ring-[#68A243]/20"
+                    className="border-[#68A243]/20 focus-visible:border-[#68A243] focus-visible:ring-[#68A243]/20 dark:bg-[#143E29] dark:border-[#68A243]/20 dark:text-white dark:placeholder-gray-400 transition-colors"
                   />
                 </div>
               </>
@@ -808,12 +824,12 @@ export default function GestionarRondas() {
           }
         }}
       >
-        <DialogContent>
+        <DialogContent className="border-gray-200 dark:border-[#68A243]/20 bg-white dark:bg-[#11161d]">
           <DialogHeader>
             <DialogTitle className="text-[#143E29] dark:text-white">
               Eliminar ronda
             </DialogTitle>
-            <DialogDescription>
+            <DialogDescription className="dark:text-gray-300">
               Esta acción eliminará definitivamente la ronda seleccionada.
             </DialogDescription>
           </DialogHeader>
