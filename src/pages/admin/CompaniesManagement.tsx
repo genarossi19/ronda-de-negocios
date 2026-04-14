@@ -31,6 +31,7 @@ import {
   DialogFooter,
 } from "../../components/ui/dialog";
 import { Input } from "../../components/ui/input";
+import { Skeleton } from "../../components/ui/skeleton";
 import Navbar from "../../components/Navbar";
 import Footer from "../../layout/Footer";
 import { toast } from "sonner";
@@ -156,6 +157,89 @@ function CompanyRow({
           >
             <Trash2 className="h-4 w-4" />
           </Button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function HeroSkeleton() {
+  return (
+    <section className="rounded-3xl bg-gradient-to-br from-[#143E29] via-[#1a5236] to-[#143E29] px-6 py-8 md:px-8 shadow-xl shadow-[#143E29]/10">
+      <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
+        <div className="max-w-3xl w-full space-y-3">
+          <div className="flex items-center gap-3">
+            <Skeleton className="h-11 w-11 rounded-2xl bg-white/10" />
+            <Skeleton className="h-10 w-64 bg-white/10" />
+          </div>
+          <Skeleton className="h-5 w-full max-w-xl bg-white/10" />
+        </div>
+
+        <Skeleton className="h-11 w-32 bg-white/10" />
+      </div>
+    </section>
+  );
+}
+
+function StatCardSkeleton() {
+  return (
+    <Card className="!gap-2 !py-3 border-[#68A243]/20">
+      <CardHeader className="!px-5 !pb-0">
+        <Skeleton className="h-4 w-28 dark:bg-[#0f2f25]" />
+      </CardHeader>
+      <CardContent className="!px-5 !pt-0">
+        <div className="flex items-center justify-between gap-3">
+          <Skeleton className="h-8 w-12 dark:bg-[#0f2f25]" />
+          <Skeleton className="h-8 w-8 rounded-full dark:bg-[#0f2f25]" />
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+function FiltersSkeleton() {
+  return (
+    <div className="mb-6 space-y-4">
+      <div className="flex flex-col sm:flex-row gap-4">
+        <Skeleton className="h-11 flex-1 dark:bg-[#0f2f25]" />
+        <div className="flex gap-2 flex-wrap">
+          {Array.from({ length: 4 }).map((_, index) => (
+            <Skeleton
+              key={index}
+              className="h-10 w-28 rounded-lg dark:bg-[#0f2f25]"
+            />
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function CompanyRowSkeleton() {
+  return (
+    <div className="bg-white dark:bg-[#143E29] rounded-lg border border-gray-200 dark:border-[#68A243]/20 p-4">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-4">
+            <Skeleton className="h-20 w-20 rounded-lg dark:bg-[#0f2f25]" />
+
+            <div className="flex-1 min-w-0 space-y-2">
+              <Skeleton className="h-7 w-52 dark:bg-[#0f2f25]" />
+              <Skeleton className="h-4 w-32 dark:bg-[#0f2f25]" />
+              <Skeleton className="h-4 w-28 dark:bg-[#0f2f25]" />
+            </div>
+          </div>
+        </div>
+
+        <div className="flex flex-wrap gap-2 sm:justify-end">
+          <Skeleton className="h-6 w-24 rounded-full dark:bg-[#0f2f25]" />
+          <Skeleton className="h-6 w-24 rounded-full dark:bg-[#0f2f25]" />
+        </div>
+
+        <div className="flex gap-2 sm:justify-end">
+          <Skeleton className="h-9 w-28 dark:bg-[#0f2f25]" />
+          <Skeleton className="h-9 w-9 dark:bg-[#0f2f25]" />
+          <Skeleton className="h-9 w-9 dark:bg-[#0f2f25]" />
         </div>
       </div>
     </div>
@@ -321,14 +405,25 @@ export default function CompaniesManagement() {
     return (
       <div className="min-h-screen bg-white dark:bg-[#0a1a15] flex flex-col">
         <Navbar />
-        <div className="flex-1 flex items-center justify-center">
-          <div className="text-center">
-            <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-gray-300 border-t-[#68A243]" />
-            <p className="mt-4 text-gray-600 dark:text-gray-400">
-              Cargando empresas...
-            </p>
+        <main className="flex-1 pt-24 pb-12 px-4">
+          <div className="max-w-7xl mx-auto space-y-8">
+            <HeroSkeleton />
+
+            <section className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {Array.from({ length: 3 }).map((_, index) => (
+                <StatCardSkeleton key={index} />
+              ))}
+            </section>
+
+            <FiltersSkeleton />
+
+            <div className="space-y-3">
+              {Array.from({ length: 5 }).map((_, index) => (
+                <CompanyRowSkeleton key={index} />
+              ))}
+            </div>
           </div>
-        </div>
+        </main>
         <Footer />
       </div>
     );

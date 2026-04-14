@@ -32,6 +32,7 @@ import {
 } from "../../components/ui/dialog";
 import { Input } from "../../components/ui/input";
 import { Label } from "../../components/ui/label";
+import { Skeleton } from "../../components/ui/skeleton";
 import {
   Select,
   SelectContent,
@@ -115,6 +116,128 @@ function getEventSortValue(event: EventoResponse) {
   const priority =
     event.estado === "activo" ? 0 : event.estado === "finalizado" ? 1 : 2;
   return { priority, dateValue };
+}
+
+function HeroSkeleton() {
+  return (
+    <section className="rounded-3xl bg-gradient-to-br from-[#143E29] via-[#1a5236] to-[#143E29] px-6 py-8 md:px-8 shadow-xl shadow-[#143E29]/10">
+      <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
+        <div className="max-w-3xl w-full space-y-3">
+          <div className="flex items-center gap-3">
+            <Skeleton className="h-11 w-11 rounded-2xl bg-white/10" />
+            <Skeleton className="h-10 w-60 bg-white/10" />
+          </div>
+          <Skeleton className="h-5 w-full max-w-xl bg-white/10" />
+        </div>
+
+        <div className="flex flex-col sm:flex-row gap-3">
+          <Skeleton className="h-11 w-32 bg-white/10" />
+          <Skeleton className="h-11 w-36 bg-white/10" />
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function StatCardSkeleton() {
+  return (
+    <Card className="!gap-2 !py-3 border-[#68A243]/20">
+      <CardHeader className="!px-5 !pb-0">
+        <Skeleton className="h-4 w-28 dark:bg-[#0f2f25]" />
+      </CardHeader>
+      <CardContent className="!px-5 !pt-0">
+        <div className="flex items-center justify-between gap-3">
+          <Skeleton className="h-8 w-12 dark:bg-[#0f2f25]" />
+          <Skeleton className="h-8 w-8 rounded-full dark:bg-[#0f2f25]" />
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+function CurrentRoundSkeleton() {
+  return (
+    <Card className="border-[#68A243]/20 overflow-hidden">
+      <CardHeader className="border-b border-[#68A243]/10 dark:border-[#68A243]/20">
+        <Skeleton className="h-7 w-36 dark:bg-[#0f2f25]" />
+      </CardHeader>
+      <CardContent className="pt-6">
+        <div className="rounded-2xl border border-[#68A243]/30 bg-gradient-to-br from-[#68A243]/10 to-white dark:from-[#68A243]/15 dark:to-[#143E29] p-5 space-y-4">
+          <div className="flex items-start justify-between gap-3">
+            <div className="space-y-2 w-full max-w-sm">
+              <Skeleton className="h-4 w-24 dark:bg-[#0f2f25]" />
+              <Skeleton className="h-8 w-full dark:bg-[#0f2f25]" />
+            </div>
+            <Skeleton className="h-6 w-24 rounded-full dark:bg-[#0f2f25]" />
+          </div>
+
+          <div className="space-y-3">
+            <div className="flex items-center gap-2">
+              <Skeleton className="h-4 w-4 rounded-full dark:bg-[#0f2f25]" />
+              <Skeleton className="h-4 w-40 dark:bg-[#0f2f25]" />
+            </div>
+            <div className="flex items-center gap-2">
+              <Skeleton className="h-4 w-4 rounded-full dark:bg-[#0f2f25]" />
+              <Skeleton className="h-4 w-48 dark:bg-[#0f2f25]" />
+            </div>
+          </div>
+
+          <Skeleton className="h-10 w-full dark:bg-[#0f2f25]" />
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+function RoundListSkeleton() {
+  return (
+    <Card className="border-[#68A243]/20">
+      <CardHeader className="border-b border-[#68A243]/10 dark:border-[#68A243]/20">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+          <Skeleton className="h-7 w-40 dark:bg-[#0f2f25]" />
+
+          <div className="flex flex-col sm:flex-row gap-3">
+            <Skeleton className="h-10 w-full sm:w-64 dark:bg-[#0f2f25]" />
+            <Skeleton className="h-10 w-full sm:w-44 dark:bg-[#0f2f25]" />
+          </div>
+        </div>
+      </CardHeader>
+
+      <CardContent className="pt-6 space-y-4">
+        {Array.from({ length: 3 }).map((_, index) => (
+          <div
+            key={index}
+            className="rounded-2xl border border-gray-200 bg-white dark:bg-[#143E29] dark:border-[#68A243]/20 p-5"
+          >
+            <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+              <div className="space-y-3 w-full max-w-md">
+                <div className="flex flex-wrap items-center gap-2">
+                  <Skeleton className="h-7 w-48 dark:bg-[#0f2f25]" />
+                  <Skeleton className="h-6 w-24 rounded-full dark:bg-[#0f2f25]" />
+                </div>
+
+                <div className="flex flex-col sm:flex-row sm:flex-wrap gap-3">
+                  <div className="flex items-center gap-2">
+                    <Skeleton className="h-4 w-4 rounded-full dark:bg-[#0f2f25]" />
+                    <Skeleton className="h-4 w-32 dark:bg-[#0f2f25]" />
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Skeleton className="h-4 w-4 rounded-full dark:bg-[#0f2f25]" />
+                    <Skeleton className="h-4 w-40 dark:bg-[#0f2f25]" />
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex flex-col sm:flex-row gap-2 lg:min-w-max">
+                <Skeleton className="h-10 w-36 dark:bg-[#0f2f25]" />
+                <Skeleton className="h-10 w-28 dark:bg-[#0f2f25]" />
+              </div>
+            </div>
+          </div>
+        ))}
+      </CardContent>
+    </Card>
+  );
 }
 
 export default function GestionarRondas() {
@@ -318,14 +441,22 @@ export default function GestionarRondas() {
     return (
       <div className="min-h-screen bg-white dark:bg-[#0a1a15] transition-colors duration-300 flex flex-col">
         <Navbar />
-        <div className="flex-1 flex items-center justify-center pt-16">
-          <div className="text-center">
-            <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-gray-300 border-t-[#68A243]" />
-            <p className="mt-4 text-gray-600 dark:text-gray-300">
-              Cargando rondas de negocios...
-            </p>
+        <main className="flex-1 pt-24 pb-12 px-4">
+          <div className="max-w-7xl mx-auto space-y-8">
+            <HeroSkeleton />
+
+            <section className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
+              {Array.from({ length: 4 }).map((_, index) => (
+                <StatCardSkeleton key={index} />
+              ))}
+            </section>
+
+            <section className="grid grid-cols-1 xl:grid-cols-[1.2fr_2fr] gap-6">
+              <CurrentRoundSkeleton />
+              <RoundListSkeleton />
+            </section>
           </div>
-        </div>
+        </main>
         <Footer />
       </div>
     );
