@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router";
 import {
+  ArrowLeft,
   CalendarDays,
   CheckCircle2,
   Clock3,
@@ -352,13 +353,23 @@ export default function GestionarRondas() {
                 </p>
               </div>
 
-              <Button
-                onClick={openCreateDialog}
-                className="h-11 px-5 bg-[#68A243] hover:bg-[#5a9038] text-white shadow-lg shadow-[#68A243]/20"
-              >
-                <Plus className="h-4 w-4" />
-                Nueva ronda
-              </Button>
+              <div className="flex flex-col sm:flex-row gap-3">
+                <Button
+                  variant="outline"
+                  onClick={() => navigate(-1)}
+                  className="h-11 px-5 border-white/20 bg-white/10 text-white hover:bg-white/15 hover:text-white"
+                >
+                  <ArrowLeft className="h-4 w-4" />
+                  Volver
+                </Button>
+                <Button
+                  onClick={openCreateDialog}
+                  className="h-11 px-5 bg-[#68A243] hover:bg-[#5a9038] text-white shadow-lg shadow-[#68A243]/20"
+                >
+                  <Plus className="h-4 w-4" />
+                  Nueva ronda
+                </Button>
+              </div>
             </div>
           </section>
 

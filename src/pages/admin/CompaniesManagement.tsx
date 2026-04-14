@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router";
 import {
+  ArrowLeft,
   Trash2,
   CheckCircle,
   XCircle,
@@ -15,6 +16,12 @@ import {
 } from "lucide-react";
 import { Button } from "../../components/ui/button";
 import { Badge } from "../../components/ui/badge";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "../../components/ui/card";
 import {
   Dialog,
   DialogContent,
@@ -331,63 +338,91 @@ export default function CompaniesManagement() {
     <div className="min-h-screen bg-gray-50 dark:bg-[#0a1a15] transition-colors duration-300 flex flex-col">
       <Navbar />
 
-      {/* Main Content */}
-      <div className="flex-1">
-        <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-          {/* Header */}
-          <div className="mb-8">
-            <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-2">
-              Dashboard Administrativo
-            </h1>
-            <p className="text-gray-600 dark:text-gray-400">
-              Gestiona las solicitudes de empresas
-            </p>
-          </div>
+      <main className="flex-1 pt-24 pb-12 px-4">
+        <div className="max-w-7xl mx-auto space-y-8">
+          <section className="rounded-3xl bg-gradient-to-br from-[#143E29] via-[#1a5236] to-[#143E29] px-6 py-8 md:px-8 text-white shadow-xl shadow-[#143E29]/10">
+            <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
+              <div className="max-w-3xl">
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-white/10 text-[#9FD27B] ring-1 ring-white/15 backdrop-blur-sm">
+                    <Building2 className="h-5 w-5" />
+                  </div>
+                  <h1 className="text-3xl sm:text-4xl font-semibold">
+                    Gestionar empresas
+                  </h1>
+                </div>
+                <p className="text-white/80 text-base max-w-2xl">
+                  Revisá, aprobá y administrá rápidamente las empresas
+                  registradas.
+                </p>
+              </div>
 
-          {/* Stats */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-            <div className="bg-white dark:bg-[#143E29] rounded-lg p-6 border border-gray-200 dark:border-[#68A243]/20">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                    Total de Empresas
-                  </p>
-                  <p className="text-3xl font-bold text-gray-900 dark:text-white mt-2">
+              <Button
+                variant="outline"
+                onClick={() => navigate(-1)}
+                className="h-11 px-5 border-white/20 bg-white/10 text-white hover:bg-white/15 hover:text-white"
+              >
+                <ArrowLeft className="h-4 w-4" />
+                Volver
+              </Button>
+            </div>
+          </section>
+
+          <section className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <Card className="!gap-2 !py-3 border-[#68A243]/20">
+              <CardHeader className="!px-5 !pb-0">
+                <CardTitle className="text-sm text-muted-foreground dark:text-gray-300">
+                  Total de empresas
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="!px-5 !pt-0">
+                <div className="flex items-center justify-between gap-3">
+                  <div className="text-3xl font-bold leading-none text-[#143E29] dark:text-white">
                     {companies.length}
-                  </p>
+                  </div>
+                  <div className="rounded-full bg-[#143E29]/8 p-2 dark:bg-[#143E29]/35">
+                    <Building2 className="h-3.5 w-3.5 text-[#143E29] dark:text-white" />
+                  </div>
                 </div>
-                <Building2 className="h-12 w-12 text-gray-300 dark:text-[#68A243]/30" />
-              </div>
-            </div>
+              </CardContent>
+            </Card>
 
-            <div className="bg-white dark:bg-[#143E29] rounded-lg p-6 border border-gray-200 dark:border-[#68A243]/20">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                    Pendientes de Revisión
-                  </p>
-                  <p className="text-3xl font-bold text-amber-600 dark:text-amber-400 mt-2">
+            <Card className="!gap-2 !py-3 border-[#68A243]/20">
+              <CardHeader className="!px-5 !pb-0">
+                <CardTitle className="text-sm text-muted-foreground dark:text-gray-300">
+                  Pendientes
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="!px-5 !pt-0">
+                <div className="flex items-center justify-between gap-3">
+                  <div className="text-3xl font-bold leading-none text-amber-600 dark:text-amber-400">
                     {pendingCompanies.length}
-                  </p>
+                  </div>
+                  <div className="rounded-full bg-amber-100 p-2 dark:bg-amber-950/30">
+                    <Clock className="h-3.5 w-3.5 text-amber-600 dark:text-amber-400" />
+                  </div>
                 </div>
-                <Clock className="h-12 w-12 text-amber-300 dark:text-amber-500/30" />
-              </div>
-            </div>
+              </CardContent>
+            </Card>
 
-            <div className="bg-white dark:bg-[#143E29] rounded-lg p-6 border border-gray-200 dark:border-[#68A243]/20">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                    Aprobadas
-                  </p>
-                  <p className="text-3xl font-bold text-[#68A243] mt-2">
+            <Card className="!gap-2 !py-3 border-[#68A243]/20">
+              <CardHeader className="!px-5 !pb-0">
+                <CardTitle className="text-sm text-muted-foreground dark:text-gray-300">
+                  Aprobadas
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="!px-5 !pt-0">
+                <div className="flex items-center justify-between gap-3">
+                  <div className="text-3xl font-bold leading-none text-[#68A243]">
                     {approvedCompanies.length}
-                  </p>
+                  </div>
+                  <div className="rounded-full bg-[#68A243]/10 p-2 dark:bg-[#68A243]/20">
+                    <CheckCircle className="h-3.5 w-3.5 text-[#68A243]" />
+                  </div>
                 </div>
-                <CheckCircle className="h-12 w-12 text-[#68A243]/30" />
-              </div>
-            </div>
-          </div>
+              </CardContent>
+            </Card>
+          </section>
 
           {/* Filters & Search */}
           <div className="mb-6 space-y-4">
@@ -455,7 +490,7 @@ export default function CompaniesManagement() {
             )}
           </div>
         </div>
-      </div>
+      </main>
 
       {/* Detail Modal */}
       <Dialog open={isDetailOpen} onOpenChange={setIsDetailOpen}>
