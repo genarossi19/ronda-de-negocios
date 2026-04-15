@@ -18,3 +18,11 @@ export async function updateAsiento(
   );
   return data;
 }
+
+export async function cancelAsiento(id: number): Promise<void> {
+  await api.delete(`/asientos/${id}/cancelar/`);
+}
+
+export async function deleteAsiento(id: number): Promise<void> {
+  await api.delete(`/asientos/${id}/`);
+}

@@ -22,7 +22,6 @@ import Navbar from "../components/Navbar";
 import { useAuth } from "../hooks/useAuth";
 import { Link, useLocation, useNavigate } from "react-router";
 import { motion as m } from "motion/react";
-import { toast } from "sonner";
 import { useTheme } from "../context/ThemeContext";
 import {
   SESSION_EXPIRED_MESSAGE,
@@ -66,9 +65,6 @@ export default function Login() {
       const noticeMessage = locationState?.message ?? SESSION_EXPIRED_MESSAGE;
 
       setSessionNotice(noticeMessage);
-      toast.error(noticeMessage, {
-        duration: 5000,
-      });
       localStorage.removeItem(SESSION_EXPIRED_STORAGE_KEY);
 
       if (

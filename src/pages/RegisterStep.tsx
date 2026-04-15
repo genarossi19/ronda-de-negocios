@@ -41,6 +41,8 @@ const STEPS = [
   { id: 4, title: "Seguridad", icon: Mail },
 ];
 
+const REGISTER_SUCCESS_EMAIL_STORAGE_KEY = "registerSuccessEmail";
+
 export default function RegistrationForm() {
   const [sectorList, setSectorList] = useState<GenericType[]>([]);
   const [localidadesList, setLocalidadesList] = useState<LocalidadResponse[]>(
@@ -193,9 +195,25 @@ export default function RegistrationForm() {
       };
 
       await createCompany(companyData);
-      toast.success("¡Empresa registrada exitosamente!");
+      localStorage.setItem(REGISTER_SUCCESS_EMAIL_STORAGE_KEY, formData.email);
+
+      const registeredEmail = localStorage.getItem(
+        REGISTER_SUCCESS_EMAIL_STORAGE_KEY,
+      );
+
+      toast.success("¡Empresa registrada exitosamente!", {
+        description: registeredEmail
+          ? `Se envio un mail a ${registeredEmail}. Verifica el correo antes de iniciar sesion.`
+          : "Verifica el correo antes de iniciar sesion.",
+        duration: 6000,
+      });
+
+      window.setTimeout(() => {
+        localStorage.removeItem(REGISTER_SUCCESS_EMAIL_STORAGE_KEY);
+      }, 6500);
+
       setFieldErrors({});
-      navigate("/");
+      navigate("/login");
     } catch (error: unknown) {
       let errorMessage = "Error al registrar la empresa";
       const newFieldErrors: Record<string, string[]> = {};

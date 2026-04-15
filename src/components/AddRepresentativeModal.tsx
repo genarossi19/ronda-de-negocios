@@ -28,7 +28,7 @@ interface AddRepresentativeModalProps {
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
   ) => void;
   onSubmit: (e: React.FormEvent) => void;
-  cargos: GenericType[];
+  cargos?: GenericType[];
   title?: string;
   description?: string;
 }
@@ -41,7 +41,7 @@ export function AddRepresentativeModal({
   submitting,
   onChange,
   onSubmit,
-  cargos,
+  cargos = [],
   title = "Nuevo representante",
   description = "Completá los datos del representante de tu empresa.",
 }: AddRepresentativeModalProps) {
