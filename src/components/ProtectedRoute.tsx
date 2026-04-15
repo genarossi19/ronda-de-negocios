@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router";
-import { useAuth } from "../hooks/useAuth";
 import Cookies from "js-cookie";
 
 interface ProtectedRouteProps {
@@ -10,13 +9,18 @@ interface ProtectedRouteProps {
 
 const TOKEN_COOKIE_NAME = "token";
 
+type DecodedToken = {
+  exp: number;
+  is_superuser?: boolean;
+};
+
 const decodeToken = (token: string) => {
   try {
     const parts = token.split(".");
     if (parts.length !== 3) return null;
-    const decoded = JSON.parse(atob(parts[1]));
+    const decoded = JSON.parse(atob(parts[1])) as DecodedToken;
     return decoded;
-  } catch (error) {
+  } catch {
     return null;
   }
 };
@@ -37,7 +41,6 @@ export const ProtectedRoute = ({
   requiredAdmin = false,
 }: ProtectedRouteProps) => {
   const navigate = useNavigate();
-  const { user } = useAuth();
   const [isVerified, setIsVerified] = useState(false);
 
   useEffect(() => {
@@ -49,14 +52,22 @@ export const ProtectedRoute = ({
       return;
     }
 
-    // Si se requiere admin y el usuario no es superuser
-    if (requiredAdmin && user && !user.is_superuser) {
+    const decoded = decodeToken(token);
+
+    if (!decoded) {
+      navigate("/login", { replace: true });
+      return;
+    }
+
+    // Si se requiere admin y el token no corresponde a un superuser,
+    // no montamos la ruta para evitar requests protegidos con usuarios empresa.
+    if (requiredAdmin && !decoded.is_superuser) {
       navigate("/", { replace: true });
       return;
     }
 
     setIsVerified(true);
-  }, [navigate, user, requiredAdmin]);
+  }, [navigate, requiredAdmin]);
 
   // Mostrar nada mientras se verifica
   if (!isVerified) {

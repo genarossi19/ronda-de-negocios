@@ -51,6 +51,7 @@ export default function Login() {
   const [isLoading, setIsLoading] = useState(false);
   const [focusedField, setFocusedField] = useState<string | null>(null);
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
+  const [sessionNotice, setSessionNotice] = useState<string | null>(null);
 
   useEffect(() => {
     const locationState = (location.state as LoginLocationState | null) ?? null;
@@ -62,7 +63,10 @@ export default function Login() {
       query.get("reason") === SESSION_EXPIRED_REASON;
 
     if (shouldShowToast) {
-      toast.error(locationState?.message ?? SESSION_EXPIRED_MESSAGE, {
+      const noticeMessage = locationState?.message ?? SESSION_EXPIRED_MESSAGE;
+
+      setSessionNotice(noticeMessage);
+      toast.error(noticeMessage, {
         duration: 5000,
       });
       localStorage.removeItem(SESSION_EXPIRED_STORAGE_KEY);
@@ -325,6 +329,24 @@ export default function Login() {
                   </m.div>
                 </div>
               </div>
+
+              {sessionNotice && (
+                <m.div
+                  initial={{ opacity: 0, y: -8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="mb-6 rounded-xl border border-amber-300 bg-amber-50 px-4 py-3 text-amber-900 shadow-sm dark:border-amber-500/30 dark:bg-amber-950/30 dark:text-amber-100"
+                >
+                  <div className="flex items-start gap-3">
+                    <div className="mt-0.5 flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-amber-100 text-amber-700 dark:bg-amber-500/15 dark:text-amber-300">
+                      <Shield className="h-4 w-4" />
+                    </div>
+                    <div className="space-y-1">
+                      <p className="text-sm font-semibold">Sesion cerrada</p>
+                      <p className="text-sm leading-5">{sessionNotice}</p>
+                    </div>
+                  </div>
+                </m.div>
+              )}
 
               {/* Form */}
               <form onSubmit={handleSubmit} className="space-y-6">

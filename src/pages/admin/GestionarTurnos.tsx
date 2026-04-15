@@ -48,21 +48,21 @@ import {
 } from "../../api/TurnoService";
 import type { EventoResponse } from "../../types/Evento";
 import type { TurnoResponse } from "../../types/Turno";
-import { getApiErrorMessage } from "../../lib/axios";
+import { getApiErrorMessage, isSessionExpiredError } from "../../lib/axios";
 
 type EstadoEditableTurno = "abierto" | "cerrado";
 
 type TurnoFormState = {
   hora_inicio: string;
   hora_fin: string;
-  cant_mesas: number;
+  cant_mesas: string;
   estado: EstadoEditableTurno;
 };
 
 const initialFormState: TurnoFormState = {
   hora_inicio: "",
   hora_fin: "",
-  cant_mesas: 1,
+  cant_mesas: "1",
   estado: "abierto",
 };
 
@@ -145,6 +145,16 @@ function normalizeTurno(turno: TurnoResponse): TurnoResponse {
       ? turno.mesas_ocupadas
       : 0,
   };
+}
+
+function parseCantMesas(value: string) {
+  const parsed = Number(value);
+
+  if (!value || Number.isNaN(parsed) || parsed < 1) {
+    return null;
+  }
+
+  return parsed;
 }
 
 function HeroSkeleton() {
@@ -299,7 +309,9 @@ export default function GestionarTurnos() {
         setEvento(selectedEvento);
         await loadTurnos(selectedEvento.id);
       } catch (error) {
-        console.error("Error loading shifts:", error);
+        if (!isSessionExpiredError(error)) {
+          console.error("Error loading shifts:", error);
+        }
         const message = getApiErrorMessage(
           error,
           "No se pudieron cargar los turnos del evento",
@@ -381,7 +393,7 @@ export default function GestionarTurnos() {
     setFormData({
       hora_inicio: turno.hora_inicio,
       hora_fin: turno.hora_fin,
-      cant_mesas: turno.cant_mesas,
+      cant_mesas: String(turno.cant_mesas),
       estado: turno.estado === "cerrado" ? "cerrado" : "abierto",
     });
     setIsEndTimeManuallyEdited(true);
@@ -410,17 +422,21 @@ export default function GestionarTurnos() {
     setFormData((current) => ({ ...current, hora_fin: value }));
   };
 
+  const handleCantMesasChange = (value: string) => {
+    if (/^\d*$/.test(value)) {
+      handleFormChange("cant_mesas", value);
+    }
+  };
+
   const handleSubmit = async () => {
     if (!evento) {
       return;
     }
 
+    const cantMesas = parseCantMesas(formData.cant_mesas);
+
     if (!turnoEnEdicion) {
-      if (
-        !formData.hora_inicio ||
-        !formData.hora_fin ||
-        formData.cant_mesas < 1
-      ) {
+      if (!formData.hora_inicio || !formData.hora_fin || cantMesas === null) {
         toast.error("Completá horario y cantidad de mesas antes de guardar");
         return;
       }
@@ -431,27 +447,39 @@ export default function GestionarTurnos() {
       }
     }
 
+    if (cantMesas === null) {
+      toast.error("Ingresá una cantidad de mesas válida");
+      return;
+    }
+
     try {
       setIsSaving(true);
 
       if (turnoEnEdicion) {
-        const updated = normalizeTurno(
-          await editTurno(turnoEnEdicion.id, {
-            cant_mesas: formData.cant_mesas,
+        const payload = {
+          ...(turnoEnEdicion.cant_mesas !== cantMesas && {
+            cant_mesas: cantMesas,
+          }),
+          ...(turnoEnEdicion.estado !== formData.estado && {
             estado: formData.estado,
           }),
-        );
-        setTurnos((current) =>
-          current.map((turno) =>
-            turno.id === turnoEnEdicion.id ? updated : turno,
-          ),
-        );
+        };
+
+        if (Object.keys(payload).length === 0) {
+          toast.info("No hubo cambios para guardar en el turno");
+          setIsFormOpen(false);
+          resetForm();
+          return;
+        }
+
+        await editTurno(turnoEnEdicion.id, payload);
+        await loadTurnos(evento.id);
         toast.success("El turno fue actualizado correctamente");
       } else {
         await createTurno({
           hora_inicio: formData.hora_inicio,
           hora_fin: formData.hora_fin,
-          cant_mesas: formData.cant_mesas,
+          cant_mesas: cantMesas,
           evento: evento.id,
           estado: formData.estado,
         });
@@ -859,10 +887,7 @@ export default function GestionarTurnos() {
                       min={1}
                       value={formData.cant_mesas}
                       onChange={(event) =>
-                        handleFormChange(
-                          "cant_mesas",
-                          Number(event.target.value) || 1,
-                        )
+                        handleCantMesasChange(event.target.value)
                       }
                       className="border-[#68A243]/20 focus-visible:border-[#68A243] focus-visible:ring-[#68A243]/20 dark:bg-[#143E29] dark:border-[#68A243]/20 dark:text-white transition-colors"
                     />
@@ -935,10 +960,7 @@ export default function GestionarTurnos() {
                       min={1}
                       value={formData.cant_mesas}
                       onChange={(event) =>
-                        handleFormChange(
-                          "cant_mesas",
-                          Number(event.target.value) || 1,
-                        )
+                        handleCantMesasChange(event.target.value)
                       }
                       className="border-[#68A243]/20 focus-visible:border-[#68A243] focus-visible:ring-[#68A243]/20 dark:bg-[#143E29] dark:border-[#68A243]/20 dark:text-white transition-colors"
                     />

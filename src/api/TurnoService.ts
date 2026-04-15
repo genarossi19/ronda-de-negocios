@@ -13,7 +13,7 @@ export async function editTurno(
   payload: TurnoEditar,
 ): Promise<TurnoResponse> {
   const { data } = await api.patch<TurnoResponse>(
-    `/turnos/editar/${turnoId}`,
+    `/turnos/editar/${turnoId}/`,
     payload,
   );
   return data;
