@@ -6,6 +6,9 @@ export interface EmpresaResponse {
   razon_social: string;
   descripcion?: string;
   logo?: string;
+  email?: string;
+  email_confirmado?: boolean;
+  email_confirmardo?: boolean;
   sector: GenericType;
   localidad: LocalidadResponse;
   readOnly?: boolean;

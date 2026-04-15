@@ -15,6 +15,7 @@ interface CompanyModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   isAuthenticated: boolean;
+  isAdmin?: boolean;
 }
 
 export default function CompanyModal({
@@ -22,8 +23,13 @@ export default function CompanyModal({
   open,
   onOpenChange,
   isAuthenticated,
+  isAdmin = false,
 }: CompanyModalProps) {
   if (!company) return null;
+
+  const emailConfirmado =
+    company.email_confirmado ?? company.email_confirmardo ?? false;
+  const showContactInformation = isAuthenticated || isAdmin;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -50,11 +56,22 @@ export default function CompanyModal({
 
         <div className="space-y-6">
           {/* Sector */}
-          <div className="flex justify-center">
+          <div className="flex justify-center gap-2 flex-wrap">
             <Badge className="bg-[#68A243] hover:bg-[#68A243]/90 text-white">
               <Building2 className="h-3 w-3 mr-1" />
               {company.sector.nombre}
             </Badge>
+            {isAdmin && (
+              <Badge
+                className={
+                  emailConfirmado
+                    ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-950/30 dark:text-emerald-400"
+                    : "bg-amber-100 text-amber-800 dark:bg-amber-950/30 dark:text-amber-400"
+                }
+              >
+                {emailConfirmado ? "Email validado" : "Email sin validar"}
+              </Badge>
+            )}
           </div>
 
           {/* Description */}
@@ -95,7 +112,7 @@ export default function CompanyModal({
           </div>
 
           {/* Contact Information - Only for authenticated users */}
-          {isAuthenticated && (
+          {showContactInformation && (
             <>
               <div className="space-y-2">
                 <div className="flex items-center gap-2 text-[#143E29] dark:text-white transition-colors">
@@ -109,12 +126,23 @@ export default function CompanyModal({
                       <p className="text-xs text-muted-foreground dark:text-gray-400 mb-1 transition-colors">
                         Email
                       </p>
-                      <a
-                        href={`mailto:${company.email}`}
-                        className="text-sm text-[#68A243] hover:text-[#143E29] dark:hover:text-[#68A243]/70 font-medium break-all transition-colors"
-                      >
-                        {company.email || "Sin email"}
-                      </a>
+                      {company.email ? (
+                        <a
+                          href={`mailto:${company.email}`}
+                          className="text-sm text-[#68A243] hover:text-[#143E29] dark:hover:text-[#68A243]/70 font-medium break-all transition-colors"
+                        >
+                          {company.email}
+                        </a>
+                      ) : (
+                        <p className="text-sm font-medium dark:text-gray-200 transition-colors">
+                          Sin email
+                        </p>
+                      )}
+                      {isAdmin && (
+                        <p className="text-xs text-muted-foreground dark:text-gray-400 mt-1 transition-colors">
+                          Estado: {emailConfirmado ? "validado" : "sin validar"}
+                        </p>
+                      )}
                     </div>
                   </div>
 
@@ -124,42 +152,36 @@ export default function CompanyModal({
                       <p className="text-xs text-muted-foreground dark:text-gray-400 mb-1 transition-colors">
                         Teléfono
                       </p>
-                      <a
-                        href={`tel:${company.phone}`}
-                        className="text-sm text-[#68A243] hover:text-[#143E29] dark:hover:text-[#68A243]/70 font-medium transition-colors"
-                      >
-                        {company.phone || "Sin teléfono"}
-                      </a>
+                      {company.telefono_contacto ? (
+                        <a
+                          href={`tel:${company.telefono_contacto}`}
+                          className="text-sm text-[#68A243] hover:text-[#143E29] dark:hover:text-[#68A243]/70 font-medium transition-colors"
+                        >
+                          {company.telefono_contacto}
+                        </a>
+                      ) : (
+                        <p className="text-sm font-medium dark:text-gray-200 transition-colors">
+                          Sin teléfono
+                        </p>
+                      )}
                     </div>
                   </div>
-
-                  {company.contactName && (
-                    <div className="flex items-start gap-3 p-3 rounded-lg bg-muted/30 !dark:bg-[#1a1f2e] transition-colors">
-                      <Building2 className="h-4 w-4 text-[#68A243] mt-0.5" />
-                      <div className="flex-1">
-                        <p className="text-xs text-muted-foreground dark:text-gray-400 mb-1 transition-colors">
-                          Contacto
-                        </p>
-                        <p className="text-sm font-medium dark:text-gray-200 transition-colors">
-                          {company.contactName}
-                        </p>
-                      </div>
-                    </div>
-                  )}
                 </div>
               </div>
 
-              <div className="pt-4 border-t !dark:border-[#68A243]/15 transition-colors">
-                <Button
-                  className="w-full bg-[#68A243] hover:bg-[#143E29] dark:hover:bg-[#68A243]/80 text-white transition-colors"
-                  onClick={() =>
-                    (window.location.href = `mailto:${company.email}`)
-                  }
-                >
-                  <Mail className="mr-2 h-4 w-4" />
-                  Contactar empresa
-                </Button>
-              </div>
+              {company.email && (
+                <div className="pt-4 border-t !dark:border-[#68A243]/15 transition-colors">
+                  <Button
+                    className="w-full bg-[#68A243] hover:bg-[#143E29] dark:hover:bg-[#68A243]/80 text-white transition-colors"
+                    onClick={() =>
+                      (window.location.href = `mailto:${company.email}`)
+                    }
+                  >
+                    <Mail className="mr-2 h-4 w-4" />
+                    Contactar empresa
+                  </Button>
+                </div>
+              )}
             </>
           )}
         </div>

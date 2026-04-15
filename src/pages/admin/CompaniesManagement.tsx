@@ -13,6 +13,8 @@ import {
   Phone,
   FileText,
   Tag,
+  MailCheck,
+  MailX,
 } from "lucide-react";
 import { Button } from "../../components/ui/button";
 import { Badge } from "../../components/ui/badge";
@@ -55,6 +57,9 @@ function CompanyRow({
   onDelete: (c: EmpresaResponse) => void;
   onView: (c: EmpresaResponse) => void;
 }) {
+  const emailConfirmado =
+    company.email_confirmado ?? company.email_confirmardo ?? false;
+
   return (
     <div className="bg-white dark:bg-[#143E29] rounded-lg border border-gray-200 dark:border-[#68A243]/20 p-4 hover:border-[#68A243]/50 transition-all">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -102,6 +107,15 @@ function CompanyRow({
           )}
           <Badge
             className={
+              emailConfirmado
+                ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-950/30 dark:text-emerald-400"
+                : "bg-amber-100 text-amber-800 dark:bg-amber-950/30 dark:text-amber-400"
+            }
+          >
+            {emailConfirmado ? "Email validado" : "Email sin validar"}
+          </Badge>
+          <Badge
+            className={
               company.eliminado
                 ? "bg-red-100 text-red-800 dark:bg-red-950/30 dark:text-red-400"
                 : company.aprobada
@@ -122,9 +136,9 @@ function CompanyRow({
           {company.aprobada ? (
             <Button
               size="sm"
-              variant="outline"
+              variant="ghost"
               onClick={() => onApprove(company)}
-              className="gap-2 border-gray-300 text-gray-700 hover:bg-gray-100 dark:border-[#68A243]/40 dark:text-[#68A243] dark:hover:bg-[#68A243]/10"
+              className="gap-2 border-gray-300 text-gray-700 hover:bg-red-50 hover:text-red-600 hover:border-red-200  dark:border-[#68A243]/40 dark:text-[#68A243] dark:hover:bg-[#68A243]/10 transition-colors ease-in-out duration-300"
             >
               <XCircle className="h-4 w-4" />
               Desaprobar
@@ -142,9 +156,9 @@ function CompanyRow({
 
           <Button
             size="sm"
-            variant="outline"
+            variant="ghost"
             onClick={() => onView(company)}
-            className="border-gray-300 text-gray-700 hover:bg-gray-100 dark:border-[#68A243]/40 dark:text-[#68A243] dark:hover:bg-[#68A243]/10"
+            className="border-gray-300 text-gray-700 hover:bg-gray-100 hover:text-gray-700 dark:border-[#68A243]/40 dark:text-[#68A243] dark:hover:bg-[#68A243]/10"
           >
             <Eye className="h-4 w-4" />
           </Button>
@@ -153,7 +167,7 @@ function CompanyRow({
             size="sm"
             variant="ghost"
             onClick={() => onDelete(company)}
-            className="text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950/30"
+            className="text-red-600 hover:bg-red-50 hover:text-red-600 dark:text-red-400 dark:hover:bg-red-950/30"
           >
             <Trash2 className="h-4 w-4" />
           </Button>
@@ -630,6 +644,28 @@ export default function CompaniesManagement() {
                       )}
                       <Badge
                         className={`text-sm ${
+                          (selectedCompany.email_confirmado ??
+                          selectedCompany.email_confirmardo ??
+                          false)
+                            ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-950/30 dark:text-emerald-400"
+                            : "bg-amber-100 text-amber-800 dark:bg-amber-950/30 dark:text-amber-400"
+                        }`}
+                      >
+                        {(selectedCompany.email_confirmado ??
+                        selectedCompany.email_confirmardo ??
+                        false) ? (
+                          <MailCheck className="h-3 w-3 mr-1" />
+                        ) : (
+                          <MailX className="h-3 w-3 mr-1" />
+                        )}
+                        {(selectedCompany.email_confirmado ??
+                        selectedCompany.email_confirmardo ??
+                        false)
+                          ? "Email validado"
+                          : "Email sin validar"}
+                      </Badge>
+                      <Badge
+                        className={`text-sm ${
                           selectedCompany.aprobada
                             ? "bg-green-100 text-green-800 dark:bg-[#68A243]/30 dark:text-[#68A243]"
                             : "bg-amber-100 text-amber-800 dark:bg-amber-950/30 dark:text-amber-400"
@@ -655,6 +691,40 @@ export default function CompaniesManagement() {
                         Contacto
                       </h3>
                       <div className="bg-gray-50 dark:bg-[#0f2f25]/50 p-4 rounded-lg space-y-2">
+                        <div>
+                          <p className="text-xs font-semibold uppercase text-gray-600 dark:text-gray-400 mb-1">
+                            Email
+                          </p>
+                          <div className="flex items-center gap-2 flex-wrap">
+                            {selectedCompany.email ? (
+                              <a
+                                href={`mailto:${selectedCompany.email}`}
+                                className="text-sm text-[#68A243] hover:text-[#5a9038] font-medium break-all"
+                              >
+                                {selectedCompany.email}
+                              </a>
+                            ) : (
+                              <p className="text-sm text-gray-900 dark:text-white font-medium">
+                                Sin email
+                              </p>
+                            )}
+                            <Badge
+                              className={
+                                (selectedCompany.email_confirmado ??
+                                selectedCompany.email_confirmardo ??
+                                false)
+                                  ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-950/30 dark:text-emerald-400"
+                                  : "bg-amber-100 text-amber-800 dark:bg-amber-950/30 dark:text-amber-400"
+                              }
+                            >
+                              {(selectedCompany.email_confirmado ??
+                              selectedCompany.email_confirmardo ??
+                              false)
+                                ? "Validado"
+                                : "Sin validar"}
+                            </Badge>
+                          </div>
+                        </div>
                         <div>
                           <p className="text-xs font-semibold uppercase text-gray-600 dark:text-gray-400 mb-1">
                             Teléfono

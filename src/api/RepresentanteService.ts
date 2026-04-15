@@ -37,3 +37,14 @@ export async function createRepresentante(
   );
   return data;
 }
+
+export async function verificarEmailRepresentante(
+  uidb64: string,
+  token: string,
+) {
+  const { data } = await api.get(
+    `/representantes/verificar-email-representante/${uidb64}/${token}/`,
+  );
+
+  return data;
+}

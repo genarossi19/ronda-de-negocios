@@ -38,7 +38,7 @@ function CompanyCardSkeleton() {
 }
 
 export default function Companies() {
-  const { isAuthenticated, isAdmin, user } = useCurrentUser();
+  const { isAuthenticated, isAdmin } = useCurrentUser();
   const navigate = useNavigate();
   const [companies, setCompanies] = useState<EmpresaResponse[]>([]);
 
@@ -225,6 +225,7 @@ export default function Companies() {
         open={modalOpen}
         onOpenChange={setModalOpen}
         isAuthenticated={isAuthenticated}
+        isAdmin={isAdmin}
       />
 
       <Footer />

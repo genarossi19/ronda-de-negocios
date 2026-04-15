@@ -21,6 +21,7 @@ import Representantes from "./pages/Representantes";
 import NotFound from "./pages/NotFound";
 import { Toaster } from "./components/ui/sonner";
 import ValidarEmail from "./pages/ValidarEmail";
+import VerificarEmailRepresentante from "./pages/VerificarEmailRepresentante";
 import { useEffect } from "react";
 import {
   AUTH_SESSION_EXPIRED_EVENT,
@@ -86,6 +87,10 @@ function AppRoutes() {
         <Route
           path="/verificar-email/:uidb64/:token"
           element={<ValidarEmail />}
+        />
+        <Route
+          path="/verificar-email-representante/:uidb64/:token"
+          element={<VerificarEmailRepresentante />}
         />
         <Route
           path="/turnos"

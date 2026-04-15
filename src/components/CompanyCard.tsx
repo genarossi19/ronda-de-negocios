@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import { Card } from "../components/ui/card";
 import { Badge } from "../components/ui/badge";
 import type { EmpresaResponse } from "../types/Empresa";
-import { Building2, XCircle, Clock } from "lucide-react";
+import { Building2, XCircle, Clock, MailX } from "lucide-react";
 
 interface CompanyCardProps {
   company: EmpresaResponse;
@@ -35,7 +35,11 @@ export default function CompanyCard({
 
   const isDeleted = company.eliminado === true;
   const isNotApproved = company.aprobada === false;
-  const showStatusBadges = isAdmin && (isDeleted || isNotApproved);
+  const emailConfirmado =
+    company.email_confirmado ?? company.email_confirmardo ?? false;
+  const hasUnvalidatedEmail = company.email !== undefined && !emailConfirmado;
+  const showStatusBadges =
+    isAdmin && (isDeleted || isNotApproved || hasUnvalidatedEmail);
 
   return (
     <Card
@@ -64,6 +68,15 @@ export default function CompanyCard({
               >
                 <Clock className="h-3 w-3" />
                 Pendiente
+              </Badge>
+            )}
+            {hasUnvalidatedEmail && (
+              <Badge
+                variant="secondary"
+                className="bg-amber-500/90 hover:bg-amber-600 text-white text-xs gap-1 flex items-center"
+              >
+                <MailX className="h-3 w-3" />
+                Email sin validar
               </Badge>
             )}
           </div>
