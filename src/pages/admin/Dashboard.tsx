@@ -99,7 +99,7 @@ export default function AdminDashboard() {
       title: "Ver Reuniones",
       description: "Monitorear todas las reuniones agendadas",
       icon: CheckCircle,
-      href: "#admin-meetings",
+      href: "/panel-administrador/reuniones",
     },
     {
       title: "Gestionar Turnos",

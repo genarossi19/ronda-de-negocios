@@ -3,6 +3,7 @@ import Cookies from "js-cookie";
 import { useUserStore } from "../store/userStore";
 
 const TOKEN_COOKIE_NAME = "token";
+const UNKNOWN_BACKEND_ERROR_MESSAGE = "Ha ocurrido un error desconocido";
 export const SESSION_EXPIRED_STORAGE_KEY = "sessionExpired";
 export const SESSION_EXPIRED_MESSAGE =
   "Su sesion expiro. Vuelve a iniciar sesion";
@@ -21,6 +22,22 @@ const AUTH_MESSAGE_FRAGMENTS = [
 type AxiosErrorWithAuthFlag = AxiosError & {
   [AUTH_REDIRECT_HANDLED_FLAG]?: boolean;
 };
+
+function isHtmlErrorPayload(payload: unknown): payload is string {
+  if (typeof payload !== "string") {
+    return false;
+  }
+
+  const normalized = payload.trim().toLowerCase();
+
+  return (
+    normalized.startsWith("<!doctype html") ||
+    normalized.startsWith("<html") ||
+    normalized.startsWith("<head") ||
+    normalized.startsWith("<body") ||
+    /<html[\s>]|<head[\s>]|<body[\s>]|<title[\s>]/i.test(normalized)
+  );
+}
 
 function collectErrorMessages(payload: unknown): string[] {
   if (typeof payload === "string") {
@@ -116,7 +133,16 @@ export function getApiErrorMessage(error: unknown, fallback: string) {
   }
 
   if (axios.isAxiosError(error)) {
+    if (isHtmlErrorPayload(error.response?.data)) {
+      return UNKNOWN_BACKEND_ERROR_MESSAGE;
+    }
+
     const [firstMessage] = getResponseMessages(error);
+
+    if (isHtmlErrorPayload(firstMessage)) {
+      return UNKNOWN_BACKEND_ERROR_MESSAGE;
+    }
+
     return firstMessage || error.message || fallback;
   }
 
