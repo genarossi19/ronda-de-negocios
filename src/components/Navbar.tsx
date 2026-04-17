@@ -12,13 +12,15 @@ import { Avatar, AvatarFallback } from "../components/ui/avatar";
 import { useState, useEffect, useRef } from "react";
 import { useAuth } from "../hooks/useAuth";
 import { useCurrentUser } from "../hooks/useCurrentUser";
-import { Link, useNavigate } from "react-router";
+import { Link, useLocation, useNavigate } from "react-router";
 import { ThemeToggle } from "./ThemeToggle";
+import { cn } from "../lib/utils";
 
 export default function Navbar() {
   const { user, isAuthenticated } = useCurrentUser();
   const { logout } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const [isOpen, setIsOpen] = useState(false);
   const [isVisible, setIsVisible] = useState(true);
   const [theme, setTheme] = useState<"light" | "dark">("light");
@@ -114,35 +116,91 @@ export default function Navbar() {
 
   const isAdmin = user?.is_superuser || false;
 
+  const isPathActive = (path: string) => {
+    const currentPath = location.pathname;
+
+    if (path === "/panel-administrador") {
+      return currentPath.startsWith("/panel-administrador");
+    }
+
+    if (path === "/empresas") {
+      return (
+        currentPath === "/empresas" || currentPath.startsWith("/empresas/")
+      );
+    }
+
+    if (path === "/turnos") {
+      return currentPath === "/turnos" || currentPath.startsWith("/mesas/");
+    }
+
+    if (path === "/representantes") {
+      return (
+        currentPath === "/representantes" ||
+        currentPath.startsWith("/representantes/")
+      );
+    }
+
+    if (path === "/historial") {
+      return (
+        currentPath === "/historial" || currentPath.startsWith("/historial/")
+      );
+    }
+
+    return currentPath === path;
+  };
+
+  const getDesktopNavLinkClassName = (path: string) => {
+    const isActive = isPathActive(path);
+
+    return cn(
+      "px-4 py-2 text-sm font-medium rounded-lg transition-all duration-300 backdrop-blur-sm",
+      isDarkTheme
+        ? isActive
+          ? "bg-white/14 text-white shadow-inner ring-1 ring-white/15"
+          : "text-white hover:bg-white/10"
+        : isActive
+          ? "bg-[#143E29]/8 text-[#143E29] shadow-sm ring-1 ring-[#143E29]/10"
+          : "text-[#143E29] hover:bg-gray-100",
+    );
+  };
+
+  const getMobileNavButtonClassName = (path: string) => {
+    const isActive = isPathActive(path);
+
+    return cn(
+      "w-full text-left px-4 py-2.5 text-sm font-medium rounded-lg transition-colors duration-200",
+      globalDarkMode
+        ? isActive
+          ? "bg-[#143E29] text-white ring-1 ring-[#68A243]/30"
+          : "text-white hover:bg-[#143E29]"
+        : isActive
+          ? "bg-[#143E29]/8 text-[#143E29] ring-1 ring-[#143E29]/10"
+          : "text-gray-900 hover:bg-gray-100",
+    );
+  };
+
   const renderNavLinks = () => {
     if (isAdmin) {
       return (
         <>
           <Link
             to="/panel-administrador"
-            className="px-4 py-2 text-sm font-medium rounded-lg transition-all duration-300 hover:bg-white/10 backdrop-blur-sm"
-            style={{ color: isDarkTheme ? "white" : "#143E29" }}
+            className={getDesktopNavLinkClassName("/panel-administrador")}
           >
             Panel Admin
           </Link>
           <Link
             to="/empresas"
-            className="px-4 py-2 text-sm font-medium rounded-lg transition-all duration-300 hover:bg-white/10 backdrop-blur-sm"
-            style={{ color: isDarkTheme ? "white" : "#143E29" }}
+            className={getDesktopNavLinkClassName("/empresas")}
           >
             Empresas
           </Link>
-          <Link
-            to="/turnos"
-            className="px-4 py-2 text-sm font-medium rounded-lg transition-all duration-300 hover:bg-white/10 backdrop-blur-sm"
-            style={{ color: isDarkTheme ? "white" : "#143E29" }}
-          >
+          <Link to="/turnos" className={getDesktopNavLinkClassName("/turnos")}>
             Turnos
           </Link>
           <Link
             to="/historial"
-            className="px-4 py-2 text-sm font-medium rounded-lg transition-all duration-300 hover:bg-white/10 backdrop-blur-sm"
-            style={{ color: isDarkTheme ? "white" : "#143E29" }}
+            className={getDesktopNavLinkClassName("/historial")}
           >
             Historial
           </Link>
@@ -155,22 +213,16 @@ export default function Navbar() {
         <>
           <Link
             to="/empresas"
-            className="px-4 py-2 text-sm font-medium rounded-lg transition-all duration-300 hover:bg-white/10 backdrop-blur-sm"
-            style={{ color: isDarkTheme ? "white" : "#143E29" }}
+            className={getDesktopNavLinkClassName("/empresas")}
           >
             Empresas
           </Link>
-          <Link
-            to="/turnos"
-            className="px-4 py-2 text-sm font-medium rounded-lg transition-all duration-300 hover:bg-white/10 backdrop-blur-sm"
-            style={{ color: isDarkTheme ? "white" : "#143E29" }}
-          >
+          <Link to="/turnos" className={getDesktopNavLinkClassName("/turnos")}>
             Turnos
           </Link>
           <Link
             to="/representantes"
-            className="px-4 py-2 text-sm font-medium rounded-lg transition-all duration-300 hover:bg-white/10 backdrop-blur-sm"
-            style={{ color: isDarkTheme ? "white" : "#143E29" }}
+            className={getDesktopNavLinkClassName("/representantes")}
           >
             Representantes
           </Link>
@@ -179,11 +231,7 @@ export default function Navbar() {
     }
 
     return (
-      <Link
-        to="/empresas"
-        className="px-4 py-2 text-sm font-medium rounded-lg transition-all duration-300 hover:bg-white/10 backdrop-blur-sm"
-        style={{ color: isDarkTheme ? "white" : "#143E29" }}
-      >
+      <Link to="/empresas" className={getDesktopNavLinkClassName("/empresas")}>
         Empresas Participantes
       </Link>
     );
@@ -425,11 +473,9 @@ export default function Navbar() {
                           <Link to="/panel-administrador">
                             <button
                               onClick={() => setIsOpen(false)}
-                              className={`w-full text-left px-4 py-2.5 text-sm font-medium rounded-lg transition-colors duration-200 ${
-                                globalDarkMode
-                                  ? "text-white hover:bg-[#143E29]"
-                                  : "text-gray-900 hover:bg-gray-100"
-                              }`}
+                              className={getMobileNavButtonClassName(
+                                "/panel-administrador",
+                              )}
                             >
                               Panel Admin
                             </button>
@@ -441,11 +487,7 @@ export default function Navbar() {
                         <Link to="/empresas">
                           <button
                             onClick={() => setIsOpen(false)}
-                            className={`w-full text-left px-4 py-2.5 text-sm font-medium rounded-lg transition-colors duration-200 ${
-                              globalDarkMode
-                                ? "text-white hover:bg-[#143E29]"
-                                : "text-gray-900 hover:bg-gray-100"
-                            }`}
+                            className={getMobileNavButtonClassName("/empresas")}
                           >
                             Empresas
                           </button>
@@ -457,11 +499,9 @@ export default function Navbar() {
                           <Link to="/empresas">
                             <button
                               onClick={() => setIsOpen(false)}
-                              className={`w-full text-left px-4 py-2.5 text-sm font-medium rounded-lg transition-colors duration-200 ${
-                                globalDarkMode
-                                  ? "text-white hover:bg-[#143E29]"
-                                  : "text-gray-900 hover:bg-gray-100"
-                              }`}
+                              className={getMobileNavButtonClassName(
+                                "/empresas",
+                              )}
                             >
                               Empresas
                             </button>
@@ -474,11 +514,7 @@ export default function Navbar() {
                           <Link to="/turnos">
                             <button
                               onClick={() => setIsOpen(false)}
-                              className={`w-full text-left px-4 py-2.5 text-sm font-medium rounded-lg transition-colors duration-200 ${
-                                globalDarkMode
-                                  ? "text-white hover:bg-[#143E29]"
-                                  : "text-gray-900 hover:bg-gray-100"
-                              }`}
+                              className={getMobileNavButtonClassName("/turnos")}
                             >
                               {isAdmin ? "Turnos" : "Mis Turnos"}
                             </button>
@@ -487,11 +523,9 @@ export default function Navbar() {
                             <Link to="/historial">
                               <button
                                 onClick={() => setIsOpen(false)}
-                                className={`w-full text-left px-4 py-2.5 text-sm font-medium rounded-lg transition-colors duration-200 ${
-                                  globalDarkMode
-                                    ? "text-white hover:bg-[#143E29]"
-                                    : "text-gray-900 hover:bg-gray-100"
-                                }`}
+                                className={getMobileNavButtonClassName(
+                                  "/historial",
+                                )}
                               >
                                 Historial
                               </button>
@@ -500,11 +534,9 @@ export default function Navbar() {
                             <Link to="/representantes">
                               <button
                                 onClick={() => setIsOpen(false)}
-                                className={`w-full text-left px-4 py-2.5 text-sm font-medium rounded-lg transition-colors duration-200 ${
-                                  globalDarkMode
-                                    ? "text-white hover:bg-[#143E29]"
-                                    : "text-gray-900 hover:bg-gray-100"
-                                }`}
+                                className={getMobileNavButtonClassName(
+                                  "/representantes",
+                                )}
                               >
                                 Representantes
                               </button>
