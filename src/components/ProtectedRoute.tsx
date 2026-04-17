@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router";
 import Cookies from "js-cookie";
+import { useUserStore } from "../store/userStore";
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -8,6 +9,8 @@ interface ProtectedRouteProps {
 }
 
 const TOKEN_COOKIE_NAME = "token";
+const PROTECTED_ROUTE_NOTICE =
+  "Por favor vuelve a iniciar sesion para continuar";
 
 type DecodedToken = {
   exp: number;
@@ -42,20 +45,34 @@ export const ProtectedRoute = ({
 }: ProtectedRouteProps) => {
   const navigate = useNavigate();
   const [isVerified, setIsVerified] = useState(false);
+  const clearUser = useUserStore((state) => state.clearUser);
 
   useEffect(() => {
+    const redirectToLogin = () => {
+      clearUser();
+      Cookies.remove(TOKEN_COOKIE_NAME);
+      navigate("/login", {
+        replace: true,
+        state: {
+          sessionExpired: true,
+          noticeTitle: "Acceso requerido",
+          message: PROTECTED_ROUTE_NOTICE,
+        },
+      });
+    };
+
     // Verificar cookie directamente
     const token = Cookies.get(TOKEN_COOKIE_NAME);
 
     if (!token || !isTokenValid(token)) {
-      navigate("/login", { replace: true });
+      redirectToLogin();
       return;
     }
 
     const decoded = decodeToken(token);
 
     if (!decoded) {
-      navigate("/login", { replace: true });
+      redirectToLogin();
       return;
     }
 
@@ -67,7 +84,7 @@ export const ProtectedRoute = ({
     }
 
     setIsVerified(true);
-  }, [navigate, requiredAdmin]);
+  }, [clearUser, navigate, requiredAdmin]);
 
   // Mostrar nada mientras se verifica
   if (!isVerified) {

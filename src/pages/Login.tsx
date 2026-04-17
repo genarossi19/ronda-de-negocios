@@ -32,6 +32,12 @@ import {
 type LoginLocationState = {
   sessionExpired?: boolean;
   message?: string;
+  noticeTitle?: string;
+};
+
+type AuthNotice = {
+  title: string;
+  message: string;
 };
 
 export default function Login() {
@@ -50,7 +56,7 @@ export default function Login() {
   const [isLoading, setIsLoading] = useState(false);
   const [focusedField, setFocusedField] = useState<string | null>(null);
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
-  const [sessionNotice, setSessionNotice] = useState<string | null>(null);
+  const [authNotice, setAuthNotice] = useState<AuthNotice | null>(null);
 
   useEffect(() => {
     const locationState = (location.state as LoginLocationState | null) ?? null;
@@ -63,8 +69,9 @@ export default function Login() {
 
     if (shouldShowToast) {
       const noticeMessage = locationState?.message ?? SESSION_EXPIRED_MESSAGE;
+      const noticeTitle = locationState?.noticeTitle ?? "Sesion cerrada";
 
-      setSessionNotice(noticeMessage);
+      setAuthNotice({ title: noticeTitle, message: noticeMessage });
       localStorage.removeItem(SESSION_EXPIRED_STORAGE_KEY);
 
       if (
@@ -328,7 +335,7 @@ export default function Login() {
                 </div>
               </div>
 
-              {sessionNotice && (
+              {authNotice && (
                 <m.div
                   initial={{ opacity: 0, y: -8 }}
                   animate={{ opacity: 1, y: 0 }}
@@ -339,8 +346,10 @@ export default function Login() {
                       <Shield className="h-4 w-4" />
                     </div>
                     <div className="space-y-1">
-                      <p className="text-sm font-semibold">Sesion cerrada</p>
-                      <p className="text-sm leading-5">{sessionNotice}</p>
+                      <p className="text-sm font-semibold">
+                        {authNotice.title}
+                      </p>
+                      <p className="text-sm leading-5">{authNotice.message}</p>
                     </div>
                   </div>
                 </m.div>
