@@ -161,7 +161,8 @@ function HeroSkeleton() {
   return (
     <section className="rounded-3xl bg-gradient-to-br from-[#143E29] via-[#1a5236] to-[#143E29] px-6 py-8 md:px-8 shadow-xl shadow-[#143E29]/10">
       <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
-        <div className="max-w-3xl w-full space-y-3">
+        <div className="max-w-3xl w-full space-y-4">
+          <Skeleton className="h-10 w-24 bg-white/10" />
           <div className="flex items-center gap-3">
             <Skeleton className="h-11 w-11 rounded-2xl bg-white/10" />
             <Skeleton className="h-10 w-56 bg-white/10" />
@@ -170,7 +171,6 @@ function HeroSkeleton() {
         </div>
 
         <div className="flex flex-col sm:flex-row gap-3">
-          <Skeleton className="h-11 w-32 bg-white/10" />
           <Skeleton className="h-11 w-36 bg-white/10" />
         </div>
       </div>
@@ -539,7 +539,15 @@ export default function GestionarTurnos() {
         <div className="max-w-7xl mx-auto space-y-8">
           <section className="rounded-3xl bg-gradient-to-br from-[#143E29] via-[#1a5236] to-[#143E29] px-6 py-8 md:px-8 text-white shadow-xl shadow-[#143E29]/10">
             <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
-              <div className="max-w-3xl">
+              <div className="max-w-3xl space-y-4">
+                <Button
+                  variant="ghost"
+                  onClick={() => navigate(-1)}
+                  className="w-fit px-0 text-white/90 hover:bg-white/10 hover:text-white"
+                >
+                  <ArrowLeft className="h-4 w-4" />
+                  Volver
+                </Button>
                 <div className="flex items-center gap-3 mb-3">
                   <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-white/10 text-[#9FD27B] ring-1 ring-white/15 backdrop-blur-sm">
                     <Clock3 className="h-5 w-5" />
@@ -555,14 +563,6 @@ export default function GestionarTurnos() {
               </div>
 
               <div className="flex flex-col sm:flex-row gap-3">
-                <Button
-                  variant="outline"
-                  onClick={() => navigate(-1)}
-                  className="h-11 px-5 border-white/20 bg-white/10 text-white hover:bg-white/15 hover:text-white"
-                >
-                  <ArrowLeft className="h-4 w-4" />
-                  Volver
-                </Button>
                 <Button
                   onClick={openCreateDialog}
                   className="h-11 px-5 bg-[#68A243] hover:bg-[#5a9038] text-white shadow-lg shadow-[#68A243]/20"
