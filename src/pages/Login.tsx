@@ -12,7 +12,7 @@ import {
   Sparkles,
   CalendarClock,
   Target,
-  Clock,
+  Users,
   Shield,
 } from "lucide-react";
 import { Button } from "../components/ui/button";
@@ -45,6 +45,7 @@ export default function Login() {
   const { resolvedTheme } = useTheme();
   const navigate = useNavigate();
   const location = useLocation();
+  const currentYear = new Date().getFullYear();
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -248,9 +249,9 @@ export default function Login() {
                   desc: "Administra tus reuniones 1 a 1 de forma sencilla",
                 },
                 {
-                  icon: Clock,
-                  title: "Historial Completo",
-                  desc: "Mantén registro de todas tus reuniones y contactos",
+                  icon: Users,
+                  title: "Gestión de Representantes",
+                  desc: "Organiza quiénes asisten a la ronda por parte de tu empresa",
                 },
               ].map((item, idx) => {
                 const Icon = item.icon;
@@ -278,7 +279,7 @@ export default function Login() {
 
             <m.div variants={itemVariants} className="pt-8">
               <p className="text-sm text-gray-500 dark:text-gray-400 transition-colors">
-                Trenque Lauquen 2025 • Evento de Networking
+                {`Trenque Lauquen ${currentYear} • Evento de Networking`}
               </p>
             </m.div>
           </m.div>

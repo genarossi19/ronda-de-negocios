@@ -67,6 +67,7 @@ export default function ImageCropperNew({
   const imgRef = useRef<HTMLImageElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const isChangingImageRef = useRef(false);
+  const objectUrlsRef = useRef(new Set<string>());
 
   const [imageSrc, setImageSrc] = useState<string>("");
   const [originalImageSrc, setOriginalImageSrc] = useState<string>("");
@@ -88,20 +89,32 @@ export default function ImageCropperNew({
   const [sourceFileName, setSourceFileName] = useState("logo.png");
   const [sourceMimeType, setSourceMimeType] = useState("image/png");
 
-  // Cleanup blob URLs when component unmounts
+  const trackObjectUrl = (url: string) => {
+    if (url.startsWith("blob:")) {
+      objectUrlsRef.current.add(url);
+    }
+
+    return url;
+  };
+
+  const revokeTrackedUrl = (url: string) => {
+    if (!url || !url.startsWith("blob:")) {
+      return;
+    }
+
+    URL.revokeObjectURL(url);
+    objectUrlsRef.current.delete(url);
+  };
+
+  // Cleanup blob URLs only when component unmounts.
   useEffect(() => {
     return () => {
-      if (imageSrc && imageSrc.startsWith("blob:")) {
-        URL.revokeObjectURL(imageSrc);
-      }
-      if (originalImageSrc && originalImageSrc.startsWith("blob:")) {
-        URL.revokeObjectURL(originalImageSrc);
-      }
-      if (croppedBlobUrl && croppedBlobUrl.startsWith("blob:")) {
-        URL.revokeObjectURL(croppedBlobUrl);
-      }
+      objectUrlsRef.current.forEach((url) => {
+        URL.revokeObjectURL(url);
+      });
+      objectUrlsRef.current.clear();
     };
-  }, [croppedBlobUrl, imageSrc, originalImageSrc]);
+  }, []);
 
   // Restaurar estado si hay initialBlob (imagen guardada anteriormente)
   // SOLO si estamos en upload o si no hay imagen en edición
@@ -114,7 +127,8 @@ export default function ImageCropperNew({
       !imageSrc &&
       mode === "upload"
     ) {
-      const url = URL.createObjectURL(initialBlob);
+      const url = trackObjectUrl(URL.createObjectURL(initialBlob));
+      setOriginalImageSrc(url);
       setCroppedBlobUrl(url);
       setMode("preview");
     }
@@ -171,17 +185,11 @@ export default function ImageCropperNew({
     setSourceMimeType(file.type || "image/png");
 
     // Limpiar URLs blob anteriores
-    if (imageSrc && imageSrc.startsWith("blob:")) {
-      URL.revokeObjectURL(imageSrc);
-    }
-    if (originalImageSrc && originalImageSrc.startsWith("blob:")) {
-      URL.revokeObjectURL(originalImageSrc);
-    }
-    if (croppedBlobUrl && croppedBlobUrl.startsWith("blob:")) {
-      URL.revokeObjectURL(croppedBlobUrl);
-    }
+    revokeTrackedUrl(imageSrc);
+    revokeTrackedUrl(originalImageSrc);
+    revokeTrackedUrl(croppedBlobUrl);
 
-    const url = URL.createObjectURL(file);
+    const url = trackObjectUrl(URL.createObjectURL(file));
     setImageSrc(url);
     setOriginalImageSrc(url);
     setMode("edit");
@@ -366,7 +374,9 @@ export default function ImageCropperNew({
           },
         );
 
-        const url = URL.createObjectURL(outputFile);
+        revokeTrackedUrl(croppedBlobUrl);
+
+        const url = trackObjectUrl(URL.createObjectURL(outputFile));
         setCroppedBlobUrl(url);
         if (onImageSelect) {
           onImageSelect(outputFile);
@@ -383,28 +393,32 @@ export default function ImageCropperNew({
   };
 
   const handleEditAgain = () => {
-    // Si tengo la imagen original guardada, usarla
-    if (originalImageSrc) {
-      isChangingImageRef.current = true;
+    const sourceToEdit = originalImageSrc || croppedBlobUrl;
 
-      setImageSrc(originalImageSrc);
-      setMode("edit");
-      setImageLoaded(false);
-      setScale(1);
-      setCompletedCrop(null);
-      setCrop({
-        unit: "px",
-        width: CROP_SIZE,
-        height: CROP_SIZE,
-        x: 0,
-        y: 0,
-      });
-      setImageKey(`${Date.now()}-${Math.random()}`); // Forzar re-render del ReactCrop
-
-      setTimeout(() => {
-        isChangingImageRef.current = false;
-      }, 0);
+    if (!sourceToEdit) {
+      handleOpenFileSelector();
+      return;
     }
+
+    isChangingImageRef.current = true;
+    setError(null);
+    setImageSrc(sourceToEdit);
+    setMode("edit");
+    setImageLoaded(false);
+    setScale(1);
+    setCompletedCrop(null);
+    setCrop({
+      unit: "px",
+      width: CROP_SIZE,
+      height: CROP_SIZE,
+      x: 0,
+      y: 0,
+    });
+    setImageKey(`${Date.now()}-${Math.random()}`);
+
+    setTimeout(() => {
+      isChangingImageRef.current = false;
+    }, 0);
   };
 
   // Renderizar basado en modo
