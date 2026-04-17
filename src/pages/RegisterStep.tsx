@@ -751,6 +751,14 @@ export default function RegistrationForm() {
                               : "focus-visible:border-[#68A243] dark:focus-visible:!border-[#2d7a52]"
                           }`}
                         />
+                        <div className="rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 dark:border-amber-700/40 dark:bg-amber-950/20">
+                          <p className="text-sm font-medium text-amber-900 dark:text-amber-200">
+                            Recibiras un correo de confirmacion en este email.
+                          </p>
+                          <p className="text-sm text-amber-800 dark:text-amber-300">
+                            Hasta verificarlo no podras iniciar sesion.
+                          </p>
+                        </div>
                         {hasFieldError("email") && (
                           <p className="text-sm text-red-500">
                             {fieldErrors.email.join(", ")}
