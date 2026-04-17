@@ -108,8 +108,10 @@ export default function Login() {
         return;
       }
 
-      await login(formData.email, formData.password);
-      navigate("/empresas");
+      const authenticatedUser = await login(formData.email, formData.password);
+      navigate(
+        authenticatedUser.is_superuser ? "/panel-administrador" : "/turnos",
+      );
     } catch (err) {
       const message =
         err instanceof Error ? err.message : "Error al iniciar sesión";
