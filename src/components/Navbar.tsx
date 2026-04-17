@@ -168,11 +168,11 @@ export default function Navbar() {
             Turnos
           </Link>
           <Link
-            to="/historial"
+            to="/representantes"
             className="px-4 py-2 text-sm font-medium rounded-lg transition-all duration-300 hover:bg-white/10 backdrop-blur-sm"
             style={{ color: isDarkTheme ? "white" : "#143E29" }}
           >
-            Historial
+            Representantes
           </Link>
         </>
       );
@@ -483,18 +483,33 @@ export default function Navbar() {
                               {isAdmin ? "Turnos" : "Mis Turnos"}
                             </button>
                           </Link>
-                          <Link to="/historial">
-                            <button
-                              onClick={() => setIsOpen(false)}
-                              className={`w-full text-left px-4 py-2.5 text-sm font-medium rounded-lg transition-colors duration-200 ${
-                                globalDarkMode
-                                  ? "text-white hover:bg-[#143E29]"
-                                  : "text-gray-900 hover:bg-gray-100"
-                              }`}
-                            >
-                              Historial
-                            </button>
-                          </Link>
+                          {isAdmin ? (
+                            <Link to="/historial">
+                              <button
+                                onClick={() => setIsOpen(false)}
+                                className={`w-full text-left px-4 py-2.5 text-sm font-medium rounded-lg transition-colors duration-200 ${
+                                  globalDarkMode
+                                    ? "text-white hover:bg-[#143E29]"
+                                    : "text-gray-900 hover:bg-gray-100"
+                                }`}
+                              >
+                                Historial
+                              </button>
+                            </Link>
+                          ) : (
+                            <Link to="/representantes">
+                              <button
+                                onClick={() => setIsOpen(false)}
+                                className={`w-full text-left px-4 py-2.5 text-sm font-medium rounded-lg transition-colors duration-200 ${
+                                  globalDarkMode
+                                    ? "text-white hover:bg-[#143E29]"
+                                    : "text-gray-900 hover:bg-gray-100"
+                                }`}
+                              >
+                                Representantes
+                              </button>
+                            </Link>
+                          )}
                           <Link to="/perfil">
                             <button
                               onClick={() => setIsOpen(false)}
