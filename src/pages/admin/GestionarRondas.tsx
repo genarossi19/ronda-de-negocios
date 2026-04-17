@@ -9,7 +9,6 @@ import {
   Pencil,
   Plus,
   Sparkles,
-  Trash2,
   XCircle,
 } from "lucide-react";
 import Navbar from "../../components/Navbar";
@@ -32,6 +31,7 @@ import {
 } from "../../components/ui/dialog";
 import { Input } from "../../components/ui/input";
 import { Label } from "../../components/ui/label";
+import { ScrollArea } from "../../components/ui/scroll-area";
 import { Skeleton } from "../../components/ui/skeleton";
 import {
   Select,
@@ -43,7 +43,6 @@ import {
 import { toast } from "sonner";
 import {
   createEvento,
-  deleteEvento,
   getEventos,
   updateEvento,
 } from "../../api/EventoService";
@@ -52,6 +51,15 @@ import { getApiErrorMessage, isSessionExpiredError } from "../../lib/axios";
 
 type EstadoEvento = EventoWrite["estado"];
 type FiltroEstado = "todos" | EstadoEvento;
+type CreateFormErrors = Partial<
+  Record<"nombre" | "fecha" | "ubicacion", string>
+>;
+
+function isCreateField(
+  field: keyof EventoWrite,
+): field is keyof CreateFormErrors {
+  return field === "nombre" || field === "fecha" || field === "ubicacion";
+}
 
 const initialFormState: EventoWrite = {
   nombre: "",
@@ -93,13 +101,13 @@ function formatDate(date: string) {
   }).format(new Date(`${date}T00:00:00`));
 }
 
-function generateEventNameFromToday() {
-  const today = new Date();
+function generateEventNameFromDate(date: string) {
+  const selectedDate = date ? new Date(`${date}T00:00:00`) : new Date();
   const formattedDate = new Intl.DateTimeFormat("es-AR", {
     day: "numeric",
     month: "long",
     year: "numeric",
-  }).format(today);
+  }).format(selectedDate);
 
   return `Ronda del ${formattedDate.charAt(0).toUpperCase()}${formattedDate.slice(1)}`;
 }
@@ -115,6 +123,43 @@ function getEventSortValue(event: EventoResponse) {
   const priority =
     event.estado === "activo" ? 0 : event.estado === "finalizado" ? 1 : 2;
   return { priority, dateValue };
+}
+
+function getEventStatusLabel(status?: EventoResponse["estado"]) {
+  switch (status) {
+    case "finalizado":
+      return "Evento finalizado";
+    case "cancelado":
+      return "Evento cancelado";
+    case "activo":
+    default:
+      return "Evento activo";
+  }
+}
+
+function getPreferredEventoId(
+  eventos: EventoResponse[],
+  currentSelectedId: number | null,
+) {
+  if (
+    currentSelectedId !== null &&
+    eventos.some((evento) => evento.id === currentSelectedId)
+  ) {
+    return currentSelectedId;
+  }
+
+  const sortedEventos = [...eventos].sort((first, second) => {
+    const a = getEventSortValue(first);
+    const b = getEventSortValue(second);
+
+    if (a.priority !== b.priority) {
+      return a.priority - b.priority;
+    }
+
+    return b.dateValue - a.dateValue;
+  });
+
+  return sortedEventos[0]?.id ?? null;
 }
 
 function HeroSkeleton() {
@@ -158,7 +203,7 @@ function CurrentRoundSkeleton() {
   return (
     <Card className="border-[#68A243]/20 overflow-hidden">
       <CardHeader className="border-b border-[#68A243]/10 dark:border-[#68A243]/20">
-        <Skeleton className="h-7 w-36 dark:bg-[#0f2f25]" />
+        <Skeleton className="h-7 w-44 dark:bg-[#0f2f25]" />
       </CardHeader>
       <CardContent className="pt-6">
         <div className="rounded-2xl border border-[#68A243]/30 bg-gradient-to-br from-[#68A243]/10 to-white dark:from-[#68A243]/15 dark:to-[#143E29] p-5 space-y-4">
@@ -182,6 +227,11 @@ function CurrentRoundSkeleton() {
           </div>
 
           <Skeleton className="h-10 w-full dark:bg-[#0f2f25]" />
+
+          <div className="space-y-2">
+            <Skeleton className="h-4 w-36 dark:bg-[#0f2f25]" />
+            <Skeleton className="h-10 w-full dark:bg-[#0f2f25]" />
+          </div>
         </div>
       </CardContent>
     </Card>
@@ -242,19 +292,17 @@ function RoundListSkeleton() {
 export default function GestionarRondas() {
   const navigate = useNavigate();
   const [eventos, setEventos] = useState<EventoResponse[]>([]);
+  const [selectedEventoId, setSelectedEventoId] = useState<number | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [filterStatus, setFilterStatus] = useState<FiltroEstado>("todos");
   const [isFormOpen, setIsFormOpen] = useState(false);
-  const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
-  const [eventoAEliminar, setEventoAEliminar] = useState<EventoResponse | null>(
-    null,
-  );
   const [eventoEnEdicion, setEventoEnEdicion] = useState<EventoResponse | null>(
     null,
   );
   const [formData, setFormData] = useState<EventoWrite>(initialFormState);
+  const [formErrors, setFormErrors] = useState<CreateFormErrors>({});
   const isEditingStateOnly = Boolean(eventoEnEdicion);
 
   useEffect(() => {
@@ -301,6 +349,25 @@ export default function GestionarRondas() {
     );
   }, [eventos]);
 
+  const eventosActivosOrdenados = useMemo(
+    () => eventosOrdenados.filter((evento) => evento.estado === "activo"),
+    [eventosOrdenados],
+  );
+
+  const eventoSeleccionado = useMemo(
+    () =>
+      eventosActivosOrdenados.find(
+        (evento) => evento.id === selectedEventoId,
+      ) ?? null,
+    [eventosActivosOrdenados, selectedEventoId],
+  );
+
+  useEffect(() => {
+    setSelectedEventoId((currentSelectedId) =>
+      getPreferredEventoId(eventosActivosOrdenados, currentSelectedId),
+    );
+  }, [eventosActivosOrdenados]);
+
   const eventosFiltrados = useMemo(() => {
     return eventosOrdenados.filter((evento) => {
       const normalizedSearchTerm = searchTerm.toLowerCase();
@@ -332,6 +399,7 @@ export default function GestionarRondas() {
 
   const resetForm = () => {
     setFormData(initialFormState);
+    setFormErrors({});
     setEventoEnEdicion(null);
   };
 
@@ -356,14 +424,41 @@ export default function GestionarRondas() {
     value: EventoWrite[K],
   ) => {
     setFormData((current) => ({ ...current, [field]: value }));
+
+    if (isCreateField(field) && formErrors[field]) {
+      const normalizedValue =
+        typeof value === "string" ? value.trim() : String(value).trim();
+
+      if (normalizedValue) {
+        setFormErrors((current) => ({
+          ...current,
+          [field]: undefined,
+        }));
+      }
+    }
+  };
+
+  const validateCreateForm = () => {
+    const nextErrors: CreateFormErrors = {};
+
+    if (!formData.nombre.trim()) {
+      nextErrors.nombre = "Ingresá un nombre";
+    }
+
+    if (!formData.fecha) {
+      nextErrors.fecha = "Seleccioná una fecha";
+    }
+
+    if (!formData.ubicacion.trim()) {
+      nextErrors.ubicacion = "Ingresá una ubicación";
+    }
+
+    setFormErrors(nextErrors);
+    return Object.keys(nextErrors).length === 0;
   };
 
   const handleSubmit = async () => {
-    if (
-      (!isEditingStateOnly && !formData.nombre.trim()) ||
-      (!isEditingStateOnly && !formData.fecha) ||
-      (!isEditingStateOnly && !formData.ubicacion.trim())
-    ) {
+    if (!isEditingStateOnly && !validateCreateForm()) {
       toast.error("Completá nombre, fecha y ubicación antes de guardar");
       return;
     }
@@ -390,33 +485,6 @@ export default function GestionarRondas() {
       const message = getApiErrorMessage(
         error,
         "Ocurrió un error al guardar la ronda",
-      );
-      if (message) {
-        toast.error(message);
-      }
-    } finally {
-      setIsSaving(false);
-    }
-  };
-
-  const handleDelete = async () => {
-    if (!eventoAEliminar) {
-      return;
-    }
-
-    try {
-      setIsSaving(true);
-      await deleteEvento(eventoAEliminar.id);
-      setEventos((current) =>
-        current.filter((evento) => evento.id !== eventoAEliminar.id),
-      );
-      toast.success("La ronda fue eliminada correctamente");
-      setIsDeleteOpen(false);
-      setEventoAEliminar(null);
-    } catch (error) {
-      const message = getApiErrorMessage(
-        error,
-        "Ocurrió un error al eliminar la ronda",
       );
       if (message) {
         toast.error(message);
@@ -571,38 +639,48 @@ export default function GestionarRondas() {
             <Card className="border-[#68A243]/20 overflow-hidden">
               <CardHeader className="border-b border-[#68A243]/10 dark:border-[#68A243]/20">
                 <CardTitle className="text-xl text-[#143E29] dark:text-white">
-                  Ronda actual
+                  Ronda seleccionada
                 </CardTitle>
               </CardHeader>
               <CardContent className="pt-6">
-                {rondaActual ? (
+                {eventoSeleccionado ? (
                   <div className="rounded-2xl border border-[#68A243]/30 bg-gradient-to-br from-[#68A243]/10 to-white dark:from-[#68A243]/15 dark:to-[#143E29] p-5 space-y-4">
                     <div className="flex items-start justify-between gap-3">
                       <div>
                         <p className="text-sm font-medium text-[#68A243] mb-1">
-                          Evento activo
+                          {getEventStatusLabel(eventoSeleccionado.estado)}
                         </p>
                         <h2 className="text-2xl font-semibold text-[#143E29] dark:text-white">
-                          {rondaActual.nombre}
+                          {eventoSeleccionado.nombre}
                         </h2>
                       </div>
-                      <Badge
-                        className={
-                          getStatusMeta(rondaActual.estado).badgeClassName
-                        }
-                      >
-                        Ronda actual
-                      </Badge>
+
+                      <div className="flex flex-wrap items-center justify-end gap-2">
+                        <Badge
+                          className={
+                            getStatusMeta(eventoSeleccionado.estado)
+                              .badgeClassName
+                          }
+                        >
+                          {getStatusMeta(eventoSeleccionado.estado).label}
+                        </Badge>
+                        {rondaActual?.id === eventoSeleccionado.id &&
+                        eventoSeleccionado.estado === "activo" ? (
+                          <Badge className="bg-[#143E29] text-white border-transparent dark:bg-[#68A243]">
+                            Ronda actual
+                          </Badge>
+                        ) : null}
+                      </div>
                     </div>
 
                     <div className="space-y-3 text-sm text-gray-700 dark:text-gray-200">
                       <div className="flex items-center gap-2">
                         <CalendarDays className="h-4 w-4 text-[#68A243]" />
-                        <span>{formatDate(rondaActual.fecha)}</span>
+                        <span>{formatDate(eventoSeleccionado.fecha)}</span>
                       </div>
                       <div className="flex items-center gap-2">
                         <MapPin className="h-4 w-4 text-[#68A243]" />
-                        <span>{rondaActual.ubicacion}</span>
+                        <span>{eventoSeleccionado.ubicacion}</span>
                       </div>
                     </div>
 
@@ -610,7 +688,7 @@ export default function GestionarRondas() {
                       className="w-full bg-[#68A243] hover:bg-[#5a9038] text-white"
                       onClick={() =>
                         navigate(
-                          `/panel-administrador/turnos/${rondaActual.id}`,
+                          `/panel-administrador/turnos/${eventoSeleccionado.id}`,
                         )
                       }
                     >
@@ -618,14 +696,31 @@ export default function GestionarRondas() {
                       Gestionar turnos
                     </Button>
 
-                    <Button
-                      variant="outline"
-                      className="w-full border-[#68A243] text-[#68A243] hover:bg-[#68A243] hover:text-white bg-transparent"
-                      onClick={() => openEditDialog(rondaActual)}
-                    >
-                      <Pencil className="h-4 w-4" />
-                      Cambiar estado de la ronda actual
-                    </Button>
+                    <div className="space-y-2">
+                      <Label className="text-sm font-medium text-[#143E29] dark:text-white">
+                        Seleccionar otra ronda
+                      </Label>
+                      <Select
+                        value={eventoSeleccionado.id.toString()}
+                        onValueChange={(value) =>
+                          setSelectedEventoId(Number(value))
+                        }
+                      >
+                        <SelectTrigger className="w-full border-[#68A243]/20 focus-visible:border-[#68A243] focus-visible:ring-[#68A243]/20 dark:bg-[#143E29] dark:border-[#68A243]/20 dark:text-white transition-colors">
+                          <SelectValue placeholder="Seleccionar ronda" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {eventosActivosOrdenados.map((evento) => (
+                            <SelectItem
+                              key={evento.id}
+                              value={evento.id.toString()}
+                            >
+                              {evento.nombre}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
                   </div>
                 ) : (
                   <div className="rounded-2xl border border-dashed border-[#68A243]/30 bg-[#68A243]/5 dark:bg-[#143E29]/60 p-6 text-center">
@@ -633,11 +728,11 @@ export default function GestionarRondas() {
                       <CalendarDays className="h-6 w-6 text-[#68A243]" />
                     </div>
                     <h3 className="text-lg font-semibold text-[#143E29] dark:text-white mb-2">
-                      No hay una ronda activa
+                      No hay rondas activas
                     </h3>
                     <p className="text-sm text-muted-foreground dark:text-gray-300 mb-5">
-                      Podés crear una nueva ronda o editar una existente para
-                      dejarla como activa.
+                      Creá una ronda activa o cambiá el estado de una existente
+                      para poder gestionar sus turnos.
                     </p>
                     <Button
                       onClick={openCreateDialog}
@@ -651,7 +746,7 @@ export default function GestionarRondas() {
               </CardContent>
             </Card>
 
-            <Card className="border-[#68A243]/20">
+            <Card className="border-[#68A243]/20 xl:self-start">
               <CardHeader className="border-b border-[#68A243]/10 dark:border-[#68A243]/20">
                 <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
                   <CardTitle className="text-xl text-[#143E29] dark:text-white">
@@ -688,77 +783,70 @@ export default function GestionarRondas() {
                 </div>
               </CardHeader>
 
-              <CardContent className="pt-6 space-y-4">
+              <CardContent className="pt-6">
                 {eventosFiltrados.length > 0 ? (
-                  eventosFiltrados.map((evento) => {
-                    const statusMeta = getStatusMeta(evento.estado);
-                    const isCurrent =
-                      rondaActual?.id === evento.id &&
-                      evento.estado === "activo";
+                  <ScrollArea className="xl:h-[calc(100vh-23rem)] xl:min-h-[28rem] xl:pr-4">
+                    <div className="space-y-4 pr-1">
+                      {eventosFiltrados.map((evento) => {
+                        const statusMeta = getStatusMeta(evento.estado);
+                        const isCurrent =
+                          rondaActual?.id === evento.id &&
+                          evento.estado === "activo";
 
-                    return (
-                      <div
-                        key={evento.id}
-                        className={[
-                          "rounded-2xl border p-5 transition-all duration-300",
-                          isCurrent
-                            ? "border-[#68A243]/40 bg-gradient-to-r from-[#68A243]/10 via-white to-white dark:from-[#68A243]/10 dark:via-[#143E29] dark:to-[#143E29] shadow-lg shadow-[#68A243]/10"
-                            : "border-gray-200 bg-white dark:bg-[#143E29] dark:border-[#68A243]/20",
-                        ].join(" ")}
-                      >
-                        <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-                          <div className="space-y-3">
-                            <div className="flex flex-wrap items-center gap-2">
-                              <h3 className="text-xl font-semibold text-[#143E29] dark:text-white">
-                                {evento.nombre}
-                              </h3>
-                              <Badge className={statusMeta.badgeClassName}>
-                                {statusMeta.label}
-                              </Badge>
-                              {isCurrent && (
-                                <Badge className="bg-[#143E29] text-white border-transparent dark:bg-[#68A243]">
-                                  Ronda actual
-                                </Badge>
-                              )}
-                            </div>
+                        return (
+                          <div
+                            key={evento.id}
+                            className={[
+                              "rounded-2xl border p-5 transition-all duration-300",
+                              isCurrent
+                                ? "border-[#68A243]/40 bg-gradient-to-r from-[#68A243]/10 via-white to-white dark:from-[#68A243]/10 dark:via-[#143E29] dark:to-[#143E29] shadow-lg shadow-[#68A243]/10"
+                                : "border-gray-200 bg-white dark:bg-[#143E29] dark:border-[#68A243]/20",
+                            ].join(" ")}
+                          >
+                            <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+                              <div className="space-y-3">
+                                <div className="flex flex-wrap items-center gap-2">
+                                  <h3 className="text-xl font-semibold text-[#143E29] dark:text-white">
+                                    {evento.nombre}
+                                  </h3>
+                                  <Badge className={statusMeta.badgeClassName}>
+                                    {statusMeta.label}
+                                  </Badge>
+                                  {isCurrent && (
+                                    <Badge className="bg-[#143E29] text-white border-transparent dark:bg-[#68A243]">
+                                      Ronda actual
+                                    </Badge>
+                                  )}
+                                </div>
 
-                            <div className="flex flex-col sm:flex-row sm:flex-wrap gap-3 text-sm text-gray-600 dark:text-gray-300">
-                              <div className="flex items-center gap-2">
-                                <CalendarDays className="h-4 w-4 text-[#68A243]" />
-                                <span>{formatDate(evento.fecha)}</span>
+                                <div className="flex flex-col sm:flex-row sm:flex-wrap gap-3 text-sm text-gray-600 dark:text-gray-300">
+                                  <div className="flex items-center gap-2">
+                                    <CalendarDays className="h-4 w-4 text-[#68A243]" />
+                                    <span>{formatDate(evento.fecha)}</span>
+                                  </div>
+                                  <div className="flex items-center gap-2">
+                                    <MapPin className="h-4 w-4 text-[#68A243]" />
+                                    <span>{evento.ubicacion}</span>
+                                  </div>
+                                </div>
                               </div>
-                              <div className="flex items-center gap-2">
-                                <MapPin className="h-4 w-4 text-[#68A243]" />
-                                <span>{evento.ubicacion}</span>
+
+                              <div className="flex flex-col sm:flex-row gap-2 lg:min-w-max">
+                                <Button
+                                  variant="outline"
+                                  onClick={() => openEditDialog(evento)}
+                                  className="border-[#68A243]/30 text-[#68A243] hover:bg-[#68A243] hover:text-white"
+                                >
+                                  <Pencil className="h-4 w-4" />
+                                  Cambiar estado
+                                </Button>
                               </div>
                             </div>
                           </div>
-
-                          <div className="flex flex-col sm:flex-row gap-2 lg:min-w-max">
-                            <Button
-                              variant="outline"
-                              onClick={() => openEditDialog(evento)}
-                              className="border-[#68A243]/30 text-[#68A243] hover:bg-[#68A243] hover:text-white"
-                            >
-                              <Pencil className="h-4 w-4" />
-                              Cambiar estado
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              onClick={() => {
-                                setEventoAEliminar(evento);
-                                setIsDeleteOpen(true);
-                              }}
-                              className="text-red-600 hover:bg-red-50 dark:text-red-300 dark:hover:bg-red-950/30"
-                            >
-                              <Trash2 className="h-4 w-4" />
-                              Eliminar
-                            </Button>
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  })
+                        );
+                      })}
+                    </div>
+                  </ScrollArea>
                 ) : (
                   <div className="rounded-2xl border border-dashed border-[#68A243]/30 bg-[#68A243]/5 dark:bg-[#143E29]/50 p-8 text-center">
                     <h3 className="text-lg font-semibold text-[#143E29] dark:text-white mb-2">
@@ -868,19 +956,26 @@ export default function GestionarRondas() {
                         handleFormChange("nombre", event.target.value)
                       }
                       placeholder="Ej: Ronda de Negocios Otoño 2026"
-                      className="border-[#68A243]/20 focus-visible:border-[#68A243] focus-visible:ring-[#68A243]/20 dark:bg-[#143E29] dark:border-[#68A243]/20 dark:text-white dark:placeholder-gray-400 transition-colors"
+                      aria-invalid={!!formErrors.nombre}
+                      className="border-[#68A243]/20 focus-visible:border-[#68A243] focus-visible:ring-[#68A243]/20 dark:bg-[#143E29] dark:border-[#68A243]/20 dark:text-white dark:placeholder-gray-400 transition-colors aria-invalid:border-red-500 aria-invalid:ring-red-500/20"
                     />
                     <Button
                       type="button"
                       variant="outline"
                       onClick={() =>
-                        handleFormChange("nombre", generateEventNameFromToday())
+                        handleFormChange(
+                          "nombre",
+                          generateEventNameFromDate(formData.fecha),
+                        )
                       }
                       className="shrink-0 border-[#68A243]/30 text-[#68A243] hover:bg-[#68A243] hover:text-white"
                     >
                       <Sparkles className="h-4 w-4" />
                     </Button>
                   </div>
+                  {formErrors.nombre ? (
+                    <p className="text-red-600 text-xs">{formErrors.nombre}</p>
+                  ) : null}
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -895,8 +990,12 @@ export default function GestionarRondas() {
                       onChange={(event) =>
                         handleFormChange("fecha", event.target.value)
                       }
-                      className="border-[#68A243]/20 focus-visible:border-[#68A243] focus-visible:ring-[#68A243]/20 dark:bg-[#143E29] dark:border-[#68A243]/20 dark:text-white transition-colors [color-scheme:light] dark:[color-scheme:dark]"
+                      aria-invalid={!!formErrors.fecha}
+                      className="border-[#68A243]/20 focus-visible:border-[#68A243] focus-visible:ring-[#68A243]/20 dark:bg-[#143E29] dark:border-[#68A243]/20 dark:text-white transition-colors [color-scheme:light] dark:[color-scheme:dark] aria-invalid:border-red-500 aria-invalid:ring-red-500/20"
                     />
+                    {formErrors.fecha ? (
+                      <p className="text-red-600 text-xs">{formErrors.fecha}</p>
+                    ) : null}
                   </div>
 
                   <div className="grid gap-2">
@@ -932,8 +1031,14 @@ export default function GestionarRondas() {
                       handleFormChange("ubicacion", event.target.value)
                     }
                     placeholder="Ej: Polo Científico Tecnológico"
-                    className="border-[#68A243]/20 focus-visible:border-[#68A243] focus-visible:ring-[#68A243]/20 dark:bg-[#143E29] dark:border-[#68A243]/20 dark:text-white dark:placeholder-gray-400 transition-colors"
+                    aria-invalid={!!formErrors.ubicacion}
+                    className="border-[#68A243]/20 focus-visible:border-[#68A243] focus-visible:ring-[#68A243]/20 dark:bg-[#143E29] dark:border-[#68A243]/20 dark:text-white dark:placeholder-gray-400 transition-colors aria-invalid:border-red-500 aria-invalid:ring-red-500/20"
                   />
+                  {formErrors.ubicacion ? (
+                    <p className="text-red-600 text-xs">
+                      {formErrors.ubicacion}
+                    </p>
+                  ) : null}
                 </div>
               </>
             )}
@@ -953,49 +1058,6 @@ export default function GestionarRondas() {
                 : eventoEnEdicion
                   ? "Actualizar estado"
                   : "Crear ronda"}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      <Dialog
-        open={isDeleteOpen}
-        onOpenChange={(open) => {
-          setIsDeleteOpen(open);
-          if (!open) {
-            setEventoAEliminar(null);
-          }
-        }}
-      >
-        <DialogContent className="border-gray-200 dark:border-[#68A243]/20 bg-white dark:bg-[#11161d]">
-          <DialogHeader>
-            <DialogTitle className="text-[#143E29] dark:text-white">
-              Eliminar ronda
-            </DialogTitle>
-            <DialogDescription className="dark:text-gray-300">
-              Esta acción eliminará definitivamente la ronda seleccionada.
-            </DialogDescription>
-          </DialogHeader>
-
-          <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-900/50 dark:bg-red-950/20 dark:text-red-300">
-            {eventoAEliminar ? (
-              <span>
-                Vas a eliminar {eventoAEliminar.nombre} programada para el{" "}
-                {formatDate(eventoAEliminar.fecha)}.
-              </span>
-            ) : null}
-          </div>
-
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsDeleteOpen(false)}>
-              Cancelar
-            </Button>
-            <Button
-              variant="destructive"
-              onClick={handleDelete}
-              disabled={isSaving}
-            >
-              {isSaving ? "Eliminando..." : "Eliminar ronda"}
             </Button>
           </DialogFooter>
         </DialogContent>

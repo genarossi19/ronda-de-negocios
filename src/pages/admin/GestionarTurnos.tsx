@@ -648,8 +648,8 @@ export default function GestionarTurnos() {
             </Card>
           </section>
 
-          <section className="grid grid-cols-1 xl:grid-cols-[1.1fr_2fr] gap-6 xl:items-start">
-            <Card className="border-[#68A243]/20 overflow-hidden xl:self-start">
+          <section className="grid grid-cols-1 xl:grid-cols-[1.1fr_2fr] gap-6">
+            <Card className="border-[#68A243]/20 overflow-hidden">
               <CardHeader className="border-b border-[#68A243]/10 dark:border-[#68A243]/20">
                 <CardTitle className="text-xl text-[#143E29] dark:text-white">
                   Evento seleccionado

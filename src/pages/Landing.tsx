@@ -1,8 +1,9 @@
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Navbar from "../components/Navbar";
 import Footer from "../layout/Footer";
 import Carousel from "../components/Carousel";
 import { Button } from "../components/ui/button";
+import { Skeleton } from "../components/ui/skeleton";
 import {
   ArrowRight,
   Building2,
@@ -13,12 +14,95 @@ import {
   MapPin,
   Clock,
 } from "lucide-react";
+import { getEventos } from "../api/EventoService";
+import type { EventoResponse } from "../types/Evento";
 
 import { TextAnimate } from "../components/ui/text-animate";
 import { Link, useNavigate } from "react-router";
+
+function getClosestActiveEvent(eventos: EventoResponse[]) {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  return (
+    eventos
+      .filter((evento) => evento.estado === "activo")
+      .sort((first, second) => {
+        const firstTime = new Date(`${first.fecha}T00:00:00`).getTime();
+        const secondTime = new Date(`${second.fecha}T00:00:00`).getTime();
+        const firstDistance = Math.abs(firstTime - today.getTime());
+        const secondDistance = Math.abs(secondTime - today.getTime());
+
+        if (firstDistance !== secondDistance) {
+          return firstDistance - secondDistance;
+        }
+
+        return firstTime - secondTime;
+      })[0] ?? null
+  );
+}
+
+function formatEventHeadlineDate(date: string) {
+  return new Intl.DateTimeFormat("es-AR", {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+  }).format(new Date(`${date}T00:00:00`));
+}
+
+function formatEventYear(date: string) {
+  return new Intl.DateTimeFormat("es-AR", {
+    year: "numeric",
+  }).format(new Date(`${date}T00:00:00`));
+}
+
+function EventInfoSkeleton({ icon: Icon }: { icon: typeof Calendar }) {
+  return (
+    <div className="inline-flex items-center gap-3 px-4 py-3 rounded-lg border border-white/10 bg-white/5 backdrop-blur-sm">
+      <Icon className="h-6 w-6 text-secondary dark:text-[#68A243]" />
+      <div className="text-left text-white min-w-[220px] space-y-2">
+        <Skeleton className="h-4 w-16 bg-white/15" />
+        <Skeleton className="h-5 w-44 bg-white/15" />
+        <Skeleton className="h-4 w-24 bg-white/10" />
+      </div>
+    </div>
+  );
+}
+
 export default function Landing() {
   const navigate = useNavigate();
   const [companyCount, setCompanyCount] = useState(0);
+  const [eventos, setEventos] = useState<EventoResponse[]>([]);
+  const [isLoadingEventInfo, setIsLoadingEventInfo] = useState(true);
+
+  useEffect(() => {
+    const fetchEventos = async () => {
+      try {
+        setIsLoadingEventInfo(true);
+        const data = await getEventos();
+        setEventos(data);
+      } catch (error) {
+        console.error("Error loading active event info:", error);
+        setEventos([]);
+      } finally {
+        setIsLoadingEventInfo(false);
+      }
+    };
+
+    fetchEventos();
+  }, []);
+
+  const activeEvent = useMemo(() => getClosestActiveEvent(eventos), [eventos]);
+
+  const headlineDate = activeEvent
+    ? formatEventHeadlineDate(activeEvent.fecha)
+    : "Fecha a confirmar";
+
+  const headlineYear = activeEvent
+    ? formatEventYear(activeEvent.fecha)
+    : "Próximamente";
+
+  const headlineLocation = activeEvent?.ubicacion ?? "Ubicación a confirmar";
 
   const handleViewCompanies = () => {
     navigate("/empresas");
@@ -50,35 +134,43 @@ export default function Landing() {
           </div>
 
           <div className="flex flex-wrap justify-center gap-6 mb-6">
-            <div className="inline-flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-white/5 dark:hover:bg-white/5 hover:backdrop-blur-sm hover:border hover:border-white/10 dark:hover:border-white/10 transition-all duration-150 ease-in-out">
-              <Calendar className="h-6 w-6 text-secondary dark:text-[#68A243]" />
-              <div className="text-left text-white">
-                <div className="text-sm text-gray-300 dark:text-gray-400 transition-colors duration-300">
-                  Fecha
-                </div>
-                <div className="font-semibold flex flex-col">
-                  Martes 21 de Octubre
-                  <span className="text-gray-300 dark:text-gray-400 transition-colors duration-300">
-                    2025
-                  </span>
+            {isLoadingEventInfo ? (
+              <EventInfoSkeleton icon={Calendar} />
+            ) : (
+              <div className="inline-flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-white/5 dark:hover:bg-white/5 hover:backdrop-blur-sm hover:border hover:border-white/10 dark:hover:border-white/10 transition-all duration-150 ease-in-out">
+                <Calendar className="h-6 w-6 text-secondary dark:text-[#68A243]" />
+                <div className="text-left text-white">
+                  <div className="text-sm text-gray-300 dark:text-gray-400 transition-colors duration-300">
+                    Fecha
+                  </div>
+                  <div className="font-semibold flex flex-col capitalize">
+                    {headlineDate}
+                    <span className="text-gray-300 dark:text-gray-400 transition-colors duration-300">
+                      {headlineYear}
+                    </span>
+                  </div>
                 </div>
               </div>
-            </div>
+            )}
 
-            <div className="inline-flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-white/5 dark:hover:bg-white/5 hover:backdrop-blur-sm hover:border hover:border-white/10 dark:hover:border-white/10 transition-all duration-150 ease-in-out">
-              <MapPin className="h-6 w-6 text-secondary dark:text-[#68A243]" />
-              <div className="text-left text-white">
-                <div className="text-sm text-gray-300 dark:text-gray-400 transition-colors duration-300">
-                  Lugar
-                </div>
-                <div className="font-semibold flex flex-col">
-                  Polo Científico Tecnológico
-                  <span className="text-gray-300 dark:text-gray-400 transition-colors duration-300">
-                    Hernández 816
-                  </span>
+            {isLoadingEventInfo ? (
+              <EventInfoSkeleton icon={MapPin} />
+            ) : (
+              <div className="inline-flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-white/5 dark:hover:bg-white/5 hover:backdrop-blur-sm hover:border hover:border-white/10 dark:hover:border-white/10 transition-all duration-150 ease-in-out">
+                <MapPin className="h-6 w-6 text-secondary dark:text-[#68A243]" />
+                <div className="text-left text-white">
+                  <div className="text-sm text-gray-300 dark:text-gray-400 transition-colors duration-300">
+                    Lugar
+                  </div>
+                  <div className="font-semibold flex flex-col">
+                    {headlineLocation}
+                    <span className="text-gray-300 dark:text-gray-400 transition-colors duration-300">
+                      Hernández 816
+                    </span>
+                  </div>
                 </div>
               </div>
-            </div>
+            )}
 
             <div className="inline-flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-white/5 dark:hover:bg-white/5 hover:backdrop-blur-sm hover:border hover:border-white/10 dark:hover:border-white/10 transition-all duration-150 ease-in-out">
               <Clock className="h-6 w-6 text-secondary dark:text-[#68A243]" />
