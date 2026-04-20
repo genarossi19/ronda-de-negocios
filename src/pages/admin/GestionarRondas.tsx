@@ -118,8 +118,16 @@ function getStatusMeta(status: EstadoEvento | EventoResponse["estado"]) {
   );
 }
 
+function getDateValue(date: string) {
+  return new Date(`${date}T00:00:00`).getTime();
+}
+
+function getCurrentEvento(eventos: EventoResponse[]) {
+  return eventos.find((evento) => evento.estado === "activo") ?? null;
+}
+
 function getEventSortValue(event: EventoResponse) {
-  const dateValue = new Date(`${event.fecha}T00:00:00`).getTime();
+  const dateValue = getDateValue(event.fecha);
   const priority =
     event.estado === "activo" ? 0 : event.estado === "finalizado" ? 1 : 2;
   return { priority, dateValue };
@@ -148,18 +156,13 @@ function getPreferredEventoId(
     return currentSelectedId;
   }
 
-  const sortedEventos = [...eventos].sort((first, second) => {
-    const a = getEventSortValue(first);
-    const b = getEventSortValue(second);
+  return eventos.find((evento) => evento.estado === "activo")?.id ?? null;
+}
 
-    if (a.priority !== b.priority) {
-      return a.priority - b.priority;
-    }
-
-    return b.dateValue - a.dateValue;
-  });
-
-  return sortedEventos[0]?.id ?? null;
+function hasValidEventoId(
+  evento: EventoResponse,
+): evento is EventoResponse & { id: number } {
+  return typeof evento.id === "number" && Number.isFinite(evento.id);
 }
 
 function HeroSkeleton() {
@@ -310,7 +313,7 @@ export default function GestionarRondas() {
       try {
         setIsLoading(true);
         const data = await getEventos();
-        setEventos(data);
+        setEventos(data.filter(hasValidEventoId));
       } catch (error) {
         console.error("Error loading events:", error);
         if (!isSessionExpiredError(error)) {
@@ -326,7 +329,7 @@ export default function GestionarRondas() {
   }, []);
 
   const eventosOrdenados = useMemo(() => {
-    return [...eventos].sort((first, second) => {
+    return eventos.filter(hasValidEventoId).sort((first, second) => {
       const a = getEventSortValue(first);
       const b = getEventSortValue(second);
 
@@ -339,14 +342,7 @@ export default function GestionarRondas() {
   }, [eventos]);
 
   const rondaActual = useMemo(() => {
-    const activas = eventos.filter((evento) => evento.estado === "activo");
-    return (
-      activas.sort((first, second) => {
-        const firstTime = new Date(`${first.fecha}T00:00:00`).getTime();
-        const secondTime = new Date(`${second.fecha}T00:00:00`).getTime();
-        return secondTime - firstTime;
-      })[0] ?? null
-    );
+    return getCurrentEvento(eventos.filter(hasValidEventoId));
   }, [eventos]);
 
   const eventosActivosOrdenados = useMemo(
@@ -471,11 +467,12 @@ export default function GestionarRondas() {
           estado: formData.estado,
         });
         const refreshedEventos = await getEventos();
-        setEventos(refreshedEventos);
+        setEventos(refreshedEventos.filter(hasValidEventoId));
         toast.success("El estado de la ronda fue actualizado correctamente");
       } else {
-        const created = await createEvento(formData);
-        setEventos((current) => [created, ...current]);
+        await createEvento(formData);
+        const refreshedEventos = await getEventos();
+        setEventos(refreshedEventos.filter(hasValidEventoId));
         toast.success("La ronda fue creada correctamente");
       }
 

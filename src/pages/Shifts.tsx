@@ -11,26 +11,60 @@ import {
 } from "../components/ui/card";
 import { Badge } from "../components/ui/badge";
 import { Skeleton } from "../components/ui/skeleton";
-import { Calendar, Clock, Users, ArrowRight, AlertCircle } from "lucide-react";
+import {
+  Calendar,
+  Clock,
+  Users,
+  ArrowRight,
+  AlertCircle,
+  Settings,
+} from "lucide-react";
 import { useCurrentUser } from "../hooks/useCurrentUser";
 import { HelpTutorial } from "../components/HelpTutorial";
 import { Link, useNavigate } from "react-router";
 import { getTurnoByEventoId } from "../api/TurnoService";
+import { getEventos } from "../api/EventoService";
+import type { EventoResponse } from "../types/Evento";
 import type { TurnoResponse } from "../types/Turno";
+
+function formatDate(date: string) {
+  return new Intl.DateTimeFormat("es-AR", {
+    day: "2-digit",
+    month: "long",
+    year: "numeric",
+  }).format(new Date(`${date}T00:00:00`));
+}
+
+function getActiveEvent(eventos: EventoResponse[]) {
+  return eventos.find((evento) => evento.estado === "activo") ?? null;
+}
 
 export default function Shifts() {
   const navigate = useNavigate();
   const [shifts, setShifts] = useState<TurnoResponse[]>([]);
+  const [activeEvent, setActiveEvent] = useState<EventoResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const { isAuthenticated } = useCurrentUser();
+  const { isAuthenticated, isAdmin } = useCurrentUser();
 
   useEffect(() => {
     const fetchTurno = async () => {
       try {
         setLoading(true);
         setError(null);
-        const data = await getTurnoByEventoId(1);
+        const eventos = await getEventos();
+        const eventoActivo = getActiveEvent(eventos);
+
+        if (!eventoActivo) {
+          setActiveEvent(null);
+          setShifts([]);
+          setError("No hay una ronda activa disponible en este momento.");
+          return;
+        }
+
+        setActiveEvent(eventoActivo);
+
+        const data = await getTurnoByEventoId(eventoActivo.id);
         setShifts(data);
       } catch (err) {
         console.error(err);
@@ -133,15 +167,29 @@ export default function Shifts() {
                   Seleccioná un turno y elegí tu mesa para la ronda de negocios
                 </p>
               </div>
-              <div className="hidden md:block">
+              <div className="hidden md:flex md:flex-col md:items-end md:gap-3">
+                {isAdmin && (
+                  <Button
+                    onClick={() =>
+                      navigate(
+                        activeEvent
+                          ? `/panel-administrador/turnos/${activeEvent.id}`
+                          : "/gestionar-rondas",
+                      )
+                    }
+                    className="gap-2 bg-[#68A243] hover:bg-[#5a9038] text-white"
+                  >
+                    <Settings className="h-4 w-4" />
+                    Gestionar turnos
+                  </Button>
+                )}
                 <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 border border-white/20">
                   <div className="flex items-center gap-2 text-sm mb-2">
                     <Calendar className="h-4 w-4 text-[#68A243]" />
                     <span className="font-semibold">Fecha del Evento</span>
                   </div>
                   <p className="text-xl font-bold">
-                    {/* {formatDate(selectedDate)} */}
-                    colocar fecha
+                    {activeEvent ? formatDate(activeEvent.fecha) : "Sin fecha"}
                   </p>
                 </div>
               </div>

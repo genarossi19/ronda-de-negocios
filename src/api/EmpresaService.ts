@@ -26,7 +26,7 @@ export const deleteCompany = async (id: number) => {
 };
 
 export const validarEmail = async (uidb64: string, token: string) => {
-  const { data } = await api.get(`/verificar-email/${uidb64}/${token}/`);
+  const { data } = await api.get(`/acceso/verificar-email/${uidb64}/${token}/`);
   return data;
 };
 

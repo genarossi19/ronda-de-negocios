@@ -140,9 +140,10 @@ export default function Navbar() {
       );
     }
 
-    if (path === "/historial") {
+    if (path === "/panel-administrador/reuniones") {
       return (
-        currentPath === "/historial" || currentPath.startsWith("/historial/")
+        currentPath === "/panel-administrador/reuniones" ||
+        currentPath.startsWith("/panel-administrador/reuniones/")
       );
     }
 
@@ -199,10 +200,12 @@ export default function Navbar() {
             Turnos
           </Link>
           <Link
-            to="/historial"
-            className={getDesktopNavLinkClassName("/historial")}
+            to="/panel-administrador/reuniones"
+            className={getDesktopNavLinkClassName(
+              "/panel-administrador/reuniones",
+            )}
           >
-            Historial
+            Reuniones
           </Link>
         </>
       );
@@ -520,14 +523,14 @@ export default function Navbar() {
                             </button>
                           </Link>
                           {isAdmin ? (
-                            <Link to="/historial">
+                            <Link to="/panel-administrador/reuniones">
                               <button
                                 onClick={() => setIsOpen(false)}
                                 className={getMobileNavButtonClassName(
-                                  "/historial",
+                                  "/panel-administrador/reuniones",
                                 )}
                               >
-                                Historial
+                                Reuniones
                               </button>
                             </Link>
                           ) : (

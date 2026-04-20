@@ -3,12 +3,14 @@ import { useNavigate } from "react-router";
 import {
   ArrowLeft,
   Building2,
-  CalendarDays,
   Clock3,
   Download,
+  RotateCcw,
   Handshake,
+  LayoutGrid,
   Mail,
   Search,
+  TableProperties,
   UserRound,
   Users,
 } from "lucide-react";
@@ -23,6 +25,13 @@ import {
   CardHeader,
   CardTitle,
 } from "../../components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "../../components/ui/dialog";
 import { Input } from "../../components/ui/input";
 import { Skeleton } from "../../components/ui/skeleton";
 import {
@@ -40,6 +49,12 @@ import {
   TableHeader,
   TableRow,
 } from "../../components/ui/table";
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "../../components/ui/tabs";
 import { ScrollArea } from "../../components/ui/scroll-area";
 import { toast } from "sonner";
 import { getEventos } from "../../api/EventoService";
@@ -292,6 +307,9 @@ export default function MeetingsSummary() {
   const [selectedEventId, setSelectedEventId] = useState<string>("");
   const [turnoFilter, setTurnoFilter] = useState<string>("all");
   const [searchTerm, setSearchTerm] = useState("");
+  const [activeView, setActiveView] = useState<"mesas" | "tabla">("tabla");
+  const [selectedTableSummary, setSelectedTableSummary] =
+    useState<TableSummary | null>(null);
   const [isLoadingEvents, setIsLoadingEvents] = useState(true);
   const [isLoadingSummary, setIsLoadingSummary] = useState(false);
   const [summaryRows, setSummaryRows] = useState<SummarySeatRow[]>([]);
@@ -360,6 +378,7 @@ export default function MeetingsSummary() {
     if (!eventId || Number.isNaN(eventId)) {
       setSummaryRows([]);
       setTableSummaries([]);
+      setSelectedTableSummary(null);
       return;
     }
 
@@ -373,6 +392,7 @@ export default function MeetingsSummary() {
       try {
         setIsLoadingSummary(true);
         setTurnoFilter("all");
+        setSelectedTableSummary(null);
 
         const turnos = sortTurnos(await getTurnoByEventoId(selectedEvent.id));
         const mesasByTurno = await Promise.all(
@@ -557,6 +577,9 @@ export default function MeetingsSummary() {
     );
   }, [summaryRows]);
 
+  const hasActiveFilters =
+    turnoFilter !== "all" || searchTerm.trim().length > 0;
+
   const stats = useMemo(() => {
     const occupiedRows = filteredRows.filter((row) => row.empresaNombre);
     const occupiedTables = filteredTableSummaries.filter(
@@ -597,19 +620,19 @@ export default function MeetingsSummary() {
                     Volver al panel
                   </Button>
 
-                  <div className="flex items-start gap-4">
-                    <div className="rounded-2xl bg-white/10 p-3 shadow-lg shadow-black/10">
-                      <Handshake className="h-7 w-7" />
-                    </div>
-                    <div className="space-y-2">
-                      <h1 className="text-3xl md:text-4xl font-bold tracking-tight">
+                  <div className="space-y-4">
+                    <div className="flex items-start gap-4">
+                      <div className="rounded-2xl bg-white/10 p-3 shadow-lg shadow-black/10">
+                        <Handshake className="h-7 w-7" />
+                      </div>
+                      <h1 className="pt-1 text-3xl md:text-4xl font-bold tracking-tight">
                         Resumen de reuniones
                       </h1>
-                      <p className="text-white/80 text-base md:text-lg max-w-2xl">
-                        Vista rápida de mesas, empresas sentadas,
-                        representantes, anfitrionas y horarios por turno.
-                      </p>
                     </div>
+                    <p className="text-white/80 text-base md:text-lg max-w-2xl">
+                      Vista rápida de mesas, empresas sentadas, representantes,
+                      anfitrionas y horarios por turno.
+                    </p>
                   </div>
                 </div>
 
@@ -703,28 +726,45 @@ export default function MeetingsSummary() {
                 ))}
           </section>
 
-          <Card className="border-[#68A243]/20 dark:border-[#68A243]/25 dark:bg-[#143E29]">
-            <CardHeader className="border-b border-[#68A243]/10 dark:border-[#68A243]/20">
-              <CardTitle className="text-[#143E29] dark:text-white">
-                Filtros del resumen
-              </CardTitle>
-              <CardDescription className="dark:text-gray-300">
-                Cambiá de ronda, filtrá por turno o buscá por empresa y
-                representante.
-              </CardDescription>
+          <Card className="border-[#68A243]/25 shadow-sm dark:border-[#68A243]/25 dark:bg-[#143E29]">
+            <CardHeader className="border-b border-[#68A243]/10 px-5 py-4 dark:border-[#68A243]/20">
+              <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+                <div>
+                  <CardTitle className="text-[#143E29] dark:text-white text-lg leading-tight">
+                    Filtros
+                  </CardTitle>
+                  <CardDescription className="text-xs dark:text-gray-300">
+                    Elegí ronda, turno o buscá una empresa puntual.
+                  </CardDescription>
+                </div>
+
+                <Button
+                  type="button"
+                  variant="ghost"
+                  onClick={() => {
+                    setTurnoFilter("all");
+                    setSearchTerm("");
+                  }}
+                  disabled={!hasActiveFilters}
+                  className="h-8 px-2.5 text-[#3F6E20] hover:bg-[#68A243]/10 hover:text-[#3F6E20] disabled:opacity-40 disabled:hover:bg-transparent dark:text-[#9FD27B] dark:hover:bg-[#68A243]/10 dark:hover:text-[#9FD27B]"
+                >
+                  <RotateCcw className="h-4 w-4" />
+                  Limpiar
+                </Button>
+              </div>
             </CardHeader>
-            <CardContent className="pt-6">
-              <div className="grid grid-cols-1 lg:grid-cols-[220px_220px_minmax(0,1fr)] gap-4">
-                <div className="space-y-2">
-                  <p className="text-sm font-medium text-[#143E29] dark:text-white">
+            <CardContent className="px-5 py-4">
+              <div className="grid grid-cols-1 gap-3 lg:grid-cols-[220px_220px_minmax(0,1fr)] xl:grid-cols-[240px_240px_minmax(0,1fr)]">
+                <div className="space-y-1.5">
+                  <label className="text-xs font-medium text-[#143E29] dark:text-white">
                     Ronda
-                  </p>
+                  </label>
                   <Select
                     value={selectedEventId || undefined}
                     onValueChange={setSelectedEventId}
                     disabled={isLoadingEvents || eventos.length === 0}
                   >
-                    <SelectTrigger className="border-[#68A243]/20 dark:border-[#68A243]/30 dark:bg-[#0f2f25] dark:text-white">
+                    <SelectTrigger className="h-10 w-full border-[#68A243]/20 bg-white dark:border-[#68A243]/30 dark:bg-[#0f2f25] dark:text-white">
                       <SelectValue placeholder="Seleccioná una ronda" />
                     </SelectTrigger>
                     <SelectContent>
@@ -737,12 +777,12 @@ export default function MeetingsSummary() {
                   </Select>
                 </div>
 
-                <div className="space-y-2">
-                  <p className="text-sm font-medium text-[#143E29] dark:text-white">
+                <div className="space-y-1.5">
+                  <label className="text-xs font-medium text-[#143E29] dark:text-white">
                     Turno
-                  </p>
+                  </label>
                   <Select value={turnoFilter} onValueChange={setTurnoFilter}>
-                    <SelectTrigger className="border-[#68A243]/20 dark:border-[#68A243]/30 dark:bg-[#0f2f25] dark:text-white">
+                    <SelectTrigger className="h-10 w-full border-[#68A243]/20 bg-white dark:border-[#68A243]/30 dark:bg-[#0f2f25] dark:text-white">
                       <SelectValue placeholder="Todos los turnos" />
                     </SelectTrigger>
                     <SelectContent>
@@ -756,17 +796,17 @@ export default function MeetingsSummary() {
                   </Select>
                 </div>
 
-                <div className="space-y-2">
-                  <p className="text-sm font-medium text-[#143E29] dark:text-white">
+                <div className="space-y-1.5">
+                  <label className="text-xs font-medium text-[#143E29] dark:text-white">
                     Buscar
-                  </p>
+                  </label>
                   <div className="relative">
-                    <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                    <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                     <Input
                       value={searchTerm}
                       onChange={(event) => setSearchTerm(event.target.value)}
                       placeholder="Empresa, representante, email o mesa"
-                      className="pl-9 border-[#68A243]/20 dark:border-[#68A243]/30 dark:bg-[#0f2f25] dark:text-white"
+                      className="h-10 w-full pl-9 border-[#68A243]/20 bg-white dark:border-[#68A243]/30 dark:bg-[#0f2f25] dark:text-white"
                     />
                   </div>
                 </div>
@@ -774,228 +814,410 @@ export default function MeetingsSummary() {
             </CardContent>
           </Card>
 
-          <section className="space-y-4">
-            <div className="flex items-center justify-between gap-3">
-              <div>
-                <h2 className="text-2xl font-bold text-[#143E29] dark:text-white">
-                  Mesas por turno
-                </h2>
-                <p className="text-sm text-muted-foreground dark:text-gray-300">
-                  Estado actual de cada mesa, con anfitriona y participantes.
-                </p>
+          <section className="space-y-4" aria-label="Vistas del resumen">
+            <Tabs
+              value={activeView}
+              onValueChange={(value) =>
+                setActiveView(value as "mesas" | "tabla")
+              }
+              className="space-y-4"
+            >
+              <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                <TabsList className="h-auto flex w-full flex-col gap-2 rounded-2xl bg-[#68A243]/8 p-2 md:inline-flex md:w-auto md:flex-row dark:bg-[#0f2f25]">
+                  <TabsTrigger
+                    value="tabla"
+                    className="rounded-xl px-4 py-2.5 data-[state=active]:bg-white data-[state=active]:text-[#143E29] dark:data-[state=active]:bg-[#143E29] dark:data-[state=active]:text-white"
+                    aria-label="Mostrar vista tabular del resumen"
+                  >
+                    <TableProperties className="h-4 w-4" />
+                    Tabla
+                  </TabsTrigger>
+                  <TabsTrigger
+                    value="mesas"
+                    className="rounded-xl px-4 py-2.5 data-[state=active]:bg-white data-[state=active]:text-[#143E29] dark:data-[state=active]:bg-[#143E29] dark:data-[state=active]:text-white"
+                    aria-label="Mostrar vista en tarjetas del resumen"
+                  >
+                    <LayoutGrid className="h-4 w-4" />
+                    Tarjetas
+                  </TabsTrigger>
+                </TabsList>
+
+                <div
+                  aria-live="polite"
+                  className="text-sm text-muted-foreground dark:text-gray-300"
+                >
+                  {isLoading
+                    ? "Cargando reuniones"
+                    : `${filteredTableSummaries.length} mesas y ${filteredRows.length} registros`}
+                </div>
               </div>
-              {!isLoading && (
-                <Badge className="bg-[#68A243]/10 text-[#3F6E20] border-[#68A243]/20 dark:bg-[#68A243]/15 dark:text-[#9FD27B] dark:border-[#68A243]/30">
-                  {filteredTableSummaries.length} mesas visibles
-                </Badge>
-              )}
-            </div>
 
-            {isLoading ? (
-              <div className="grid grid-cols-1 xl:grid-cols-2 gap-5">
-                {Array.from({ length: 4 }).map((_, index) => (
-                  <MeetingCardSkeleton key={index} />
-                ))}
-              </div>
-            ) : filteredTableSummaries.length > 0 ? (
-              <div className="grid grid-cols-1 xl:grid-cols-2 gap-5">
-                {filteredTableSummaries.map((tableSummary) => {
-                  const occupancyBadge = getOccupancyBadge(
-                    tableSummary.estadoMesa,
-                  );
-                  const turnoBadge = formatTurnoStatus(
-                    tableSummary.turnoEstado,
-                  );
+              <TabsContent value="mesas" className="mt-0 space-y-4">
+                {isLoading ? (
+                  <div className="grid grid-cols-1 xl:grid-cols-2 gap-5">
+                    {Array.from({ length: 4 }).map((_, index) => (
+                      <MeetingCardSkeleton key={index} />
+                    ))}
+                  </div>
+                ) : filteredTableSummaries.length > 0 ? (
+                  <div className="grid grid-cols-1 xl:grid-cols-2 gap-5">
+                    {filteredTableSummaries.map((tableSummary) => {
+                      const occupancyBadge = getOccupancyBadge(
+                        tableSummary.estadoMesa,
+                      );
+                      const turnoBadge = formatTurnoStatus(
+                        tableSummary.turnoEstado,
+                      );
 
-                  return (
-                    <Card
-                      key={tableSummary.key}
-                      className="border-[#68A243]/20 dark:border-[#68A243]/25 dark:bg-[#143E29] overflow-hidden"
-                    >
-                      <CardHeader className="border-b border-[#68A243]/10 dark:border-[#68A243]/20">
-                        <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
-                          <div className="space-y-3">
-                            <div className="flex items-center gap-2 flex-wrap">
-                              <CardTitle className="text-xl text-[#143E29] dark:text-white">
-                                Mesa {tableSummary.mesaNumero}
-                              </CardTitle>
-                              <Badge className={occupancyBadge.className}>
-                                {occupancyBadge.label}
-                              </Badge>
-                              <Badge className={turnoBadge.className}>
-                                {turnoBadge.label}
-                              </Badge>
-                            </div>
-                            <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground dark:text-gray-300">
-                              <span className="inline-flex items-center gap-2">
-                                <Clock3 className="h-4 w-4" />
-                                {tableSummary.turnoHorario}
-                              </span>
-                              <span className="inline-flex items-center gap-2">
-                                <Users className="h-4 w-4" />
-                                {tableSummary.ocupacionActual}/2 asientos
-                                ocupados
-                              </span>
-                            </div>
-                          </div>
-
-                          <div className="rounded-2xl border border-[#68A243]/15 bg-[#68A243]/5 px-4 py-3 min-w-[180px] dark:bg-[#0f2f25] dark:border-[#68A243]/20">
-                            <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground dark:text-gray-400">
-                              Empresa anfitriona
-                            </p>
-                            <p className="mt-2 font-semibold text-[#143E29] dark:text-white">
-                              {tableSummary.anfitrionaEmpresa ?? "Sin definir"}
-                            </p>
-                          </div>
-                        </div>
-                      </CardHeader>
-
-                      <CardContent className="pt-6">
-                        {tableSummary.participantes.length > 0 ? (
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                            {tableSummary.participantes.map((participante) => (
-                              <div
-                                key={participante.asientoId}
-                                className="rounded-2xl border border-[#68A243]/15 bg-white/70 dark:bg-[#0f2f25] dark:border-[#68A243]/20 p-4 space-y-3"
-                              >
-                                <div className="flex items-start justify-between gap-3">
-                                  <div>
-                                    <p className="text-xs uppercase tracking-[0.16em] text-muted-foreground dark:text-gray-400">
-                                      Empresa
-                                    </p>
-                                    <p className="mt-1 font-semibold text-[#143E29] dark:text-white">
-                                      {participante.empresaNombre}
-                                    </p>
-                                  </div>
-                                  {participante.anfitriona && (
-                                    <Badge className="bg-[#68A243]/15 text-[#3F6E20] border-[#68A243]/30 dark:bg-[#68A243]/20 dark:text-[#9FD27B] dark:border-[#68A243]/40">
-                                      Anfitriona
-                                    </Badge>
-                                  )}
+                      return (
+                        <Card
+                          key={tableSummary.key}
+                          className="border-[#68A243]/20 dark:border-[#68A243]/25 dark:bg-[#143E29] overflow-hidden"
+                        >
+                          <CardHeader className="border-b border-[#68A243]/10 dark:border-[#68A243]/20 space-y-4">
+                            <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+                              <div className="space-y-3">
+                                <div className="flex items-center gap-2 flex-wrap">
+                                  <CardTitle className="text-xl text-[#143E29] dark:text-white">
+                                    Mesa {tableSummary.mesaNumero}
+                                  </CardTitle>
+                                  <Badge className={occupancyBadge.className}>
+                                    {occupancyBadge.label}
+                                  </Badge>
+                                  <Badge className={turnoBadge.className}>
+                                    {turnoBadge.label}
+                                  </Badge>
                                 </div>
-
-                                <div className="space-y-2 text-sm text-muted-foreground dark:text-gray-300">
-                                  <p className="inline-flex items-center gap-2">
-                                    <UserRound className="h-4 w-4" />
-                                    {participante.representanteNombre ||
-                                      "Sin representante"}
-                                  </p>
-                                  <p className="inline-flex items-center gap-2 break-all">
-                                    <Mail className="h-4 w-4" />
-                                    {participante.representanteEmail ||
-                                      "Sin email"}
-                                  </p>
+                                <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground dark:text-gray-300">
+                                  <span className="inline-flex items-center gap-2">
+                                    <Clock3 className="h-4 w-4" />
+                                    {tableSummary.turnoHorario}
+                                  </span>
+                                  <span className="inline-flex items-center gap-2">
+                                    <Users className="h-4 w-4" />
+                                    {tableSummary.ocupacionActual}/2 asientos
+                                    ocupados
+                                  </span>
                                 </div>
                               </div>
-                            ))}
-                          </div>
-                        ) : (
-                          <div className="rounded-2xl border border-dashed border-slate-300 dark:border-slate-700 p-6 text-center text-sm text-muted-foreground dark:text-gray-300">
-                            Esta mesa todavía no tiene asientos ocupados.
-                          </div>
-                        )}
-                      </CardContent>
-                    </Card>
-                  );
-                })}
-              </div>
-            ) : (
-              <Card className="border-[#68A243]/20 dark:border-[#68A243]/25 dark:bg-[#143E29]">
-                <CardContent className="py-12 text-center space-y-2">
-                  <p className="text-lg font-semibold text-[#143E29] dark:text-white">
-                    No hay reuniones para mostrar
-                  </p>
-                  <p className="text-sm text-muted-foreground dark:text-gray-300">
-                    Ajustá los filtros o esperá a que las empresas ocupen mesas.
-                  </p>
-                </CardContent>
-              </Card>
-            )}
-          </section>
 
-          <Card className="border-[#68A243]/20 dark:border-[#68A243]/25 dark:bg-[#143E29] overflow-hidden">
-            <CardHeader className="border-b border-[#68A243]/10 dark:border-[#68A243]/20">
-              <CardTitle className="text-[#143E29] dark:text-white">
-                Vista tabular
-              </CardTitle>
-              <CardDescription className="dark:text-gray-300">
-                Detalle de cada asiento por turno y mesa, listo para control
-                rápido.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="p-0">
-              <ScrollArea className="w-full">
-                <Table>
-                  <TableHeader>
-                    <TableRow className="hover:bg-transparent dark:border-[#68A243]/20">
-                      <TableHead>Turno</TableHead>
-                      <TableHead>Mesa</TableHead>
-                      <TableHead>Estado</TableHead>
-                      <TableHead>Empresa</TableHead>
-                      <TableHead>Representante</TableHead>
-                      <TableHead>Email</TableHead>
-                      <TableHead>Anfitriona</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {filteredRows.length > 0 ? (
-                      filteredRows.map((row) => {
-                        const occupancyBadge = getOccupancyBadge(
-                          row.estadoMesa,
-                        );
+                              <div className="rounded-2xl border border-[#68A243]/15 bg-[#68A243]/5 px-4 py-3 min-w-[180px] dark:bg-[#0f2f25] dark:border-[#68A243]/20">
+                                <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground dark:text-gray-400">
+                                  Empresa anfitriona
+                                </p>
+                                <p className="mt-2 font-semibold text-[#143E29] dark:text-white">
+                                  {tableSummary.anfitrionaEmpresa ??
+                                    "Sin definir"}
+                                </p>
+                              </div>
+                            </div>
 
-                        return (
-                          <TableRow
-                            key={row.key}
-                            className="dark:border-[#68A243]/15"
-                          >
-                            <TableCell className="min-w-[140px] font-medium text-[#143E29] dark:text-white">
-                              {row.turnoHorario}
-                            </TableCell>
-                            <TableCell>Mesa {row.mesaNumero}</TableCell>
-                            <TableCell>
-                              <Badge className={occupancyBadge.className}>
-                                {occupancyBadge.label}
-                              </Badge>
-                            </TableCell>
-                            <TableCell>
-                              {row.empresaNombre || "Sin ocupar"}
-                            </TableCell>
-                            <TableCell>
-                              {row.representanteNombre || "Sin representante"}
-                            </TableCell>
-                            <TableCell className="min-w-[220px]">
-                              {row.representanteEmail || "-"}
-                            </TableCell>
-                            <TableCell>
-                              {row.anfitriona ? (
-                                <Badge className="bg-[#68A243]/15 text-[#3F6E20] border-[#68A243]/30 dark:bg-[#68A243]/20 dark:text-[#9FD27B] dark:border-[#68A243]/40">
-                                  Sí
-                                </Badge>
-                              ) : (
-                                "-"
-                              )}
-                            </TableCell>
+                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                              <div className="rounded-2xl border border-[#68A243]/15 bg-white/70 dark:bg-[#0f2f25] dark:border-[#68A243]/20 p-4">
+                                <p className="text-xs uppercase tracking-[0.16em] text-muted-foreground dark:text-gray-400">
+                                  Participantes
+                                </p>
+                                <p className="mt-2 text-2xl font-bold text-[#143E29] dark:text-white">
+                                  {tableSummary.participantes.length}
+                                </p>
+                              </div>
+                              <div className="rounded-2xl border border-[#68A243]/15 bg-white/70 dark:bg-[#0f2f25] dark:border-[#68A243]/20 p-4">
+                                <p className="text-xs uppercase tracking-[0.16em] text-muted-foreground dark:text-gray-400">
+                                  Representación
+                                </p>
+                                <p className="mt-2 font-semibold text-[#143E29] dark:text-white">
+                                  {tableSummary.participantes.some(
+                                    (participante) => participante.anfitriona,
+                                  )
+                                    ? "Con anfitriona"
+                                    : "Sin anfitriona"}
+                                </p>
+                              </div>
+                              <div className="rounded-2xl border border-[#68A243]/15 bg-white/70 dark:bg-[#0f2f25] dark:border-[#68A243]/20 p-4">
+                                <p className="text-xs uppercase tracking-[0.16em] text-muted-foreground dark:text-gray-400">
+                                  Estado rápido
+                                </p>
+                                <p className="mt-2 font-semibold text-[#143E29] dark:text-white">
+                                  {occupancyBadge.label}
+                                </p>
+                              </div>
+                            </div>
+                          </CardHeader>
+
+                          <CardContent className="pt-5 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                            <div className="text-sm text-muted-foreground dark:text-gray-300">
+                              {tableSummary.participantes.length > 0
+                                ? `${tableSummary.participantes
+                                    .map(
+                                      (participante) =>
+                                        participante.empresaNombre,
+                                    )
+                                    .join(" · ")}`
+                                : "Esta mesa todavía no tiene asientos ocupados."}
+                            </div>
+                            <Button
+                              variant="outline"
+                              onClick={() =>
+                                setSelectedTableSummary(tableSummary)
+                              }
+                              className="border-[#68A243]/30 text-[#68A243] hover:bg-[#68A243] hover:text-white"
+                              aria-label={`Ver detalle de la mesa ${tableSummary.mesaNumero}`}
+                            >
+                              Ver detalle
+                            </Button>
+                          </CardContent>
+                        </Card>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <Card className="border-[#68A243]/20 dark:border-[#68A243]/25 dark:bg-[#143E29]">
+                    <CardContent className="py-12 text-center space-y-2">
+                      <p className="text-lg font-semibold text-[#143E29] dark:text-white">
+                        No hay reuniones para mostrar
+                      </p>
+                      <p className="text-sm text-muted-foreground dark:text-gray-300">
+                        Ajustá los filtros o esperá a que las empresas ocupen
+                        mesas.
+                      </p>
+                    </CardContent>
+                  </Card>
+                )}
+              </TabsContent>
+
+              <TabsContent value="tabla" className="mt-0">
+                <Card className="border-[#68A243]/20 dark:border-[#68A243]/25 dark:bg-[#143E29] overflow-hidden">
+                  <CardHeader className="border-b border-[#68A243]/10 dark:border-[#68A243]/20">
+                    <CardTitle className="text-[#143E29] dark:text-white">
+                      Vista tabular
+                    </CardTitle>
+                    <CardDescription className="dark:text-gray-300">
+                      Una fila por mesa para ver rápido qué empresa anfitriona
+                      se cruza con qué empresa invitada.
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="p-0">
+                    <ScrollArea className="w-full">
+                      <Table>
+                        <TableHeader>
+                          <TableRow className="hover:bg-transparent dark:border-[#68A243]/20">
+                            <TableHead>Turno</TableHead>
+                            <TableHead>Mesa</TableHead>
+                            <TableHead>Estado</TableHead>
+                            <TableHead>Anfitriona</TableHead>
+                            <TableHead>Invitada</TableHead>
                           </TableRow>
-                        );
-                      })
-                    ) : (
-                      <TableRow className="hover:bg-transparent dark:border-[#68A243]/15">
-                        <TableCell
-                          colSpan={7}
-                          className="py-10 text-center text-muted-foreground dark:text-gray-300"
-                        >
-                          No hay registros para el filtro actual.
-                        </TableCell>
-                      </TableRow>
-                    )}
-                  </TableBody>
-                </Table>
-              </ScrollArea>
-            </CardContent>
-          </Card>
+                        </TableHeader>
+                        <TableBody>
+                          {filteredTableSummaries.length > 0 ? (
+                            filteredTableSummaries.map((tableSummary) => {
+                              const anfitriona =
+                                tableSummary.participantes.find(
+                                  (participante) => participante.anfitriona,
+                                ) ?? null;
+                              const invitada =
+                                tableSummary.participantes.find(
+                                  (participante) => !participante.anfitriona,
+                                ) ?? null;
+                              const occupancyBadge = getOccupancyBadge(
+                                tableSummary.estadoMesa,
+                              );
+
+                              return (
+                                <TableRow
+                                  key={tableSummary.key}
+                                  className="dark:border-[#68A243]/15"
+                                >
+                                  <TableCell className="min-w-[140px] font-medium text-[#143E29] dark:text-white">
+                                    {tableSummary.turnoHorario}
+                                  </TableCell>
+                                  <TableCell>
+                                    Mesa {tableSummary.mesaNumero}
+                                  </TableCell>
+                                  <TableCell>
+                                    <Badge className={occupancyBadge.className}>
+                                      {occupancyBadge.label}
+                                    </Badge>
+                                  </TableCell>
+                                  <TableCell className="min-w-[280px] align-top">
+                                    {anfitriona ? (
+                                      <div className="space-y-1 py-1">
+                                        <p className="font-semibold text-[#143E29] dark:text-white">
+                                          {anfitriona.empresaNombre}
+                                        </p>
+                                        <p className="text-sm text-muted-foreground dark:text-gray-300">
+                                          {anfitriona.representanteNombre ||
+                                            "Sin representante"}
+                                        </p>
+                                        <p className="text-sm text-muted-foreground dark:text-gray-400 break-all">
+                                          {anfitriona.representanteEmail ||
+                                            "Sin email"}
+                                        </p>
+                                      </div>
+                                    ) : (
+                                      <span className="text-sm text-muted-foreground dark:text-gray-300">
+                                        Sin anfitriona asignada
+                                      </span>
+                                    )}
+                                  </TableCell>
+                                  <TableCell className="min-w-[280px] align-top">
+                                    {invitada ? (
+                                      <div className="space-y-1 py-1">
+                                        <p className="font-semibold text-[#143E29] dark:text-white">
+                                          {invitada.empresaNombre}
+                                        </p>
+                                        <p className="text-sm text-muted-foreground dark:text-gray-300">
+                                          {invitada.representanteNombre ||
+                                            "Sin representante"}
+                                        </p>
+                                        <p className="text-sm text-muted-foreground dark:text-gray-400 break-all">
+                                          {invitada.representanteEmail ||
+                                            "Sin email"}
+                                        </p>
+                                      </div>
+                                    ) : (
+                                      <span className="text-sm text-muted-foreground dark:text-gray-300">
+                                        Sin invitada asignada
+                                      </span>
+                                    )}
+                                  </TableCell>
+                                </TableRow>
+                              );
+                            })
+                          ) : (
+                            <TableRow className="hover:bg-transparent dark:border-[#68A243]/15">
+                              <TableCell
+                                colSpan={5}
+                                className="py-10 text-center text-muted-foreground dark:text-gray-300"
+                              >
+                                No hay registros para el filtro actual.
+                              </TableCell>
+                            </TableRow>
+                          )}
+                        </TableBody>
+                      </Table>
+                    </ScrollArea>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+            </Tabs>
+          </section>
         </div>
       </main>
+
+      <Dialog
+        open={Boolean(selectedTableSummary)}
+        onOpenChange={(open) => {
+          if (!open) {
+            setSelectedTableSummary(null);
+          }
+        }}
+      >
+        <DialogContent className="sm:max-w-3xl border-[#68A243]/20 dark:border-[#68A243]/25 bg-white dark:bg-[#11161d]">
+          {selectedTableSummary ? (
+            <>
+              <DialogHeader>
+                <DialogTitle className="text-[#143E29] dark:text-white flex items-center gap-2">
+                  Mesa {selectedTableSummary.mesaNumero}
+                  <Badge
+                    className={
+                      getOccupancyBadge(selectedTableSummary.estadoMesa)
+                        .className
+                    }
+                  >
+                    {getOccupancyBadge(selectedTableSummary.estadoMesa).label}
+                  </Badge>
+                </DialogTitle>
+                <DialogDescription className="dark:text-gray-300">
+                  Turno {selectedTableSummary.turnoHorario}. Revisá
+                  participantes, empresa anfitriona y estado actual de
+                  ocupación.
+                </DialogDescription>
+              </DialogHeader>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="rounded-2xl border border-[#68A243]/15 bg-[#68A243]/5 dark:bg-[#0f2f25] dark:border-[#68A243]/20 p-4">
+                  <p className="text-xs uppercase tracking-[0.16em] text-muted-foreground dark:text-gray-400">
+                    Estado del turno
+                  </p>
+                  <div className="mt-2">
+                    <Badge
+                      className={
+                        formatTurnoStatus(selectedTableSummary.turnoEstado)
+                          .className
+                      }
+                    >
+                      {
+                        formatTurnoStatus(selectedTableSummary.turnoEstado)
+                          .label
+                      }
+                    </Badge>
+                  </div>
+                </div>
+                <div className="rounded-2xl border border-[#68A243]/15 bg-[#68A243]/5 dark:bg-[#0f2f25] dark:border-[#68A243]/20 p-4">
+                  <p className="text-xs uppercase tracking-[0.16em] text-muted-foreground dark:text-gray-400">
+                    Ocupación
+                  </p>
+                  <p className="mt-2 text-2xl font-bold text-[#143E29] dark:text-white">
+                    {selectedTableSummary.ocupacionActual}/2
+                  </p>
+                </div>
+                <div className="rounded-2xl border border-[#68A243]/15 bg-[#68A243]/5 dark:bg-[#0f2f25] dark:border-[#68A243]/20 p-4">
+                  <p className="text-xs uppercase tracking-[0.16em] text-muted-foreground dark:text-gray-400">
+                    Empresa anfitriona
+                  </p>
+                  <p className="mt-2 font-semibold text-[#143E29] dark:text-white">
+                    {selectedTableSummary.anfitrionaEmpresa ?? "Sin definir"}
+                  </p>
+                </div>
+              </div>
+
+              {selectedTableSummary.participantes.length > 0 ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  {selectedTableSummary.participantes.map((participante) => (
+                    <div
+                      key={participante.asientoId}
+                      className="rounded-2xl border border-[#68A243]/15 bg-white/70 dark:bg-[#0f2f25] dark:border-[#68A243]/20 p-4 space-y-3"
+                    >
+                      <div className="flex items-start justify-between gap-3">
+                        <div>
+                          <p className="text-xs uppercase tracking-[0.16em] text-muted-foreground dark:text-gray-400">
+                            Empresa
+                          </p>
+                          <p className="mt-1 font-semibold text-[#143E29] dark:text-white">
+                            {participante.empresaNombre}
+                          </p>
+                        </div>
+                        {participante.anfitriona && (
+                          <Badge className="bg-[#68A243]/15 text-[#3F6E20] border-[#68A243]/30 dark:bg-[#68A243]/20 dark:text-[#9FD27B] dark:border-[#68A243]/40">
+                            Anfitriona
+                          </Badge>
+                        )}
+                      </div>
+
+                      <div className="space-y-2 text-sm text-muted-foreground dark:text-gray-300">
+                        <p className="inline-flex items-center gap-2">
+                          <UserRound className="h-4 w-4" />
+                          {participante.representanteNombre ||
+                            "Sin representante"}
+                        </p>
+                        <p className="inline-flex items-center gap-2 break-all">
+                          <Mail className="h-4 w-4" />
+                          {participante.representanteEmail || "Sin email"}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="rounded-2xl border border-dashed border-slate-300 dark:border-slate-700 p-6 text-center text-sm text-muted-foreground dark:text-gray-300">
+                  Esta mesa todavía no tiene asientos ocupados.
+                </div>
+              )}
+            </>
+          ) : null}
+        </DialogContent>
+      </Dialog>
 
       <Footer />
     </div>
