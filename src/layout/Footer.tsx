@@ -60,10 +60,10 @@ export default function Footer() {
               <li className="flex items-start gap-2 text-gray-300">
                 <Mail className="h-5 w-5 text-secondary mt-0.5 flex-shrink-0" />
                 <a
-                  href="mailto:info@rondanegocios.com"
+                  href="mailto:secretaria.produccion@trenquelauquen.gov.ar"
                   className="hover:text-accent transition-colors"
                 >
-                  info@rondanegocios.com
+                  secretaria.produccion@trenquelauquen.gov.ar
                 </a>
               </li>
             </ul>
@@ -106,7 +106,7 @@ export default function Footer() {
               </p>
               <span className="hidden sm:inline text-gray-400/60">•</span>
               <p className="text-xs text-gray-300/80">
-                oficinaempleotrenque@gmail.com
+                beta {import.meta.env.VITE_APP_VERSION}
               </p>
             </div>
 
