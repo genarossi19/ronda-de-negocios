@@ -132,8 +132,7 @@ export function useSessionExpiryGuard() {
     const triggerOneMinuteWarning = () => {
       if (warnedTokenExpiryRef.current !== decoded.exp) {
         warnedTokenExpiryRef.current = decoded.exp;
-        toast.warning("Tu sesion expira en 1 minuto", {
-          description: "Guarda tus cambios para evitar perder progreso.",
+        toast.warning("Tu sesión expira en 1 minuto", {
           duration: 7000,
         });
       }

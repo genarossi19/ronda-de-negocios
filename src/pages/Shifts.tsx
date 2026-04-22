@@ -125,7 +125,11 @@ export default function Shifts() {
       case "full":
         return <Badge variant="destructive">Completo</Badge>;
       case "cerrado":
-        return <Badge variant="secondary">Cerrado</Badge>;
+        return (
+          <Badge className="bg-gray-400 text-gray-800 hover:bg-gray-500 dark:bg-gray-600 dark:text-gray-100 dark:hover:bg-gray-700">
+            Cerrado
+          </Badge>
+        );
       default:
         return null;
     }
@@ -348,7 +352,11 @@ export default function Shifts() {
               {filteredShifts.map((shift, index) => (
                 <Card
                   key={shift.id}
-                  className="hover:shadow-lg transition-all duration-300 border-2 hover:border-[#68A243]/30 dark:bg-[#143E29] dark:border-[#68A243]/20 dark:hover:shadow-lg dark:hover:shadow-[#68A243]/20 dark:hover:border-[#68A243]/40"
+                  className={`hover:shadow-lg transition-all duration-300 border-2 dark:bg-[#143E29] dark:border-[#68A243]/20 dark:hover:shadow-lg dark:hover:shadow-[#68A243]/20 ${
+                    shift.estado === "cerrado"
+                      ? "opacity-50 hover:shadow-none hover:border-[#68A243]/20 dark:hover:shadow-none dark:hover:border-[#68A243]/20"
+                      : "hover:border-[#68A243]/30 dark:hover:border-[#68A243]/40"
+                  }`}
                   style={{
                     animation: `fadeInUp 0.5s ease-out ${index * 0.1}s both`,
                   }}
@@ -430,11 +438,15 @@ export default function Shifts() {
 
                     <Button
                       onClick={() => navigate(`/mesas/${shift.id}`)}
-                      disabled={shift.estado === "full"}
+                      disabled={
+                        shift.estado === "full" || shift.estado === "cerrado"
+                      }
                       className="w-full bg-[#68A243] hover:bg-[#68A243]/90 text-white font-semibold py-6 text-base disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       {shift.estado === "full" ? (
                         "Turno Completo"
+                      ) : shift.estado === "cerrado" ? (
+                        "Turno Cerrado"
                       ) : (
                         <>
                           Ver Mesas Disponibles
