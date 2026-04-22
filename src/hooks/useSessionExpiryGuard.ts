@@ -1,10 +1,12 @@
 import { useCallback, useEffect, useRef } from "react";
 import Cookies from "js-cookie";
+import { toast } from "sonner";
 import { triggerSessionExpired } from "../lib/axios";
 import { useUserStore } from "../store/userStore";
 
 const TOKEN_COOKIE_NAME = "token";
 const SESSION_EXPIRY_GRACE_MS = 250;
+const SESSION_WARNING_THRESHOLD_SECONDS = 60;
 
 type TokenExpiryPayload = {
   exp: number;
@@ -32,7 +34,14 @@ function decodeTokenExpiry(token: string): TokenExpiryPayload | null {
 
 export function useSessionExpiryGuard() {
   const isAuthenticated = useUserStore((state) => state.isAuthenticated);
+  const setSessionSecondsRemaining = useUserStore(
+    (state) => state.setSessionSecondsRemaining,
+  );
   const timeoutRef = useRef<number | null>(null);
+  const warningTimeoutRef = useRef<number | null>(null);
+  const countdownIntervalRef = useRef<number | null>(null);
+  const warnedTokenExpiryRef = useRef<number | null>(null);
+  const activeTokenExpiryRef = useRef<number | null>(null);
 
   const clearScheduledExpiration = useCallback(() => {
     if (timeoutRef.current !== null) {
@@ -41,8 +50,53 @@ export function useSessionExpiryGuard() {
     }
   }, []);
 
-  const scheduleSessionExpiration = useCallback(() => {
+  const clearWarningTimeout = useCallback(() => {
+    if (warningTimeoutRef.current !== null) {
+      window.clearTimeout(warningTimeoutRef.current);
+      warningTimeoutRef.current = null;
+    }
+  }, []);
+
+  const clearCountdownInterval = useCallback(() => {
+    if (countdownIntervalRef.current !== null) {
+      window.clearInterval(countdownIntervalRef.current);
+      countdownIntervalRef.current = null;
+    }
+    setSessionSecondsRemaining(null);
+  }, [setSessionSecondsRemaining]);
+
+  const clearAllSessionTimers = useCallback(() => {
     clearScheduledExpiration();
+    clearWarningTimeout();
+    clearCountdownInterval();
+  }, [clearCountdownInterval, clearScheduledExpiration, clearWarningTimeout]);
+
+  const startCountdown = useCallback(
+    (tokenExpirySeconds: number) => {
+      clearCountdownInterval();
+
+      const updateCountdown = () => {
+        const remainingSeconds = Math.max(
+          0,
+          Math.ceil(tokenExpirySeconds - Date.now() / 1000),
+        );
+
+        if (remainingSeconds <= 0) {
+          clearCountdownInterval();
+          return;
+        }
+
+        setSessionSecondsRemaining(remainingSeconds);
+      };
+
+      updateCountdown();
+      countdownIntervalRef.current = window.setInterval(updateCountdown, 1000);
+    },
+    [clearCountdownInterval, setSessionSecondsRemaining],
+  );
+
+  const scheduleSessionExpiration = useCallback(() => {
+    clearAllSessionTimers();
 
     const token = Cookies.get(TOKEN_COOKIE_NAME);
 
@@ -60,6 +114,11 @@ export function useSessionExpiryGuard() {
       return;
     }
 
+    if (activeTokenExpiryRef.current !== decoded.exp) {
+      activeTokenExpiryRef.current = decoded.exp;
+      warnedTokenExpiryRef.current = null;
+    }
+
     const millisecondsUntilExpiration = decoded.exp * 1000 - Date.now();
 
     if (millisecondsUntilExpiration <= 0) {
@@ -67,14 +126,39 @@ export function useSessionExpiryGuard() {
       return;
     }
 
+    const warningMilliseconds =
+      millisecondsUntilExpiration - SESSION_WARNING_THRESHOLD_SECONDS * 1000;
+
+    const triggerOneMinuteWarning = () => {
+      if (warnedTokenExpiryRef.current !== decoded.exp) {
+        warnedTokenExpiryRef.current = decoded.exp;
+        toast.warning("Tu sesion expira en 1 minuto", {
+          description: "Guarda tus cambios para evitar perder progreso.",
+          duration: 7000,
+        });
+      }
+      startCountdown(decoded.exp);
+    };
+
+    if (warningMilliseconds <= 0) {
+      triggerOneMinuteWarning();
+    } else {
+      warningTimeoutRef.current = window.setTimeout(
+        triggerOneMinuteWarning,
+        warningMilliseconds,
+      );
+    }
+
     timeoutRef.current = window.setTimeout(() => {
       triggerSessionExpired();
     }, millisecondsUntilExpiration + SESSION_EXPIRY_GRACE_MS);
-  }, [clearScheduledExpiration]);
+  }, [clearAllSessionTimers, startCountdown]);
 
   useEffect(() => {
     if (!isAuthenticated) {
-      clearScheduledExpiration();
+      activeTokenExpiryRef.current = null;
+      warnedTokenExpiryRef.current = null;
+      clearAllSessionTimers();
       return;
     }
 
@@ -89,9 +173,9 @@ export function useSessionExpiryGuard() {
     document.addEventListener("visibilitychange", handleVisibilityChange);
 
     return () => {
-      clearScheduledExpiration();
+      clearAllSessionTimers();
       window.removeEventListener("focus", scheduleSessionExpiration);
       document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
-  }, [clearScheduledExpiration, isAuthenticated, scheduleSessionExpiration]);
+  }, [clearAllSessionTimers, isAuthenticated, scheduleSessionExpiration]);
 }
