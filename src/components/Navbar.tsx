@@ -13,12 +13,16 @@ import { Badge } from "../components/ui/badge";
 import { useState, useEffect, useRef } from "react";
 import { useAuth } from "../hooks/useAuth";
 import { useCurrentUser } from "../hooks/useCurrentUser";
+import { useUserStore } from "../store/userStore";
 import { Link, useLocation, useNavigate } from "react-router";
 import { ThemeToggle } from "./ThemeToggle";
 import { cn } from "../lib/utils";
 
 export default function Navbar() {
   const { user, isAuthenticated, isPendingApproval } = useCurrentUser();
+  const sessionSecondsRemaining = useUserStore(
+    (state) => state.sessionSecondsRemaining,
+  );
   const { logout } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
@@ -28,6 +32,19 @@ export default function Navbar() {
   const [globalDarkMode, setGlobalDarkMode] = useState(false);
   const lastScrollY = useRef(0);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+
+  const getSessionCountdownLabel = () => {
+    if (sessionSecondsRemaining === null) return null;
+
+    const minutes = Math.floor(sessionSecondsRemaining / 60)
+      .toString()
+      .padStart(2, "0");
+    const seconds = (sessionSecondsRemaining % 60).toString().padStart(2, "0");
+
+    return `${minutes}:${seconds}`;
+  };
+
+  const sessionCountdownLabel = getSessionCountdownLabel();
 
   useEffect(() => {
     // Detectar dark mode global
@@ -285,19 +302,47 @@ export default function Navbar() {
 
           {/* Derecha - User Section */}
           <div className="flex items-center gap-3">
-            {isPendingApproval && (
-              <div
-                className={cn(
-                  "hidden md:inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs font-medium transition-colors duration-300",
-                  isDarkTheme
-                    ? "border-amber-400/30 bg-amber-400/15 text-amber-100"
-                    : "border-amber-200 bg-amber-50 text-amber-800",
+            {/* Notification rail sin layout shift: slots fijos con opacity-0 */}
+            {isAuthenticated && (
+              <div className="hidden md:flex items-center gap-2">
+                <div
+                  aria-hidden={!sessionCountdownLabel}
+                  className={cn(
+                    "inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-semibold whitespace-nowrap transition-opacity duration-300",
+                    sessionCountdownLabel
+                      ? "opacity-100"
+                      : "opacity-0 pointer-events-none",
+                    isDarkTheme
+                      ? "border-red-400/30 bg-red-400/15 text-red-100"
+                      : "border-red-200 bg-red-50 text-red-800",
+                  )}
+                >
+                  <Clock3 className="h-3.5 w-3.5 flex-shrink-0" />
+                  <span>Sesi&#xF3;n:</span>
+                  <span className="font-mono tabular-nums w-[38px] text-right">
+                    {sessionCountdownLabel ?? "00:00"}
+                  </span>
+                </div>
+                {!user?.is_superuser && (
+                  <div
+                    aria-hidden={!isPendingApproval}
+                    className={cn(
+                      "inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-medium whitespace-nowrap transition-opacity duration-300",
+                      isPendingApproval
+                        ? "opacity-100"
+                        : "opacity-0 pointer-events-none",
+                      isDarkTheme
+                        ? "border-amber-400/30 bg-amber-400/15 text-amber-100"
+                        : "border-amber-200 bg-amber-50 text-amber-800",
+                    )}
+                  >
+                    <Clock3 className="h-3.5 w-3.5 flex-shrink-0" />
+                    Pendiente de aprobaci&#xF3;n
+                  </div>
                 )}
-              >
-                <Clock3 className="h-3.5 w-3.5" />
-                Pendiente de aprobación
               </div>
             )}
+
             <ThemeToggle />
             {isAuthenticated ? (
               <DropdownMenu
@@ -520,6 +565,19 @@ export default function Navbar() {
                             Tu empresa sigue en revisión. Te avisaremos por mail
                             cuando quede aprobada para operar en los turnos.
                           </p>
+                        )}
+                        {sessionCountdownLabel && (
+                          <div
+                            className={cn(
+                              "mt-3 inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs font-semibold",
+                              globalDarkMode
+                                ? "border-red-500/35 bg-red-500/10 text-red-200"
+                                : "border-red-200 bg-red-50 text-red-800",
+                            )}
+                          >
+                            <Clock3 className="h-3.5 w-3.5" />
+                            Sesion: {sessionCountdownLabel}
+                          </div>
                         )}
                       </div>
                     )}

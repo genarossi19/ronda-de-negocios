@@ -201,7 +201,7 @@ export default function Shifts() {
                   Seleccioná un turno y elegí tu mesa para la ronda de negocios
                 </p>
               </div>
-              <div className="hidden md:flex md:flex-col md:items-end md:gap-3">
+              <div className="hidden md:flex md:flex-col md:gap-3">
                 {isAdmin && (
                   <Button
                     onClick={() =>
@@ -211,13 +211,13 @@ export default function Shifts() {
                           : "/gestionar-rondas",
                       )
                     }
-                    className="gap-2 bg-[#68A243] hover:bg-[#5a9038] text-white"
+                    className="w-full h-11 gap-2 bg-[#68A243] hover:bg-[#5a9038] text-white font-semibold"
                   >
                     <Settings className="h-4 w-4" />
                     Gestionar turnos
                   </Button>
                 )}
-                <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 border border-white/20">
+                <div className="w-full bg-white/10 backdrop-blur-sm rounded-lg p-4 border border-white/20">
                   <div className="flex items-center gap-2 text-sm mb-2">
                     <Calendar className="h-4 w-4 text-[#68A243]" />
                     <span className="font-semibold">Fecha del Evento</span>
