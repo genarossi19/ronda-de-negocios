@@ -11,7 +11,9 @@ export interface DecodedToken {
   user_id: number;
   empresa_id: number;
   razon_social: string;
+  email: string;
   is_superuser: boolean;
+  aprobada: boolean;
 }
 
 const TOKEN_COOKIE_NAME = "token";
@@ -74,7 +76,9 @@ export const useAuth = () => {
       user_id: decoded.user_id,
       empresa_id: decoded.empresa_id,
       razon_social: decoded.razon_social,
+      email: decoded.email,
       is_superuser: decoded.is_superuser,
+      aprobada: decoded.aprobada,
       token_type: decoded.token_type,
     });
   }, []); // Solo ejecutar una vez al montar
@@ -111,7 +115,9 @@ export const useAuth = () => {
           user_id: decoded.user_id,
           empresa_id: decoded.empresa_id,
           razon_social: decoded.razon_social,
+          email: decoded.email,
           is_superuser: decoded.is_superuser,
+          aprobada: decoded.aprobada,
           token_type: decoded.token_type,
         };
 

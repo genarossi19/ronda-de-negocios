@@ -7,6 +7,14 @@ import { useUserStore } from "../store/userStore";
 export const useCurrentUser = () => {
   const { user, isAuthenticated } = useUserStore();
   const isAdmin = user?.is_superuser ?? false;
+  const isApprovedCompany = user?.aprobada ?? false;
+  const isPendingApproval = Boolean(user) && !isAdmin && !isApprovedCompany;
   // console.log("[useCurrentUser] user:", user, "isAdmin:", isAdmin);
-  return { user, isAuthenticated, isAdmin };
+  return {
+    user,
+    isAuthenticated,
+    isAdmin,
+    isApprovedCompany,
+    isPendingApproval,
+  };
 };

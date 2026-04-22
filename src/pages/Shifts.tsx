@@ -18,12 +18,15 @@ import {
   ArrowRight,
   AlertCircle,
   Settings,
+  Mail,
+  ShieldAlert,
 } from "lucide-react";
 import { useCurrentUser } from "../hooks/useCurrentUser";
 import { HelpTutorial } from "../components/HelpTutorial";
 import { Link, useNavigate } from "react-router";
 import { getTurnoByEventoId } from "../api/TurnoService";
 import { getEventos } from "../api/EventoService";
+import { getApiErrorMessage } from "../lib/axios";
 import type { EventoResponse } from "../types/Evento";
 import type { TurnoResponse } from "../types/Turno";
 
@@ -45,13 +48,26 @@ export default function Shifts() {
   const [activeEvent, setActiveEvent] = useState<EventoResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const { isAuthenticated, isAdmin } = useCurrentUser();
+  const [approvalNotice, setApprovalNotice] = useState<string | null>(null);
+  const { isAuthenticated, isAdmin, isPendingApproval } = useCurrentUser();
 
   useEffect(() => {
     const fetchTurno = async () => {
+      if (isPendingApproval) {
+        setActiveEvent(null);
+        setShifts([]);
+        setError(null);
+        setApprovalNotice(
+          "Tu empresa todavía no fue aprobada por el equipo administrador. Cuando eso ocurra vas a poder inscribirte a los turnos y recibirás un mail de confirmación. Mientras tanto puedes ver las empresas inscriptas y gestionar tus representantes",
+        );
+        setLoading(false);
+        return;
+      }
+
       try {
         setLoading(true);
         setError(null);
+        setApprovalNotice(null);
         const eventos = await getEventos();
         const eventoActivo = getActiveEvent(eventos);
 
@@ -68,15 +84,33 @@ export default function Shifts() {
         setShifts(data);
       } catch (err) {
         console.error(err);
-        setError(
+        const apiMessage = getApiErrorMessage(
+          err,
           "No se pudieron cargar los turnos. Intentá de nuevo más tarde.",
+        );
+
+        if (
+          apiMessage?.includes(
+            "You do not have permission to perform this action",
+          )
+        ) {
+          setError(null);
+          setApprovalNotice(
+            "Tu empresa todavía no fue aprobada por el equipo administrador. Cuando eso ocurra vas a poder inscribirte a los turnos y recibirás un mail de confirmación.",
+          );
+          return;
+        }
+
+        setError(
+          apiMessage ??
+            "No se pudieron cargar los turnos. Intentá de nuevo más tarde.",
         );
       } finally {
         setLoading(false);
       }
     };
     fetchTurno();
-  }, []);
+  }, [isPendingApproval]);
 
   const filteredShifts = shifts;
 
@@ -243,6 +277,38 @@ export default function Shifts() {
                 </Card>
               ))}
             </div>
+          ) : approvalNotice ? (
+            <Card className="border-amber-200 bg-amber-50 dark:bg-amber-950/15 dark:border-amber-500/20 transition-colors duration-300">
+              <CardHeader>
+                <div className="flex items-center gap-3">
+                  <ShieldAlert className="h-6 w-6 text-amber-700 dark:text-amber-300" />
+                  <CardTitle className="text-amber-800 dark:text-amber-200 transition-colors duration-300">
+                    Tu empresa está pendiente de aprobación
+                  </CardTitle>
+                </div>
+                <CardDescription className="text-amber-900/80 dark:text-amber-100/80 transition-colors duration-300">
+                  {approvalNotice}
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                <div className="flex items-start gap-3 rounded-2xl border border-amber-200/80 bg-white/70 px-4 py-3 dark:border-amber-500/20 dark:bg-[#143E29]/40">
+                  <Mail className="mt-0.5 h-4 w-4 text-amber-700 dark:text-amber-300" />
+                  <p className="text-sm text-amber-900/80 dark:text-amber-100/80">
+                    Te enviaremos un correo cuando la aprobación quede
+                    confirmada y ya puedas reservar tu turno.
+                  </p>
+                </div>
+
+                <Link to="/representantes">
+                  <Button
+                    variant="outline"
+                    className="border-amber-300 text-amber-800 hover:bg-amber-100 dark:border-amber-500/30 dark:text-amber-200 dark:hover:bg-amber-500/10"
+                  >
+                    Revisar representantes
+                  </Button>
+                </Link>
+              </CardContent>
+            </Card>
           ) : error ? (
             <Card className="border-destructive/50 bg-destructive/5 dark:bg-destructive/10 dark:border-destructive/30 dark:text-white transition-colors duration-300">
               <CardHeader>

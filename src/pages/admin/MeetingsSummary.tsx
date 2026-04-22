@@ -2,7 +2,6 @@ import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router";
 import {
   ArrowLeft,
-  Building2,
   Clock3,
   Download,
   RotateCcw,
@@ -188,40 +187,53 @@ function escapeCsvValue(value: string | number | boolean) {
   return `"${String(value).replace(/"/g, '""')}"`;
 }
 
-function downloadCsv(rows: SummarySeatRow[], eventName: string) {
+function downloadCsv(
+  rows: TableSummary[],
+  eventName: string,
+  eventDate?: string,
+) {
   const headers = [
     "Evento",
     "Fecha",
     "Turno",
-    "Estado del turno",
     "Mesa",
-    "Ocupacion actual",
     "Estado de la mesa",
-    "Empresa",
-    "Representante",
-    "Email representante",
-    "Es anfitriona",
+    "Ocupacion actual",
+    "Anfitriona",
+    "Representante anfitriona",
+    "Email anfitriona",
+    "Invitada",
+    "Representante invitada",
+    "Email invitada",
   ];
 
   const content = [
     headers.map(escapeCsvValue).join(","),
-    ...rows.map((row) =>
-      [
-        row.eventoNombre,
-        row.eventoFecha,
+    ...rows.map((row) => {
+      const anfitriona =
+        row.participantes.find((participante) => participante.anfitriona) ??
+        null;
+      const invitada =
+        row.participantes.find((participante) => !participante.anfitriona) ??
+        null;
+
+      return [
+        eventName,
+        eventDate ?? "",
         row.turnoHorario,
-        row.turnoEstado,
         `Mesa ${row.mesaNumero}`,
-        `${row.ocupacionActual}/2`,
         row.estadoMesa,
-        row.empresaNombre || "Sin ocupar",
-        row.representanteNombre || "Sin representante",
-        row.representanteEmail || "",
-        row.anfitriona ? "Si" : "No",
+        `${row.ocupacionActual}/2`,
+        anfitriona?.empresaNombre || "Sin anfitriona asignada",
+        anfitriona?.representanteNombre || "Sin representante",
+        anfitriona?.representanteEmail || "Sin email",
+        invitada?.empresaNombre || "Sin invitada asignada",
+        invitada?.representanteNombre || "Sin representante",
+        invitada?.representanteEmail || "Sin email",
       ]
         .map(escapeCsvValue)
-        .join(","),
-    ),
+        .join(",");
+    }),
   ].join("\n");
 
   const blob = new Blob([`\uFEFF${content}`], {
@@ -260,22 +272,6 @@ function HeroSkeleton() {
         </div>
       </div>
     </section>
-  );
-}
-
-function StatCardSkeleton() {
-  return (
-    <Card className="!gap-2 !py-3 border-[#68A243]/20">
-      <CardHeader className="!px-5 !pb-0">
-        <Skeleton className="h-4 w-28 dark:bg-[#0f2f25]" />
-      </CardHeader>
-      <CardContent className="!px-5 !pt-0">
-        <div className="flex items-center justify-between gap-3">
-          <Skeleton className="h-8 w-12 dark:bg-[#0f2f25]" />
-          <Skeleton className="h-8 w-8 rounded-full dark:bg-[#0f2f25]" />
-        </div>
-      </CardContent>
-    </Card>
   );
 }
 
@@ -580,23 +576,6 @@ export default function MeetingsSummary() {
   const hasActiveFilters =
     turnoFilter !== "all" || searchTerm.trim().length > 0;
 
-  const stats = useMemo(() => {
-    const occupiedRows = filteredRows.filter((row) => row.empresaNombre);
-    const occupiedTables = filteredTableSummaries.filter(
-      (tableSummary) => tableSummary.ocupacionActual > 0,
-    );
-
-    return {
-      turnos: new Set(filteredRows.map((row) => row.turnoId)).size,
-      mesasConActividad: occupiedTables.length,
-      empresasPresentes: new Set(
-        occupiedRows.map((row) => row.empresaNombre).filter(Boolean),
-      ).size,
-      representantes: occupiedRows.filter((row) => row.representanteNombre)
-        .length,
-    };
-  }, [filteredRows, filteredTableSummaries]);
-
   const isLoading = isLoadingEvents || isLoadingSummary;
 
   return (
@@ -651,14 +630,21 @@ export default function MeetingsSummary() {
 
                   <Button
                     onClick={() => {
-                      if (!selectedEvent || filteredRows.length === 0) {
+                      if (
+                        !selectedEvent ||
+                        filteredTableSummaries.length === 0
+                      ) {
                         toast.info(
                           "No hay datos para exportar en el filtro actual",
                         );
                         return;
                       }
 
-                      downloadCsv(filteredRows, selectedEvent.nombre);
+                      downloadCsv(
+                        filteredTableSummaries,
+                        selectedEvent.nombre,
+                        selectedEvent.fecha,
+                      );
                     }}
                     className="bg-white text-[#143E29] hover:bg-white/90"
                   >
@@ -670,146 +656,82 @@ export default function MeetingsSummary() {
             </section>
           )}
 
-          <section className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-5">
-            {isLoading
-              ? Array.from({ length: 4 }).map((_, index) => (
-                  <StatCardSkeleton key={index} />
-                ))
-              : [
-                  {
-                    title: "Turnos con actividad",
-                    value: stats.turnos,
-                    icon: Clock3,
-                    accent: "text-[#68A243]",
-                    bg: "bg-[#68A243]/10",
-                  },
-                  {
-                    title: "Mesas ocupadas",
-                    value: stats.mesasConActividad,
-                    icon: Handshake,
-                    accent: "text-[#F5891F]",
-                    bg: "bg-[#F5891F]/10",
-                  },
-                  {
-                    title: "Empresas presentes",
-                    value: stats.empresasPresentes,
-                    icon: Building2,
-                    accent: "text-[#143E29] dark:text-white",
-                    bg: "bg-[#143E29]/10",
-                  },
-                  {
-                    title: "Representantes sentados",
-                    value: stats.representantes,
-                    icon: Users,
-                    accent: "text-[#3F6E20]",
-                    bg: "bg-[#68A243]/10",
-                  },
-                ].map((stat) => (
-                  <Card
-                    key={stat.title}
-                    className="border-[#68A243]/20 dark:border-[#68A243]/25 dark:bg-[#143E29]"
-                  >
-                    <CardHeader className="pb-2 flex flex-row items-center justify-between">
-                      <CardTitle className="text-sm font-medium text-muted-foreground dark:text-gray-300">
-                        {stat.title}
-                      </CardTitle>
-                      <div className={`rounded-xl p-2 ${stat.bg}`}>
-                        <stat.icon className={`h-5 w-5 ${stat.accent}`} />
-                      </div>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="text-3xl font-bold text-[#143E29] dark:text-white">
-                        {stat.value}
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-          </section>
+          <Card className="border-[#68A243]/15 shadow-sm dark:border-[#68A243]/20 dark:bg-[#143E29]">
+            <CardContent className="px-4 py-4 md:px-5">
+              <div className="flex flex-col gap-3 xl:flex-row xl:items-center">
+                <div className="grid flex-1 grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-[minmax(280px,1.2fr)_220px_minmax(320px,1fr)]">
+                  <div className="flex items-center gap-3">
+                    <span className="shrink-0 text-xs font-semibold uppercase tracking-[0.14em] text-[#3F6E20] dark:text-[#9FD27B]">
+                      Ronda
+                    </span>
+                    <Select
+                      value={selectedEventId || undefined}
+                      onValueChange={setSelectedEventId}
+                      disabled={isLoadingEvents || eventos.length === 0}
+                    >
+                      <SelectTrigger
+                        aria-label="Filtrar por ronda"
+                        className="h-10 w-full border-[#68A243]/20 focus-visible:border-[#68A243] focus-visible:ring-[#68A243]/20 bg-white dark:bg-[#143E29] dark:border-[#68A243]/20 dark:text-white transition-colors"
+                      >
+                        <SelectValue placeholder="Seleccioná una ronda" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {eventos.map((evento) => (
+                          <SelectItem key={evento.id} value={String(evento.id)}>
+                            {evento.nombre}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
 
-          <Card className="border-[#68A243]/25 shadow-sm dark:border-[#68A243]/25 dark:bg-[#143E29]">
-            <CardHeader className="border-b border-[#68A243]/10 px-5 py-4 dark:border-[#68A243]/20">
-              <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
-                <div>
-                  <CardTitle className="text-[#143E29] dark:text-white text-lg leading-tight">
-                    Filtros
-                  </CardTitle>
-                  <CardDescription className="text-xs dark:text-gray-300">
-                    Elegí ronda, turno o buscá una empresa puntual.
-                  </CardDescription>
+                  <div className="flex items-center gap-3">
+                    <span className="shrink-0 text-xs font-semibold uppercase tracking-[0.14em] text-[#3F6E20] dark:text-[#9FD27B]">
+                      Turno
+                    </span>
+                    <Select value={turnoFilter} onValueChange={setTurnoFilter}>
+                      <SelectTrigger
+                        aria-label="Filtrar por turno"
+                        className="h-10 w-full border-[#68A243]/20 focus-visible:border-[#68A243] focus-visible:ring-[#68A243]/20 bg-white dark:bg-[#143E29] dark:border-[#68A243]/20 dark:text-white transition-colors"
+                      >
+                        <SelectValue placeholder="Todos los turnos" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">Todos los turnos</SelectItem>
+                        {availableTurnos.map((turno) => (
+                          <SelectItem key={turno.id} value={String(turno.id)}>
+                            {turno.horario}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="relative">
+                    <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                    <Input
+                      aria-label="Buscar reuniones"
+                      value={searchTerm}
+                      onChange={(event) => setSearchTerm(event.target.value)}
+                      placeholder="Empresa, representante, email o mesa"
+                      className="h-10 w-full pl-9 border-[#68A243]/20 focus-visible:border-[#68A243] focus-visible:ring-[#68A243]/20 bg-white dark:bg-[#143E29] dark:border-[#68A243]/20 dark:text-white dark:placeholder-gray-400 transition-colors"
+                    />
+                  </div>
                 </div>
 
                 <Button
                   type="button"
-                  variant="ghost"
+                  variant="outline"
                   onClick={() => {
                     setTurnoFilter("all");
                     setSearchTerm("");
                   }}
                   disabled={!hasActiveFilters}
-                  className="h-8 px-2.5 text-[#3F6E20] hover:bg-[#68A243]/10 hover:text-[#3F6E20] disabled:opacity-40 disabled:hover:bg-transparent dark:text-[#9FD27B] dark:hover:bg-[#68A243]/10 dark:hover:text-[#9FD27B]"
+                  className="h-10 justify-start border-[#68A243]/20 bg-white px-3 text-[#3F6E20] hover:bg-[#68A243]/10 hover:text-[#3F6E20] disabled:opacity-40 disabled:hover:bg-white dark:border-[#68A243]/20 dark:bg-[#143E29] dark:text-[#9FD27B] dark:hover:bg-[#68A243]/10 dark:hover:text-[#9FD27B]"
                 >
                   <RotateCcw className="h-4 w-4" />
                   Limpiar
                 </Button>
-              </div>
-            </CardHeader>
-            <CardContent className="px-5 py-4">
-              <div className="grid grid-cols-1 gap-3 lg:grid-cols-[220px_220px_minmax(0,1fr)] xl:grid-cols-[240px_240px_minmax(0,1fr)]">
-                <div className="space-y-1.5">
-                  <label className="text-xs font-medium text-[#143E29] dark:text-white">
-                    Ronda
-                  </label>
-                  <Select
-                    value={selectedEventId || undefined}
-                    onValueChange={setSelectedEventId}
-                    disabled={isLoadingEvents || eventos.length === 0}
-                  >
-                    <SelectTrigger className="h-10 w-full border-[#68A243]/20 bg-white dark:border-[#68A243]/30 dark:bg-[#0f2f25] dark:text-white">
-                      <SelectValue placeholder="Seleccioná una ronda" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {eventos.map((evento) => (
-                        <SelectItem key={evento.id} value={String(evento.id)}>
-                          {evento.nombre}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="space-y-1.5">
-                  <label className="text-xs font-medium text-[#143E29] dark:text-white">
-                    Turno
-                  </label>
-                  <Select value={turnoFilter} onValueChange={setTurnoFilter}>
-                    <SelectTrigger className="h-10 w-full border-[#68A243]/20 bg-white dark:border-[#68A243]/30 dark:bg-[#0f2f25] dark:text-white">
-                      <SelectValue placeholder="Todos los turnos" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">Todos los turnos</SelectItem>
-                      {availableTurnos.map((turno) => (
-                        <SelectItem key={turno.id} value={String(turno.id)}>
-                          {turno.horario}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="space-y-1.5">
-                  <label className="text-xs font-medium text-[#143E29] dark:text-white">
-                    Buscar
-                  </label>
-                  <div className="relative">
-                    <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                    <Input
-                      value={searchTerm}
-                      onChange={(event) => setSearchTerm(event.target.value)}
-                      placeholder="Empresa, representante, email o mesa"
-                      className="h-10 w-full pl-9 border-[#68A243]/20 bg-white dark:border-[#68A243]/30 dark:bg-[#0f2f25] dark:text-white"
-                    />
-                  </div>
-                </div>
               </div>
             </CardContent>
           </Card>
@@ -823,6 +745,20 @@ export default function MeetingsSummary() {
               className="space-y-4"
             >
               <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                <div>
+                  <h2 className="text-xl font-semibold text-[#143E29] dark:text-white">
+                    Reuniones
+                  </h2>
+                  <p
+                    aria-live="polite"
+                    className="text-sm text-muted-foreground dark:text-gray-300"
+                  >
+                    {isLoading
+                      ? "Cargando reuniones"
+                      : `${filteredTableSummaries.length} mesas y ${filteredRows.length} registros`}
+                  </p>
+                </div>
+
                 <TabsList className="h-auto flex w-full flex-col gap-2 rounded-2xl bg-[#68A243]/8 p-2 md:inline-flex md:w-auto md:flex-row dark:bg-[#0f2f25]">
                   <TabsTrigger
                     value="tabla"
@@ -841,15 +777,6 @@ export default function MeetingsSummary() {
                     Tarjetas
                   </TabsTrigger>
                 </TabsList>
-
-                <div
-                  aria-live="polite"
-                  className="text-sm text-muted-foreground dark:text-gray-300"
-                >
-                  {isLoading
-                    ? "Cargando reuniones"
-                    : `${filteredTableSummaries.length} mesas y ${filteredRows.length} registros`}
-                </div>
               </div>
 
               <TabsContent value="mesas" className="mt-0 space-y-4">

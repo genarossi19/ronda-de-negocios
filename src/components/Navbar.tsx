@@ -1,5 +1,5 @@
 import { Button } from "../components/ui/button";
-import { Building2, Menu, X, LogOut, User2Icon } from "lucide-react";
+import { Building2, Menu, X, LogOut, User2Icon, Clock3 } from "lucide-react";
 import { Sheet, SheetContent, SheetTrigger } from "../components/ui/sheet";
 import {
   DropdownMenu,
@@ -9,6 +9,7 @@ import {
   DropdownMenuTrigger,
 } from "../components/ui/dropdown-menu";
 import { Avatar, AvatarFallback } from "../components/ui/avatar";
+import { Badge } from "../components/ui/badge";
 import { useState, useEffect, useRef } from "react";
 import { useAuth } from "../hooks/useAuth";
 import { useCurrentUser } from "../hooks/useCurrentUser";
@@ -17,7 +18,7 @@ import { ThemeToggle } from "./ThemeToggle";
 import { cn } from "../lib/utils";
 
 export default function Navbar() {
-  const { user, isAuthenticated } = useCurrentUser();
+  const { user, isAuthenticated, isPendingApproval } = useCurrentUser();
   const { logout } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
@@ -284,6 +285,19 @@ export default function Navbar() {
 
           {/* Derecha - User Section */}
           <div className="flex items-center gap-3">
+            {isPendingApproval && (
+              <div
+                className={cn(
+                  "hidden md:inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs font-medium transition-colors duration-300",
+                  isDarkTheme
+                    ? "border-amber-400/30 bg-amber-400/15 text-amber-100"
+                    : "border-amber-200 bg-amber-50 text-amber-800",
+                )}
+              >
+                <Clock3 className="h-3.5 w-3.5" />
+                Pendiente de aprobación
+              </div>
+            )}
             <ThemeToggle />
             {isAuthenticated ? (
               <DropdownMenu
@@ -331,9 +345,30 @@ export default function Navbar() {
                       {getUserDisplayName()}
                     </p>
                     {!user?.is_superuser && (
-                      <p className="text-xs text-gray-500 dark:text-gray-400 transition-colors duration-300">
-                        Empresa ID: {user?.empresa_id}
-                      </p>
+                      <div className="space-y-1.5">
+                        <p className="text-xs text-gray-500 dark:text-gray-400 transition-colors duration-300">
+                          Empresa ID: {user?.empresa_id}
+                        </p>
+                        <Badge
+                          className={cn(
+                            "border text-[11px] font-medium",
+                            isPendingApproval
+                              ? "border-amber-200 bg-amber-50 text-amber-800 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-200"
+                              : "border-[#68A243]/25 bg-[#68A243]/10 text-[#3F6E20] dark:border-[#68A243]/30 dark:bg-[#68A243]/15 dark:text-[#b8e39c]",
+                          )}
+                        >
+                          {isPendingApproval
+                            ? "Pendiente de aprobación"
+                            : "Empresa aprobada"}
+                        </Badge>
+                        {isPendingApproval && (
+                          <p className="text-[11px] leading-relaxed text-gray-500 dark:text-gray-400">
+                            Tu empresa todavía está en revisión. Cuando sea
+                            aprobada vas a poder inscribirte a turnos y
+                            recibirás un mail de aviso.
+                          </p>
+                        )}
+                      </div>
                     )}
                   </div>
                   <DropdownMenuSeparator className="bg-[#669649]/30 dark:bg-[#1a5032]" />
@@ -460,8 +495,32 @@ export default function Navbar() {
                             >
                               ID: {user?.empresa_id}
                             </p>
+                            {!isAdmin && (
+                              <Badge
+                                className={cn(
+                                  "mt-2 border text-[11px] font-medium",
+                                  isPendingApproval
+                                    ? "border-amber-200 bg-amber-50 text-amber-800 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-200"
+                                    : "border-[#68A243]/25 bg-[#68A243]/10 text-[#3F6E20] dark:border-[#68A243]/30 dark:bg-[#68A243]/15 dark:text-[#b8e39c]",
+                                )}
+                              >
+                                {isPendingApproval
+                                  ? "Pendiente de aprobación"
+                                  : "Empresa aprobada"}
+                              </Badge>
+                            )}
                           </div>
                         </div>
+                        {isPendingApproval && (
+                          <p
+                            className={`mt-3 text-xs leading-relaxed transition-colors duration-300 ${
+                              globalDarkMode ? "text-gray-400" : "text-gray-600"
+                            }`}
+                          >
+                            Tu empresa sigue en revisión. Te avisaremos por mail
+                            cuando quede aprobada para operar en los turnos.
+                          </p>
+                        )}
                       </div>
                     )}
 
