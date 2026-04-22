@@ -112,6 +112,11 @@ function CompanyRow({
                 : "bg-amber-100 text-amber-800 dark:bg-amber-950/30 dark:text-amber-400"
             }
           >
+            {emailConfirmado ? (
+              <MailCheck className="mr-1 h-3 w-3" />
+            ) : (
+              <MailX className="mr-1 h-3 w-3" />
+            )}
             {emailConfirmado ? "Email validado" : "Email sin validar"}
           </Badge>
           <Badge
@@ -123,6 +128,13 @@ function CompanyRow({
                   : "bg-amber-100 text-amber-800 dark:bg-amber-950/30 dark:text-amber-400"
             }
           >
+            {company.eliminado ? (
+              <XCircle className="mr-1 h-3 w-3" />
+            ) : company.aprobada ? (
+              <CheckCircle className="mr-1 h-3 w-3" />
+            ) : (
+              <Clock className="mr-1 h-3 w-3" />
+            )}
             {company.eliminado
               ? "Eliminada"
               : company.aprobada

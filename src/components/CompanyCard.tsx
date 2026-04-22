@@ -55,7 +55,7 @@ export default function CompanyCard({
             {isDeleted && (
               <Badge
                 variant="destructive"
-                className="bg-red-500/90 hover:bg-red-600 text-white text-xs gap-1 flex items-center"
+                className="bg-red-100 text-red-800 hover:bg-red-100 dark:bg-red-950/30 dark:text-red-400 text-xs gap-1 flex items-center"
               >
                 <XCircle className="h-3 w-3" />
                 Eliminada
@@ -64,7 +64,7 @@ export default function CompanyCard({
             {isNotApproved && (
               <Badge
                 variant="secondary"
-                className="bg-yellow-500/90 hover:bg-yellow-600 text-white text-xs gap-1 flex items-center"
+                className="bg-amber-100 text-amber-800 hover:bg-amber-100 dark:bg-amber-950/30 dark:text-amber-400 text-xs gap-1 flex items-center"
               >
                 <Clock className="h-3 w-3" />
                 Pendiente
@@ -73,7 +73,7 @@ export default function CompanyCard({
             {hasUnvalidatedEmail && (
               <Badge
                 variant="secondary"
-                className="bg-amber-500/90 hover:bg-amber-600 text-white text-xs gap-1 flex items-center"
+                className="bg-amber-100 text-amber-800 hover:bg-amber-100 dark:bg-amber-950/30 dark:text-amber-400 text-xs gap-1 flex items-center"
               >
                 <MailX className="h-3 w-3" />
                 Email sin validar

@@ -302,6 +302,8 @@ export default function MeetingsSummary() {
   const [eventos, setEventos] = useState<EventoResponse[]>([]);
   const [selectedEventId, setSelectedEventId] = useState<string>("");
   const [turnoFilter, setTurnoFilter] = useState<string>("all");
+  const [eventSearchTerm, setEventSearchTerm] = useState("");
+  const [turnoSearchTerm, setTurnoSearchTerm] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
   const [activeView, setActiveView] = useState<"mesas" | "tabla">("tabla");
   const [selectedTableSummary, setSelectedTableSummary] =
@@ -573,6 +575,32 @@ export default function MeetingsSummary() {
     );
   }, [summaryRows]);
 
+  const filteredEventos = useMemo(() => {
+    const query = eventSearchTerm.trim().toLowerCase();
+
+    if (!query) {
+      return eventos;
+    }
+
+    return eventos.filter((evento) =>
+      evento.nombre.toLowerCase().includes(query),
+    );
+  }, [eventSearchTerm, eventos]);
+
+  const filteredTurnos = useMemo(() => {
+    const query = turnoSearchTerm.trim().toLowerCase();
+
+    if (!query) {
+      return availableTurnos;
+    }
+
+    return availableTurnos.filter(
+      (turno) =>
+        turno.horario.toLowerCase().includes(query) ||
+        String(turno.id).includes(query),
+    );
+  }, [availableTurnos, turnoSearchTerm]);
+
   const hasActiveFilters =
     turnoFilter !== "all" || searchTerm.trim().length > 0;
 
@@ -659,7 +687,7 @@ export default function MeetingsSummary() {
           <Card className="border-[#68A243]/15 shadow-sm dark:border-[#68A243]/20 dark:bg-[#143E29]">
             <CardContent className="px-4 py-4 md:px-5">
               <div className="flex flex-col gap-3 xl:flex-row xl:items-center">
-                <div className="grid flex-1 grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-[minmax(280px,1.2fr)_220px_minmax(320px,1fr)]">
+                <div className="grid flex-1 grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-[minmax(280px,1.05fr)_minmax(280px,1fr)_minmax(240px,0.85fr)]">
                   <div className="flex items-center gap-3">
                     <span className="shrink-0 text-xs font-semibold uppercase tracking-[0.14em] text-[#3F6E20] dark:text-[#9FD27B]">
                       Ronda
@@ -667,6 +695,11 @@ export default function MeetingsSummary() {
                     <Select
                       value={selectedEventId || undefined}
                       onValueChange={setSelectedEventId}
+                      onOpenChange={(open) => {
+                        if (!open) {
+                          setEventSearchTerm("");
+                        }
+                      }}
                       disabled={isLoadingEvents || eventos.length === 0}
                     >
                       <SelectTrigger
@@ -676,11 +709,32 @@ export default function MeetingsSummary() {
                         <SelectValue placeholder="Seleccioná una ronda" />
                       </SelectTrigger>
                       <SelectContent>
-                        {eventos.map((evento) => (
-                          <SelectItem key={evento.id} value={String(evento.id)}>
-                            {evento.nombre}
-                          </SelectItem>
-                        ))}
+                        <div className="px-2 py-2">
+                          <Input
+                            value={eventSearchTerm}
+                            onChange={(event) =>
+                              setEventSearchTerm(event.target.value)
+                            }
+                            onKeyDown={(event) => event.stopPropagation()}
+                            placeholder="Buscar ronda por nombre"
+                            className="h-9 border-[#68A243]/20 focus-visible:border-[#68A243] focus-visible:ring-[#68A243]/20"
+                          />
+                        </div>
+                        {filteredEventos.length > 0 ? (
+                          filteredEventos.map((evento) => (
+                            <SelectItem
+                              key={evento.id}
+                              value={String(evento.id)}
+                              className="py-2.5 font-medium text-[#143E29] data-[highlighted]:bg-[#143E29]/12 data-[highlighted]:text-[#143E29] dark:text-white dark:data-[highlighted]:bg-[#68A243]/25 dark:data-[highlighted]:text-white"
+                            >
+                              {evento.nombre}
+                            </SelectItem>
+                          ))
+                        ) : (
+                          <div className="px-3 py-2 text-sm text-muted-foreground">
+                            No se encontraron rondas
+                          </div>
+                        )}
                       </SelectContent>
                     </Select>
                   </div>
@@ -689,7 +743,15 @@ export default function MeetingsSummary() {
                     <span className="shrink-0 text-xs font-semibold uppercase tracking-[0.14em] text-[#3F6E20] dark:text-[#9FD27B]">
                       Turno
                     </span>
-                    <Select value={turnoFilter} onValueChange={setTurnoFilter}>
+                    <Select
+                      value={turnoFilter}
+                      onValueChange={setTurnoFilter}
+                      onOpenChange={(open) => {
+                        if (!open) {
+                          setTurnoSearchTerm("");
+                        }
+                      }}
+                    >
                       <SelectTrigger
                         aria-label="Filtrar por turno"
                         className="h-10 w-full border-[#68A243]/20 focus-visible:border-[#68A243] focus-visible:ring-[#68A243]/20 bg-white dark:bg-[#143E29] dark:border-[#68A243]/20 dark:text-white transition-colors"
@@ -697,12 +759,45 @@ export default function MeetingsSummary() {
                         <SelectValue placeholder="Todos los turnos" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="all">Todos los turnos</SelectItem>
-                        {availableTurnos.map((turno) => (
-                          <SelectItem key={turno.id} value={String(turno.id)}>
-                            {turno.horario}
-                          </SelectItem>
-                        ))}
+                        <div className="px-2 py-2">
+                          <Input
+                            value={turnoSearchTerm}
+                            onChange={(event) =>
+                              setTurnoSearchTerm(event.target.value)
+                            }
+                            onKeyDown={(event) => event.stopPropagation()}
+                            placeholder="Buscar por número u horario"
+                            className="h-9 border-[#68A243]/20 focus-visible:border-[#68A243] focus-visible:ring-[#68A243]/20"
+                          />
+                        </div>
+                        <SelectItem
+                          value="all"
+                          className="py-2.5 font-medium text-[#143E29] data-[highlighted]:bg-[#143E29]/12 data-[highlighted]:text-[#143E29] dark:text-white dark:data-[highlighted]:bg-[#68A243]/25 dark:data-[highlighted]:text-white"
+                        >
+                          Todos los turnos
+                        </SelectItem>
+                        {filteredTurnos.length > 0 ? (
+                          filteredTurnos.map((turno) => (
+                            <SelectItem
+                              key={turno.id}
+                              value={String(turno.id)}
+                              className="py-2.5 data-[highlighted]:bg-[#143E29]/12 data-[highlighted]:text-[#143E29] dark:data-[highlighted]:bg-[#68A243]/25 dark:data-[highlighted]:text-white"
+                            >
+                              <div className="flex w-full items-center justify-between gap-3">
+                                <span className="rounded-full border border-[#68A243]/25 bg-[#68A243]/10 px-2.5 py-0.5 text-xs font-semibold text-[#3F6E20] dark:border-[#68A243]/30 dark:bg-[#68A243]/15 dark:text-[#9FD27B]">
+                                  Turno {turno.id}
+                                </span>
+                                <span className="text-sm font-medium text-[#425249] dark:text-gray-200">
+                                  {turno.horario}
+                                </span>
+                              </div>
+                            </SelectItem>
+                          ))
+                        ) : (
+                          <div className="px-3 py-2 text-sm text-muted-foreground">
+                            No se encontraron turnos
+                          </div>
+                        )}
                       </SelectContent>
                     </Select>
                   </div>
