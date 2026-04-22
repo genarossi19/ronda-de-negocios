@@ -74,7 +74,10 @@ function markAuthRedirectHandled(error: AxiosError) {
   (error as AxiosErrorWithAuthFlag)[AUTH_REDIRECT_HANDLED_FLAG] = true;
 }
 
-function redirectToLogin() {
+export function triggerSessionExpired(
+  message = SESSION_EXPIRED_MESSAGE,
+  reason = SESSION_EXPIRED_REASON,
+) {
   localStorage.setItem(SESSION_EXPIRED_STORAGE_KEY, "true");
   Cookies.remove(TOKEN_COOKIE_NAME);
   useUserStore.getState().clearUser();
@@ -82,15 +85,15 @@ function redirectToLogin() {
   const authEvent = new CustomEvent(AUTH_SESSION_EXPIRED_EVENT, {
     cancelable: true,
     detail: {
-      message: SESSION_EXPIRED_MESSAGE,
-      reason: SESSION_EXPIRED_REASON,
+      message,
+      reason,
     },
   });
 
   const handledByRouter = !window.dispatchEvent(authEvent);
 
   if (!handledByRouter && window.location.pathname !== "/login") {
-    window.location.assign(`/login?reason=${SESSION_EXPIRED_REASON}`);
+    window.location.assign(`/login?reason=${reason}`);
   }
 }
 
@@ -193,7 +196,7 @@ api.interceptors.response.use(
   (error) => {
     if (isAuthenticationFailure(error)) {
       markAuthRedirectHandled(error);
-      redirectToLogin();
+      triggerSessionExpired();
     }
 
     return Promise.reject(error);

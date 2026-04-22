@@ -13,6 +13,7 @@ import Tables from "./pages/Tables";
 import Test from "./pages/Test";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 import { useAuth } from "./hooks/useAuth";
+import { useSessionExpiryGuard } from "./hooks/useSessionExpiryGuard";
 import Dashboard from "./pages/admin/Dashboard";
 import CompaniesManagement from "./pages/admin/CompaniesManagement";
 import GestionarRondas from "./pages/admin/GestionarRondas";
@@ -75,6 +76,7 @@ function AuthRedirectHandler() {
 
 function AppRoutes() {
   useAuth();
+  useSessionExpiryGuard();
 
   return (
     <ThemeProvider>

@@ -335,6 +335,17 @@ export default function AdminDashboard() {
       href: "/gestionar-rondas",
     },
     {
+      title: "Gestionar Turnos",
+      description: activeEventId
+        ? "Crear y actualizar turnos de la ronda activa"
+        : "Necesitás una ronda activa para administrar turnos",
+      icon: Clock3,
+      href: activeEventId
+        ? `/panel-administrador/turnos/${activeEventId}`
+        : "/gestionar-rondas",
+      requiresActiveEvent: true,
+    },
+    {
       title: "Aprobar Empresas",
       description: "Revisar y aprobar registros de empresas",
       icon: Users,
@@ -345,17 +356,6 @@ export default function AdminDashboard() {
       description: "Monitorear todas las reuniones agendadas",
       icon: CheckCircle,
       href: "/panel-administrador/reuniones",
-    },
-    {
-      title: "Gestionar Turnos",
-      description: activeEventId
-        ? "Crear y actualizar turnos de la ronda activa"
-        : "Necesitás una ronda activa para administrar turnos",
-      icon: Clock3,
-      href: activeEventId
-        ? `/panel-administrador/turnos/${activeEventId}`
-        : "/gestionar-rondas",
-      requiresActiveEvent: true,
     },
   ];
 
