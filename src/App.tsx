@@ -24,6 +24,8 @@ import NotFound from "./pages/NotFound";
 import { Toaster } from "./components/ui/sonner";
 import ValidarEmail from "./pages/ValidarEmail";
 import VerificarEmailRepresentante from "./pages/VerificarEmailRepresentante";
+import ForgotPassword from "./pages/ForgotPassword";
+import ResetPassword from "./pages/ResetPassword";
 import { useEffect } from "react";
 import {
   AUTH_SESSION_EXPIRED_EVENT,
@@ -83,6 +85,11 @@ function AppRoutes() {
       <AuthRedirectHandler />
       <Routes>
         <Route path="/login" element={<Login />} />
+        <Route path="/olvide-contraseña" element={<ForgotPassword />} />
+        <Route
+          path="/reset-password/:uidb/:token"
+          element={<ResetPassword />}
+        />
         <Route path="/" element={<Landing />} />
         <Route path="/empresas" element={<Empresas />} />
         <Route path="/empresas/:id" element={<EmpresasDetail />} />

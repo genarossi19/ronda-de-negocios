@@ -409,12 +409,12 @@ export default function Login() {
                     >
                       Contraseña
                     </Label>
-                    {/* <Link
-                      to="#"
+                    <Link
+                      to="/olvide-contraseña"
                       className="text-xs text-[#68A243] hover:text-[#143E29] dark:hover:text-white font-medium transition-colors"
                     >
                       ¿Olvidaste tu contraseña?
-                    </Link> */}
+                    </Link>
                   </div>
                   <m.div
                     className="relative"
