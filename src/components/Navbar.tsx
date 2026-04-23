@@ -265,9 +265,12 @@ export default function Navbar() {
       } ${navClasses} ${isDarkTheme ? "border-[#1a5032]" : "border-gray-100"}`}
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16">
-          {/* Logo */}
-          <Link to="/" className="flex items-center gap-3 group flex-shrink-0">
+        <div className="flex items-center h-16 relative">
+          {/* Logo - Izquierda */}
+          <Link
+            to="/"
+            className="flex items-center gap-3 group flex-shrink-0 relative z-10"
+          >
             <div
               className={`p-2 rounded-xl transition-all duration-300 group-hover:scale-110 ${
                 isDarkTheme
@@ -295,13 +298,13 @@ export default function Navbar() {
             </div>
           </Link>
 
-          {/* Centro - Navigation Links (Desktop) */}
-          <div className="hidden lg:flex items-center gap-1">
-            {renderNavLinks()}
+          {/* Centro - Navigation Links (Desktop) - VERDADERAMENTE CENTRADOS */}
+          <div className="absolute left-1/2 transform -translate-x-1/2 hidden lg:flex">
+            <div className="flex items-center gap-1">{renderNavLinks()}</div>
           </div>
 
           {/* Derecha - User Section */}
-          <div className="flex items-center gap-3">
+          <div className="ml-auto flex items-center gap-3">
             {/* Notification rail sin layout shift: slots fijos con opacity-0 */}
             {isAuthenticated && (
               <div className="hidden md:flex items-center gap-2">
@@ -392,7 +395,7 @@ export default function Navbar() {
                     {!user?.is_superuser && (
                       <div className="space-y-1.5">
                         <p className="text-xs text-gray-500 dark:text-gray-400 transition-colors duration-300">
-                          Empresa ID: {user?.empresa_id}
+                          {user?.email}
                         </p>
                         <Badge
                           className={cn(

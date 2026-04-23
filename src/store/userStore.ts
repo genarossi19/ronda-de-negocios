@@ -4,7 +4,7 @@ export interface User {
   user_id: number;
   empresa_id: number;
   razon_social: string;
-  email?: string;
+  email: string;
   is_superuser: boolean;
   aprobada: boolean;
   token_type: string;
