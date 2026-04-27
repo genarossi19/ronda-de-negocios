@@ -11,6 +11,7 @@ import {
   Eye,
   EyeOff,
   Check,
+  Info,
 } from "lucide-react";
 import { AnimatePresence, motion as m } from "motion/react";
 import { Button } from "../components/ui/button";
@@ -38,6 +39,12 @@ import {
   SelectValue,
 } from "../components/ui/select";
 import { Card, CardContent } from "../components/ui/card";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "../components/ui/tooltip";
 import { useNavigate } from "react-router";
 import type { GenericType } from "../types/GenericType";
 import type { LocalidadResponse } from "../types/Localidad";
@@ -919,7 +926,35 @@ export default function RegistrationForm() {
                             )}
                           </div>
 
-                          <div className="space-y-3 pt-4 border-t dark:border-[#2a3d4d]">
+                          <div className="space-y-4 pt-4 border-t dark:border-[#2a3d4d]">
+                            <div className="flex items-center gap-2">
+                              <Label className="text-gray-700 dark:text-gray-300 font-bold text-sm">
+                                Logo de la empresa
+                              </Label>
+                              <TooltipProvider>
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <button
+                                      type="button"
+                                      className="inline-flex items-center justify-center w-4 h-4 rounded-full bg-primary/20 dark:bg-[#68A243]/20 text-primary dark:text-[#68A243] hover:bg-primary/30 dark:hover:bg-[#68A243]/30 transition-colors"
+                                    >
+                                      <Info className="w-3 h-3" />
+                                    </button>
+                                  </TooltipTrigger>
+                                  <TooltipContent
+                                    side="right"
+                                    className="max-w-xs"
+                                  >
+                                    <p className="text-sm">
+                                      La imagen se mostrará en formato cuadrado
+                                      (1:1). Recomendamos usar imágenes
+                                      cuadradas de al menos 256x256 píxeles (ej:
+                                      256x256, 512x512, 1024x1024).
+                                    </p>
+                                  </TooltipContent>
+                                </Tooltip>
+                              </TooltipProvider>
+                            </div>
                             <ImageCropperNew
                               onImageSelect={handleImageUpload}
                               initialBlob={logoFile}

@@ -278,7 +278,7 @@ export default function ImageCropperNew({
 
     ctx.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0);
     ctx.imageSmoothingQuality = "high";
-    
+
     // Para JPG: llenar con blanco (no soporta transparencia). Para PNG: dejar transparente
     if (!useAlpha) {
       ctx.fillStyle = "#ffffff";
@@ -439,7 +439,7 @@ export default function ImageCropperNew({
             Subir imagen del logo
           </Label>
           <p className="text-xs text-muted-foreground mt-1">
-            PNG, JPG o WebP. Máximo {maxFileSize}MB
+            PNG, JPG o WebP. Máximo {maxFileSize}MB. Formato Cuadrado (1:1)
           </p>
         </div>
 
