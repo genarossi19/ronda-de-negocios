@@ -2,6 +2,7 @@ import { useEffect, useState, useCallback } from "react";
 import Navbar from "../components/Navbar";
 import Footer from "../layout/Footer";
 import { Button } from "../components/ui/button";
+import { Input } from "../components/ui/input";
 import {
   Card,
   CardContent,
@@ -11,6 +12,13 @@ import {
 } from "../components/ui/card";
 import { Badge } from "../components/ui/badge";
 import { Skeleton } from "../components/ui/skeleton";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "../components/ui/select";
 import { Dialog, DialogTrigger } from "../components/ui/dialog";
 import {
   AlertDialog,
@@ -32,6 +40,8 @@ import {
   User,
   Building2,
   Trash2,
+  X,
+  Search,
 } from "lucide-react";
 import {
   getRepresentantes,
@@ -74,6 +84,8 @@ export default function Representantes() {
     null,
   );
   const [deleting, setDeleting] = useState(false);
+  const [searchName, setSearchName] = useState("");
+  const [selectedCargos, setSelectedCargos] = useState<number[]>([]);
 
   const fetchRepresentantes = useCallback(async () => {
     try {
@@ -199,6 +211,38 @@ export default function Representantes() {
     setDeleteDialogOpen(true);
   };
 
+  const filterRepresentantes = (reps: RepresentanteResponse[]) => {
+    return reps.filter((rep) => {
+      const matchesName =
+        searchName === "" ||
+        `${rep.nombre} ${rep.apellido}`
+          .toLowerCase()
+          .includes(searchName.toLowerCase());
+      const matchesCargo =
+        selectedCargos.length === 0 ||
+        selectedCargos.includes(rep.cargo?.id || 0);
+      return matchesName && matchesCargo;
+    });
+  };
+
+  const addCargoFilter = (cargoId: number) => {
+    if (!selectedCargos.includes(cargoId) && selectedCargos.length < 3) {
+      setSelectedCargos([...selectedCargos, cargoId]);
+    }
+  };
+
+  const removeCargoFilter = (cargoId: number) => {
+    setSelectedCargos(selectedCargos.filter((id) => id !== cargoId));
+  };
+
+  const clearFilters = () => {
+    setSearchName("");
+    setSelectedCargos([]);
+  };
+
+  const filteredOwnRepresentantes = filterRepresentantes(ownRepresentantes);
+  const filteredRepresentantes = filterRepresentantes(representantes);
+
   const confirmDelete = async () => {
     if (!repToDelete) return;
     setDeleting(true);
@@ -262,7 +306,7 @@ export default function Representantes() {
                           <span className="font-semibold">Propios</span>
                         </div>
                         <p className="text-2xl font-bold">
-                          {ownRepresentantes.length}
+                          {filteredOwnRepresentantes.length}
                         </p>
                       </div>
                       <div className="flex-1 border-l border-white/20 pl-6">
@@ -271,7 +315,8 @@ export default function Representantes() {
                           <span className="font-semibold">Total</span>
                         </div>
                         <p className="text-2xl font-bold">
-                          {ownRepresentantes.length + representantes.length}
+                          {filteredOwnRepresentantes.length +
+                            filteredRepresentantes.length}
                         </p>
                       </div>
                     </div>
@@ -282,7 +327,7 @@ export default function Representantes() {
                         <span className="font-semibold">Total</span>
                       </div>
                       <p className="text-3xl font-bold">
-                        {representantes.length}
+                        {filteredRepresentantes.length}
                       </p>
                     </>
                   )}
@@ -329,6 +374,103 @@ export default function Representantes() {
                 cargos={cargos}
               />
             </Dialog>
+          </div>
+
+          {/* Filters */}
+          <div className="mb-8 space-y-4">
+            <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-end">
+              {/* Search by name */}
+              <div className="w-full sm:flex-1 sm:max-w-2xl">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Buscar por nombre
+                </label>
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 dark:text-gray-500" />
+                  <Input
+                    type="text"
+                    placeholder="Ej: Juan García"
+                    value={searchName}
+                    onChange={(e) => setSearchName(e.target.value)}
+                    className="pl-10 bg-white dark:bg-[#143E29] border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus-visible:ring-[#68A243]/50 dark:focus-visible:ring-[#68A243]/50"
+                  />
+                </div>
+              </div>
+
+              {/* Filter by cargo */}
+              <div className="w-full sm:w-auto">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Filtrar por cargo
+                </label>
+                <Select
+                  value=""
+                  onValueChange={(cargoId) => {
+                    addCargoFilter(Number(cargoId));
+                  }}
+                  disabled={selectedCargos.length >= 3}
+                >
+                  <SelectTrigger className="w-full sm:w-[240px] bg-white dark:bg-[#143E29] border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white hover:border-gray-400 dark:hover:border-[#68A243]/50 dark:hover:bg-[#1a4d35] transition-colors focus:ring-[#68A243]/50 dark:focus:ring-[#68A243]/50">
+                    <SelectValue placeholder="Seleccionar cargo" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {cargos.map((cargo) => (
+                      <SelectItem
+                        key={cargo.id}
+                        value={String(cargo.id)}
+                        disabled={selectedCargos.includes(cargo.id)}
+                      >
+                        {cargo.nombre}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Clear filters button */}
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={clearFilters}
+                className={`text-gray-700 dark:text-gray-300 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/20 gap-2 transition-all ${
+                  searchName || selectedCargos.length > 0
+                    ? "visible opacity-100"
+                    : "invisible opacity-0"
+                }`}
+              >
+                <X className="h-4 w-4" />
+                Limpiar filtros
+              </Button>
+            </div>
+
+            {/* Selected cargo badges */}
+            <div
+              className={`flex flex-wrap gap-2 items-center min-h-10 transition-all ${
+                selectedCargos.length > 0
+                  ? "visible opacity-100"
+                  : "invisible opacity-0"
+              }`}
+            >
+              <span className="text-sm text-gray-600 dark:text-gray-400">
+                Cargos seleccionados:
+              </span>
+              {selectedCargos.map((cargoId) => {
+                const cargo = cargos.find((c) => c.id === cargoId);
+                return (
+                  <Badge
+                    key={cargoId}
+                    variant="secondary"
+                    className="bg-[#68A243]/20 text-[#68A243] dark:bg-[#68A243]/30 dark:text-[#68A243] flex items-center gap-2 pl-2.5"
+                  >
+                    {cargo?.nombre}
+                    <button
+                      onClick={() => removeCargoFilter(cargoId)}
+                      className="hover:opacity-70 transition-opacity"
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
+                  </Badge>
+                );
+              })}
+            </div>
           </div>
 
           {/* List */}
@@ -388,20 +530,22 @@ export default function Representantes() {
                     Representantes de {user?.razon_social || "tu empresa"}
                   </p>
                 </div>
-                {ownRepresentantes.length === 0 ? (
+                {filteredOwnRepresentantes.length === 0 ? (
                   <Card className="text-center py-8 border-2 border-dashed border-[#ffb900]/30 dark:bg-[#143E29]/30 dark:border-[#ffb900]/20 transition-colors duration-300">
                     <CardHeader>
                       <div className="flex justify-center mb-2">
                         <Users className="h-10 w-10 text-gray-300" />
                       </div>
                       <CardTitle className="text-gray-500 text-base">
-                        Sin representantes propios
+                        {searchName || selectedCargos.length > 0
+                          ? "No se encontraron representantes propios"
+                          : "Sin representantes propios"}
                       </CardTitle>
                     </CardHeader>
                   </Card>
                 ) : (
                   <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                    {ownRepresentantes.map((rep, i) => (
+                    {filteredOwnRepresentantes.map((rep, i) => (
                       <Card
                         key={i}
                         className="relative group hover:shadow-md transition-shadow border-2 border-[#ffb900]/20 dark:bg-[#143E29]/40 dark:border-[#ffb900]/30 dark:hover:shadow-lg dark:hover:shadow-[#ffb900]/10"
@@ -467,20 +611,22 @@ export default function Representantes() {
                     Representantes de otras empresas
                   </p>
                 </div>
-                {representantes.length === 0 ? (
+                {filteredRepresentantes.length === 0 ? (
                   <Card className="text-center py-8 border-2 border-dashed border-gray-300 dark:bg-[#143E29]/30 dark:border-gray-600/30 transition-colors duration-300">
                     <CardHeader>
                       <div className="flex justify-center mb-2">
                         <Users className="h-10 w-10 text-gray-300" />
                       </div>
                       <CardTitle className="text-gray-500 dark:text-gray-400 text-base">
-                        Sin otros representantes
+                        {searchName || selectedCargos.length > 0
+                          ? "No se encontraron representantes"
+                          : "Sin otros representantes"}
                       </CardTitle>
                     </CardHeader>
                   </Card>
                 ) : (
                   <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                    {representantes.map((rep, i) => (
+                    {filteredRepresentantes.map((rep, i) => (
                       <Card
                         key={i}
                         className="relative group hover:shadow-md transition-shadow border-2 hover:border-[#68A243]/30 dark:bg-[#143E29]/40 dark:border-gray-700/50 dark:hover:border-[#68A243]/30 dark:hover:shadow-lg dark:hover:shadow-[#68A243]/10"
@@ -538,23 +684,27 @@ export default function Representantes() {
                 )}
               </div>
             </>
-          ) : representantes.length === 0 ? (
+          ) : filteredRepresentantes.length === 0 ? (
             <Card className="text-center py-12 dark:bg-[#143E29]/40 dark:border-gray-700/50 transition-colors duration-300">
               <CardHeader>
                 <div className="flex justify-center mb-2">
                   <Users className="h-12 w-12 text-gray-300" />
                 </div>
                 <CardTitle className="text-gray-500 dark:text-gray-400 transition-colors duration-300">
-                  Sin representantes
+                  {searchName || selectedCargos.length > 0
+                    ? "No se encontraron representantes"
+                    : "Sin representantes"}
                 </CardTitle>
                 <CardDescription className="dark:text-gray-500">
-                  Todavía no hay representantes registrados para tu empresa.
+                  {searchName || selectedCargos.length > 0
+                    ? "Intenta con otros filtros"
+                    : "Todavía no hay representantes registrados para tu empresa."}
                 </CardDescription>
               </CardHeader>
             </Card>
           ) : (
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {representantes.map((rep, i) => (
+              {filteredRepresentantes.map((rep, i) => (
                 <Card
                   key={i}
                   className="relative group hover:shadow-md transition-shadow border-2 hover:border-[#68A243]/30 dark:bg-[#143E29]/40 dark:border-gray-700/50 dark:hover:border-[#68A243]/30 dark:hover:shadow-lg dark:hover:shadow-[#68A243]/10"
