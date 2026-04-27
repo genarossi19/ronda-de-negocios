@@ -2,8 +2,9 @@ import { useEffect, useRef, useState } from "react";
 import { getCompanies } from "../api/EmpresaService";
 import type { EmpresaResponse } from "../types/Empresa";
 import { Skeleton } from "./ui/skeleton";
-import { AlertCircle, RotateCcw } from "lucide-react";
+import { AlertCircle, RotateCcw, Building2 } from "lucide-react";
 import { Button } from "./ui/button";
+import { Link } from "react-router";
 
 interface CarouselProps {
   onCompaniesLoaded?: (count: number) => void;
@@ -169,64 +170,91 @@ export default function Carousel({ onCompaniesLoaded }: CarouselProps) {
       <div className="absolute left-0 top-0 bottom-0 w-20 bg-gradient-to-r from-white dark:from-[#0a1a15] to-transparent z-10" />
       <div className="absolute right-0 top-0 bottom-0 w-20 bg-gradient-to-l from-white dark:from-[#0a1a15] to-transparent z-10" />
 
-      <div
-        ref={scrollRef}
-        className="flex gap-8 overflow-x-hidden py-8"
-        style={{ scrollBehavior: "auto" }}
-      >
-        {loading
-          ? Array.from({ length: 10 }).map((_, index) => (
-              <Skeleton
-                key={index}
-                className="flex-shrink-0 w-32 h-32 bg-gray-200 dark:bg-[#143E29] rounded-xl border border-gray-300 dark:border-[#68A243]/20 flex items-center justify-center p-4 hover:shadow-md dark:hover:shadow-lg transition-shadow duration-300"
-              />
-            ))
-          : duplicatedCompanies.map((company, index) => {
-              const companyKey = String(company.id);
-              const aspectClass = imageAspectRatios[companyKey] || "normal";
-              const showImage =
-                Boolean(company.logo) && !imageErrors[companyKey];
-              const initials = getCompanyInitials(company.razon_social);
+      {loading ? (
+        <div
+          ref={scrollRef}
+          className="flex gap-8 overflow-x-hidden py-8"
+          style={{ scrollBehavior: "auto" }}
+        >
+          {Array.from({ length: 10 }).map((_, index) => (
+            <Skeleton
+              key={index}
+              className="flex-shrink-0 w-32 h-32 bg-gray-200 dark:bg-[#143E29] rounded-xl border border-gray-300 dark:border-[#68A243]/20 flex items-center justify-center p-4 hover:shadow-md dark:hover:shadow-lg transition-shadow duration-300"
+            />
+          ))}
+        </div>
+      ) : !error && companies.length === 0 ? (
+        <div className="flex items-center justify-center py-16">
+          <div className="text-center">
+            <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-[#68A243]/15 dark:bg-[#68A243]/20 text-[#68A243] mb-4">
+              <Building2 className="h-8 w-8" />
+            </div>
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+              Aún no hay empresas registradas
+            </h3>
+            <p className="text-gray-600 dark:text-gray-400 mb-6 max-w-sm">
+              Sé la primera en inscribirte a la Ronda de Negocios y accede a
+              oportunidades exclusivas.
+            </p>
+            <Link to="/register">
+              <Button className="bg-[#68A243] hover:bg-[#68A243]/90 text-white">
+                Inscribir mi empresa
+              </Button>
+            </Link>
+          </div>
+        </div>
+      ) : (
+        <div
+          ref={scrollRef}
+          className="flex gap-8 overflow-x-hidden py-8"
+          style={{ scrollBehavior: "auto" }}
+        >
+          {duplicatedCompanies.map((company, index) => {
+            const companyKey = String(company.id);
+            const aspectClass = imageAspectRatios[companyKey] || "normal";
+            const showImage = Boolean(company.logo) && !imageErrors[companyKey];
+            const initials = getCompanyInitials(company.razon_social);
 
-              return (
-                <div
-                  key={`${company.id}-${index}`}
-                  className="relative flex-shrink-0 w-32 h-32 bg-white dark:bg-[#143E29] rounded-xl border border-gray-300 dark:border-[#68A243]/20 flex items-center justify-center hover:shadow-lg dark:hover:shadow-xl transition-shadow duration-200 overflow-hidden"
-                >
-                  {showImage ? (
-                    <img
-                      src={company.logo}
-                      alt={company.razon_social}
-                      loading="lazy"
-                      onLoad={(e) => handleImageLoad(companyKey, e)}
-                      onError={() => {
-                        setImageErrors((prev) => ({
-                          ...prev,
-                          [companyKey]: true,
-                        }));
-                      }}
-                      className={`w-full h-full object-cover object-center ${
-                        aspectClass === "wide"
-                          ? "h-full w-auto"
-                          : aspectClass === "tall"
-                            ? "w-full h-auto"
-                            : ""
-                      }`}
-                    />
-                  ) : (
-                    <div
-                      aria-label={company.razon_social}
-                      className="absolute inset-0 flex items-center justify-center bg-[#68A243]/20 dark:bg-[#68A243]/35 text-[#143E29] dark:text-[#d7efc8]"
-                    >
-                      <span className="text-3xl font-bold tracking-wide">
-                        {initials || "?"}
-                      </span>
-                    </div>
-                  )}
-                </div>
-              );
-            })}
-      </div>
+            return (
+              <div
+                key={`${company.id}-${index}`}
+                className="relative flex-shrink-0 w-32 h-32 bg-white dark:bg-[#143E29] rounded-xl border border-gray-300 dark:border-[#68A243]/20 flex items-center justify-center hover:shadow-lg dark:hover:shadow-xl transition-shadow duration-200 overflow-hidden"
+              >
+                {showImage ? (
+                  <img
+                    src={company.logo}
+                    alt={company.razon_social}
+                    loading="lazy"
+                    onLoad={(e) => handleImageLoad(companyKey, e)}
+                    onError={() => {
+                      setImageErrors((prev) => ({
+                        ...prev,
+                        [companyKey]: true,
+                      }));
+                    }}
+                    className={`w-full h-full object-cover object-center ${
+                      aspectClass === "wide"
+                        ? "h-full w-auto"
+                        : aspectClass === "tall"
+                          ? "w-full h-auto"
+                          : ""
+                    }`}
+                  />
+                ) : (
+                  <div
+                    aria-label={company.razon_social}
+                    className="absolute inset-0 flex items-center justify-center bg-[#68A243]/20 dark:bg-[#68A243]/35 text-[#143E29] dark:text-[#d7efc8]"
+                  >
+                    <span className="text-3xl font-bold tracking-wide">
+                      {initials || "?"}
+                    </span>
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }
