@@ -48,3 +48,7 @@ export async function verificarEmailRepresentante(
 
   return data;
 }
+
+export async function deleteRepresentante(id: number): Promise<void> {
+  await api.delete(`/representantes/${id}/`);
+}

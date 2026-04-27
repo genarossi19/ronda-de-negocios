@@ -31,6 +31,7 @@ import {
   Plus,
   Trash2,
   LogOut,
+  X,
 } from "lucide-react";
 import { Avatar, AvatarFallback } from "../components/ui/avatar";
 import {
@@ -1241,156 +1242,182 @@ export default function Tables() {
                   Cargando representantes...
                 </div>
               ) : validRepresentatives.length > 0 ? (
-                <Popover
-                  open={openRepresentativeSearch}
-                  onOpenChange={setOpenRepresentativeSearch}
-                >
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant="outline"
-                      role="combobox"
-                      aria-expanded={openRepresentativeSearch}
-                      className="w-full justify-between border-[#68A243]/20 hover:border-[#68A243] bg-transparent dark:bg-[#0f2f25] dark:border-[#68A243]/20 dark:text-white dark:hover:bg-[#1a3f30] transition-colors duration-300"
-                    >
-                      {selectedRepresentative
-                        ? validRepresentatives.find(
-                            (rep) =>
-                              rep.id.toString() === selectedRepresentative,
-                          )
-                          ? `${
-                              validRepresentatives.find(
-                                (rep) =>
-                                  rep.id.toString() === selectedRepresentative,
-                              )?.nombre
-                            } ${
-                              validRepresentatives.find(
-                                (rep) =>
-                                  rep.id.toString() === selectedRepresentative,
-                              )?.apellido
-                            }`
-                          : "Buscá y seleccioná un representante"
-                        : "Buscá y seleccioná un representante"}
-                      <Search className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent
-                    className="w-full p-0 dark:bg-[#143E29] dark:border-[#68A243]/20"
-                    align="start"
+                <div className="relative">
+                  <Popover
+                    open={openRepresentativeSearch}
+                    onOpenChange={setOpenRepresentativeSearch}
                   >
-                    {loadingRepresentatives ? (
-                      <div className="p-4 space-y-2 dark:bg-[#143E29]">
-                        <Skeleton className="h-8 w-full dark:bg-[#1a3f30]" />
-                        <Skeleton className="h-10 w-full dark:bg-[#1a3f30]" />
-                        <Skeleton className="h-10 w-full dark:bg-[#1a3f30]" />
-                        <Skeleton className="h-10 w-full dark:bg-[#1a3f30]" />
-                      </div>
-                    ) : (
-                      <Command className="dark:bg-[#143E29]">
-                        <CommandInput
-                          placeholder="Buscar representante..."
-                          className="h-9 dark:bg-[#0f2f25] dark:text-white dark:placeholder-gray-400 dark:border-[#68A243]/20"
-                        />
-                        <CommandList className="dark:bg-[#143E29]">
-                          <CommandEmpty className="dark:text-gray-400">
-                            No se encontró ningún representante
-                          </CommandEmpty>
-                          <CommandGroup className="dark:text-white">
-                            {validRepresentatives.map((rep) => {
-                              const isOwn =
-                                userFromStore?.is_superuser &&
-                                rep.empresa_id === userFromStore.empresa_id;
-                              return (
-                                <CommandItem
-                                  key={rep.id}
-                                  value={`${rep.nombre} ${rep.apellido}`}
-                                  onSelect={() => {
-                                    setSelectedRepresentative(
-                                      rep.id.toString(),
-                                    );
-                                    setOpenRepresentativeSearch(false);
-                                  }}
-                                  className={cn(
-                                    "cursor-pointer dark:hover:bg-[#1a3f30] dark:focus:bg-[#1a3f30] dark:text-white transition-colors duration-200",
-                                    isOwn && "bg-yellow-50 dark:bg-[#1a3f30]",
-                                  )}
-                                >
-                                  <div className="flex items-center gap-3 flex-1">
-                                    <Avatar
-                                      className={cn(
-                                        "h-8 w-8",
-                                        isOwn ? "bg-[#ffb900]" : "bg-[#68A243]",
-                                      )}
-                                    >
-                                      <AvatarFallback
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        role="combobox"
+                        aria-expanded={openRepresentativeSearch}
+                        className="w-full justify-between h-10 !border-[#68A243]/20 hover:!border-[#68A243]/50 !focus-visible:border-[#68A243] !focus-visible:ring-[#68A243]/20 !bg-white hover:!bg-gray-50 dark:!bg-[#143E29] dark:hover:!bg-[#1a3f30] dark:!border-[#68A243]/20 dark:hover:!border-[#68A243]/40 !text-gray-900 dark:!text-white transition-colors duration-300"
+                      >
+                        <span className="flex-1 text-left">
+                          {selectedRepresentative
+                            ? validRepresentatives.find(
+                                (rep) =>
+                                  rep.id.toString() === selectedRepresentative,
+                              )
+                              ? `${
+                                  validRepresentatives.find(
+                                    (rep) =>
+                                      rep.id.toString() ===
+                                      selectedRepresentative,
+                                  )?.nombre
+                                } ${
+                                  validRepresentatives.find(
+                                    (rep) =>
+                                      rep.id.toString() ===
+                                      selectedRepresentative,
+                                  )?.apellido
+                                }`
+                              : "Buscá y seleccioná un representante"
+                            : "Buscá y seleccioná un representante"}
+                        </span>
+                        {!selectedRepresentative && (
+                          <Search className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                        )}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent
+                      className="w-[var(--radix-popover-trigger-width)] p-0 dark:bg-[#143E29] dark:border-[#68A243]/20"
+                      align="start"
+                      side="bottom"
+                      sideOffset={4}
+                    >
+                      {loadingRepresentatives ? (
+                        <div className="p-4 space-y-2 dark:bg-[#143E29]">
+                          <Skeleton className="h-8 w-full dark:bg-[#1a3f30]" />
+                          <Skeleton className="h-10 w-full dark:bg-[#1a3f30]" />
+                          <Skeleton className="h-10 w-full dark:bg-[#1a3f30]" />
+                          <Skeleton className="h-10 w-full dark:bg-[#1a3f30]" />
+                        </div>
+                      ) : (
+                        <Command className="dark:bg-[#143E29]">
+                          <CommandInput
+                            placeholder="Buscar representante..."
+                            className="h-9 dark:bg-[#0f2f25] dark:text-white dark:placeholder-gray-400 dark:border-[#68A243]/20"
+                          />
+                          <CommandList className="dark:bg-[#143E29]">
+                            <CommandEmpty className="dark:text-gray-400">
+                              No se encontró ningún representante
+                            </CommandEmpty>
+                            <CommandGroup className="dark:text-white">
+                              {validRepresentatives.map((rep) => {
+                                const isOwn =
+                                  userFromStore?.is_superuser &&
+                                  rep.empresa_id === userFromStore.empresa_id;
+                                return (
+                                  <CommandItem
+                                    key={rep.id}
+                                    value={`${rep.nombre} ${rep.apellido}`}
+                                    onSelect={() => {
+                                      setSelectedRepresentative(
+                                        rep.id.toString(),
+                                      );
+                                      setOpenRepresentativeSearch(false);
+                                    }}
+                                    className={cn(
+                                      "cursor-pointer dark:hover:bg-[#1a3f30] dark:focus:bg-[#1a3f30] dark:text-white transition-colors duration-200",
+                                      isOwn && "bg-yellow-50 dark:bg-[#1a3f30]",
+                                    )}
+                                  >
+                                    <div className="flex items-center gap-3 flex-1">
+                                      <Avatar
                                         className={cn(
-                                          "text-white text-xs font-semibold",
+                                          "h-8 w-8",
                                           isOwn
                                             ? "bg-[#ffb900]"
                                             : "bg-[#68A243]",
                                         )}
                                       >
-                                        {`${rep.nombre[0]}${rep.apellido[0]}`.toUpperCase()}
-                                      </AvatarFallback>
-                                    </Avatar>
-                                    <div className="flex-1">
-                                      <p className="font-medium">
-                                        {rep.nombre} {rep.apellido}
-                                      </p>
-                                      <p className="text-xs text-gray-500 dark:text-gray-200 transition-colors duration-300">
-                                        {userFromStore?.is_superuser &&
-                                        !isOwn ? (
-                                          <span>
-                                            {rep.email} •{" "}
-                                            {rep.empresa_nombre ||
-                                              "Sin empresa"}
-                                          </span>
-                                        ) : (
-                                          rep.email
-                                        )}
-                                      </p>
+                                        <AvatarFallback
+                                          className={cn(
+                                            "text-white text-xs font-semibold",
+                                            isOwn
+                                              ? "bg-[#ffb900]"
+                                              : "bg-[#68A243]",
+                                          )}
+                                        >
+                                          {`${rep.nombre[0]}${rep.apellido[0]}`.toUpperCase()}
+                                        </AvatarFallback>
+                                      </Avatar>
+                                      <div className="flex-1">
+                                        <p className="font-medium">
+                                          {rep.nombre} {rep.apellido}
+                                        </p>
+                                        <p className="text-xs text-gray-500 dark:text-gray-200 transition-colors duration-300">
+                                          {userFromStore?.is_superuser &&
+                                          !isOwn ? (
+                                            <span>
+                                              {rep.email} •{" "}
+                                              {rep.empresa_nombre ||
+                                                "Sin empresa"}
+                                            </span>
+                                          ) : (
+                                            rep.email
+                                          )}
+                                        </p>
+                                      </div>
+                                      {isOwn && (
+                                        <Badge className="bg-[#ffb900] text-black shrink-0 dark:bg-amber-500 dark:text-black">
+                                          Propio
+                                        </Badge>
+                                      )}
                                     </div>
-                                    {isOwn && (
-                                      <Badge className="bg-[#ffb900] text-black shrink-0 dark:bg-amber-500 dark:text-black">
-                                        Propio
-                                      </Badge>
-                                    )}
-                                  </div>
-                                  <Check
-                                    className={cn(
-                                      "ml-auto h-4 w-4 text-[#68A243]",
-                                      selectedRepresentative ===
-                                        rep.id.toString()
-                                        ? "opacity-100"
-                                        : "opacity-0",
-                                    )}
-                                  />
-                                </CommandItem>
-                              );
-                            })}
-                          </CommandGroup>
-                        </CommandList>
-                      </Command>
-                    )}
-                  </PopoverContent>
-                </Popover>
+                                    <Check
+                                      className={cn(
+                                        "ml-auto h-4 w-4 text-[#68A243]",
+                                        selectedRepresentative ===
+                                          rep.id.toString()
+                                          ? "opacity-100"
+                                          : "opacity-0",
+                                      )}
+                                    />
+                                  </CommandItem>
+                                );
+                              })}
+                            </CommandGroup>
+                            <div className="border-t border-[#68A243]/20 p-2">
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => {
+                                  setShowAddRepresentativeDialog(true);
+                                  setOpenRepresentativeSearch(false);
+                                }}
+                                disabled={!!selectedRepresentative}
+                                className="w-full text-[#68A243] dark:text-[#68A243] hover:bg-[#68A243]/10 dark:hover:bg-[#68A243]/15 disabled:opacity-50 disabled:cursor-not-allowed justify-start text-xs h-8"
+                              >
+                                <Plus className="h-3 w-3 mr-2" />
+                                Cargar nuevo representante
+                              </Button>
+                            </div>
+                          </CommandList>
+                        </Command>
+                      )}
+                    </PopoverContent>
+                  </Popover>
+                  {selectedRepresentative && (
+                    <button
+                      onClick={() => {
+                        setSelectedRepresentative("");
+                        setOpenRepresentativeSearch(false);
+                      }}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 p-1 hover:opacity-100 opacity-70 transition-opacity z-10"
+                    >
+                      <X className="h-4 w-4 text-[#68A243]" />
+                    </button>
+                  )}
+                </div>
               ) : (
                 <div className="text-sm text-[#F05826] dark:text-orange-400 bg-[#F05826]/10 dark:bg-orange-950/20 p-3 rounded-lg border border-[#F05826]/30 dark:border-orange-700/30 transition-colors duration-300">
                   No tenés representantes agregados.
                 </div>
               )}
-              <div className="text-xs text-gray-500 dark:text-gray-200 px-1 py-2 mt-3 transition-colors duration-300">
-                ¿No aparece en la lista? Agregá uno aquí ↓
-              </div>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() => setShowAddRepresentativeDialog(true)}
-                className="w-full border-[#68A243]/20 hover:border-[#68A243] text-[#68A243] dark:bg-[#0f2f25] dark:border-[#68A243]/20 dark:text-[#68A243] dark:hover:bg-[#1a3f30] transition-colors duration-300"
-              >
-                <Plus className="h-4 w-4 mr-2" />
-                Agregar nuevo representante
-              </Button>
             </div>
 
             <div className="flex gap-3 mt-4">
@@ -1634,156 +1661,182 @@ export default function Tables() {
                   Cargando representantes...
                 </div>
               ) : validRepresentatives.length > 0 ? (
-                <Popover
-                  open={openRepresentativeSearch}
-                  onOpenChange={setOpenRepresentativeSearch}
-                >
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant="outline"
-                      role="combobox"
-                      aria-expanded={openRepresentativeSearch}
-                      className="w-full justify-between border-[#ffb900]/20 hover:border-[#ffb900] bg-transparent dark:bg-[#0f2f25] dark:border-[#ffb900]/20 dark:text-white dark:hover:bg-[#1a3f30] transition-colors duration-300"
-                    >
-                      {selectedRepresentative
-                        ? validRepresentatives.find(
-                            (rep) =>
-                              rep.id.toString() === selectedRepresentative,
-                          )
-                          ? `${
-                              validRepresentatives.find(
-                                (rep) =>
-                                  rep.id.toString() === selectedRepresentative,
-                              )?.nombre
-                            } ${
-                              validRepresentatives.find(
-                                (rep) =>
-                                  rep.id.toString() === selectedRepresentative,
-                              )?.apellido
-                            }`
-                          : "Buscá y seleccioná un representante"
-                        : "Buscá y seleccioná un representante"}
-                      <Search className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent
-                    className="w-full p-0 dark:bg-[#143E29] dark:border-[#68A243]/20"
-                    align="start"
+                <div className="relative">
+                  <Popover
+                    open={openRepresentativeSearch}
+                    onOpenChange={setOpenRepresentativeSearch}
                   >
-                    {loadingRepresentatives ? (
-                      <div className="p-4 space-y-2 dark:bg-[#143E29]">
-                        <Skeleton className="h-8 w-full dark:bg-[#1a3f30]" />
-                        <Skeleton className="h-10 w-full dark:bg-[#1a3f30]" />
-                        <Skeleton className="h-10 w-full dark:bg-[#1a3f30]" />
-                        <Skeleton className="h-10 w-full dark:bg-[#1a3f30]" />
-                      </div>
-                    ) : (
-                      <Command className="dark:bg-[#143E29]">
-                        <CommandInput
-                          placeholder="Buscar representante..."
-                          className="h-9 dark:bg-[#0f2f25] dark:text-white dark:placeholder-gray-400 dark:border-[#68A243]/20"
-                        />
-                        <CommandList className="dark:bg-[#143E29]">
-                          <CommandEmpty className="dark:text-gray-400">
-                            No se encontró ningún representante
-                          </CommandEmpty>
-                          <CommandGroup className="dark:text-white">
-                            {validRepresentatives.map((rep) => {
-                              const isOwn =
-                                userFromStore?.is_superuser &&
-                                rep.empresa_id === userFromStore.empresa_id;
-                              return (
-                                <CommandItem
-                                  key={rep.id}
-                                  value={`${rep.nombre} ${rep.apellido}`}
-                                  onSelect={() => {
-                                    setSelectedRepresentative(
-                                      rep.id.toString(),
-                                    );
-                                    setOpenRepresentativeSearch(false);
-                                  }}
-                                  className={cn(
-                                    "cursor-pointer",
-                                    isOwn && "bg-yellow-50",
-                                  )}
-                                >
-                                  <div className="flex items-center gap-3 flex-1">
-                                    <Avatar
-                                      className={cn(
-                                        "h-8 w-8",
-                                        isOwn ? "bg-[#ffb900]" : "bg-[#68A243]",
-                                      )}
-                                    >
-                                      <AvatarFallback
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        role="combobox"
+                        aria-expanded={openRepresentativeSearch}
+                        className="w-full justify-between h-10 !border-[#ffb900]/20 hover:!border-[#ffb900]/50 !focus-visible:border-[#ffb900] !focus-visible:ring-[#ffb900]/20 !bg-white hover:!bg-gray-50 dark:!bg-[#143E29] dark:hover:!bg-[#1a3f30] dark:!border-[#ffb900]/20 dark:hover:!border-[#ffb900]/40 !text-gray-900 dark:!text-white transition-colors duration-300"
+                      >
+                        <span className="flex-1 text-left">
+                          {selectedRepresentative
+                            ? validRepresentatives.find(
+                                (rep) =>
+                                  rep.id.toString() === selectedRepresentative,
+                              )
+                              ? `${
+                                  validRepresentatives.find(
+                                    (rep) =>
+                                      rep.id.toString() ===
+                                      selectedRepresentative,
+                                  )?.nombre
+                                } ${
+                                  validRepresentatives.find(
+                                    (rep) =>
+                                      rep.id.toString() ===
+                                      selectedRepresentative,
+                                  )?.apellido
+                                }`
+                              : "Buscá y seleccioná un representante"
+                            : "Buscá y seleccioná un representante"}
+                        </span>
+                        {!selectedRepresentative && (
+                          <Search className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                        )}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent
+                      className="w-[var(--radix-popover-trigger-width)] p-0 dark:bg-[#143E29] dark:border-[#68A243]/20"
+                      align="start"
+                      side="bottom"
+                      sideOffset={4}
+                    >
+                      {loadingRepresentatives ? (
+                        <div className="p-4 space-y-2 dark:bg-[#143E29]">
+                          <Skeleton className="h-8 w-full dark:bg-[#1a3f30]" />
+                          <Skeleton className="h-10 w-full dark:bg-[#1a3f30]" />
+                          <Skeleton className="h-10 w-full dark:bg-[#1a3f30]" />
+                          <Skeleton className="h-10 w-full dark:bg-[#1a3f30]" />
+                        </div>
+                      ) : (
+                        <Command className="dark:bg-[#143E29]">
+                          <CommandInput
+                            placeholder="Buscar representante..."
+                            className="h-9 dark:bg-[#0f2f25] dark:text-white dark:placeholder-gray-400 dark:border-[#68A243]/20"
+                          />
+                          <CommandList className="dark:bg-[#143E29]">
+                            <CommandEmpty className="dark:text-gray-400">
+                              No se encontró ningún representante
+                            </CommandEmpty>
+                            <CommandGroup className="dark:text-white">
+                              {validRepresentatives.map((rep) => {
+                                const isOwn =
+                                  userFromStore?.is_superuser &&
+                                  rep.empresa_id === userFromStore.empresa_id;
+                                return (
+                                  <CommandItem
+                                    key={rep.id}
+                                    value={`${rep.nombre} ${rep.apellido}`}
+                                    onSelect={() => {
+                                      setSelectedRepresentative(
+                                        rep.id.toString(),
+                                      );
+                                      setOpenRepresentativeSearch(false);
+                                    }}
+                                    className={cn(
+                                      "cursor-pointer",
+                                      isOwn && "bg-yellow-50",
+                                    )}
+                                  >
+                                    <div className="flex items-center gap-3 flex-1">
+                                      <Avatar
                                         className={cn(
-                                          "text-white text-xs font-semibold",
+                                          "h-8 w-8",
                                           isOwn
                                             ? "bg-[#ffb900]"
                                             : "bg-[#68A243]",
                                         )}
                                       >
-                                        {`${rep.nombre[0]}${rep.apellido[0]}`.toUpperCase()}
-                                      </AvatarFallback>
-                                    </Avatar>
-                                    <div className="flex-1">
-                                      <p className="font-medium">
-                                        {rep.nombre} {rep.apellido}
-                                      </p>
-                                      <p className="text-xs text-gray-500 dark:text-gray-200 transition-colors duration-300">
-                                        {userFromStore?.is_superuser &&
-                                        !isOwn ? (
-                                          <span>
-                                            {rep.email} •{" "}
-                                            {rep.empresa_nombre ||
-                                              "Sin empresa"}
-                                          </span>
-                                        ) : (
-                                          rep.email
-                                        )}
-                                      </p>
+                                        <AvatarFallback
+                                          className={cn(
+                                            "text-white text-xs font-semibold",
+                                            isOwn
+                                              ? "bg-[#ffb900]"
+                                              : "bg-[#68A243]",
+                                          )}
+                                        >
+                                          {`${rep.nombre[0]}${rep.apellido[0]}`.toUpperCase()}
+                                        </AvatarFallback>
+                                      </Avatar>
+                                      <div className="flex-1">
+                                        <p className="font-medium">
+                                          {rep.nombre} {rep.apellido}
+                                        </p>
+                                        <p className="text-xs text-gray-500 dark:text-gray-200 transition-colors duration-300">
+                                          {userFromStore?.is_superuser &&
+                                          !isOwn ? (
+                                            <span>
+                                              {rep.email} •{" "}
+                                              {rep.empresa_nombre ||
+                                                "Sin empresa"}
+                                            </span>
+                                          ) : (
+                                            rep.email
+                                          )}
+                                        </p>
+                                      </div>
+                                      {isOwn && (
+                                        <Badge className="bg-[#ffb900] text-black shrink-0 dark:bg-amber-500 dark:text-black">
+                                          Propio
+                                        </Badge>
+                                      )}
                                     </div>
-                                    {isOwn && (
-                                      <Badge className="bg-[#ffb900] text-black shrink-0 dark:bg-amber-500 dark:text-black">
-                                        Propio
-                                      </Badge>
-                                    )}
-                                  </div>
-                                  <Check
-                                    className={cn(
-                                      "ml-auto h-4 w-4 text-[#ffb900]",
-                                      selectedRepresentative ===
-                                        rep.id.toString()
-                                        ? "opacity-100"
-                                        : "opacity-0",
-                                    )}
-                                  />
-                                </CommandItem>
-                              );
-                            })}
-                          </CommandGroup>
-                        </CommandList>
-                      </Command>
-                    )}
-                  </PopoverContent>
-                </Popover>
+                                    <Check
+                                      className={cn(
+                                        "ml-auto h-4 w-4 text-[#ffb900]",
+                                        selectedRepresentative ===
+                                          rep.id.toString()
+                                          ? "opacity-100"
+                                          : "opacity-0",
+                                      )}
+                                    />
+                                  </CommandItem>
+                                );
+                              })}
+                            </CommandGroup>
+                            <div className="border-t border-[#ffb900]/20 p-2">
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => {
+                                  setShowAddRepresentativeDialog(true);
+                                  setOpenRepresentativeSearch(false);
+                                }}
+                                disabled={!!selectedRepresentative}
+                                className="w-full text-[#ffb900] dark:text-[#ffb900] hover:bg-[#ffb900]/10 dark:hover:bg-[#ffb900]/15 disabled:opacity-50 disabled:cursor-not-allowed justify-start text-xs h-8"
+                              >
+                                <Plus className="h-3 w-3 mr-2" />
+                                Cargar nuevo representante
+                              </Button>
+                            </div>
+                          </CommandList>
+                        </Command>
+                      )}
+                    </PopoverContent>
+                  </Popover>
+                  {selectedRepresentative && (
+                    <button
+                      onClick={() => {
+                        setSelectedRepresentative("");
+                        setOpenRepresentativeSearch(false);
+                      }}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 p-1 hover:opacity-100 opacity-70 transition-opacity z-10"
+                    >
+                      <X className="h-4 w-4 text-[#ffb900]" />
+                    </button>
+                  )}
+                </div>
               ) : (
                 <div className="text-sm text-[#F05826] bg-[#F05826]/10 p-3 rounded-lg border border-[#F05826]/30">
                   No tenés representantes agregados.
                 </div>
               )}
-              <div className="text-xs text-gray-500 dark:text-gray-200 px-1 py-2 mt-3 transition-colors duration-300">
-                ¿No aparece en la lista? Agregá uno aquí ↓
-              </div>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() => setShowAddRepresentativeDialog(true)}
-                className="w-full border-[#ffb900]/20 hover:border-[#ffb900] text-[#ffb900] dark:bg-[#0f2f25] dark:border-[#ffb900]/20 dark:text-[#ffb900] dark:hover:bg-[#1a3f30] transition-colors duration-300"
-              >
-                <Plus className="h-4 w-4 mr-2" />
-                Agregar nuevo representante
-              </Button>
             </div>
 
             <div className="flex gap-3 mt-4">

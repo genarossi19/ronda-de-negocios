@@ -12,6 +12,15 @@ import {
 import { Badge } from "../components/ui/badge";
 import { Skeleton } from "../components/ui/skeleton";
 import { Dialog, DialogTrigger } from "../components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "../components/ui/alert-dialog";
 import { AddRepresentativeModal } from "../components/AddRepresentativeModal";
 import {
   Users,
@@ -22,10 +31,12 @@ import {
   AlertCircle,
   User,
   Building2,
+  Trash2,
 } from "lucide-react";
 import {
   getRepresentantes,
   createRepresentante,
+  deleteRepresentante,
 } from "../api/RepresentanteService";
 import { getCargos } from "../api/CargoService";
 import type {
@@ -58,6 +69,11 @@ export default function Representantes() {
   const [form, setForm] = useState<RepresentanteWrite>(EMPTY_FORM);
   const [formErrors, setFormErrors] = useState<Partial<RepresentanteWrite>>({});
   const [submitting, setSubmitting] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [repToDelete, setRepToDelete] = useState<RepresentanteResponse | null>(
+    null,
+  );
+  const [deleting, setDeleting] = useState(false);
 
   const fetchRepresentantes = useCallback(async () => {
     try {
@@ -176,6 +192,44 @@ export default function Representantes() {
       [name]: name === "cargo" ? Number(value) : value,
     }));
     setFormErrors((prev) => ({ ...prev, [name]: undefined }));
+  };
+
+  const handleDelete = async (rep: RepresentanteResponse) => {
+    setRepToDelete(rep);
+    setDeleteDialogOpen(true);
+  };
+
+  const confirmDelete = async () => {
+    if (!repToDelete) return;
+    setDeleting(true);
+    try {
+      await deleteRepresentante(repToDelete.id);
+
+      // Actualizar la lista correctamente
+      if (user?.is_superuser && user?.empresa_id) {
+        if (repToDelete.empresa_id === user.empresa_id) {
+          setOwnRepresentantes((prev) =>
+            prev.filter((r) => r.id !== repToDelete.id),
+          );
+        } else {
+          setRepresentantes((prev) =>
+            prev.filter((r) => r.id !== repToDelete.id),
+          );
+        }
+      } else {
+        setRepresentantes((prev) =>
+          prev.filter((r) => r.id !== repToDelete.id),
+        );
+      }
+
+      toast.success("Representante eliminado correctamente.");
+      setDeleteDialogOpen(false);
+      setRepToDelete(null);
+    } catch {
+      toast.error("No se pudo eliminar el representante. Intentá de nuevo.");
+    } finally {
+      setDeleting(false);
+    }
   };
 
   return (
@@ -350,11 +404,23 @@ export default function Representantes() {
                     {ownRepresentantes.map((rep, i) => (
                       <Card
                         key={i}
-                        className="hover:shadow-md transition-shadow border-2 border-[#ffb900] bg-yellow-50/30 dark:bg-[#143E29]/40 dark:border-[#ffb900]/40 dark:hover:shadow-lg dark:hover:shadow-[#ffb900]/10"
+                        className="relative group hover:shadow-md transition-shadow border-2 border-[#ffb900]/20 dark:bg-[#143E29]/40 dark:border-[#ffb900]/30 dark:hover:shadow-lg dark:hover:shadow-[#ffb900]/10"
                       >
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleDelete(rep)}
+                          className="absolute top-3 right-3 opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity h-8 w-8 lg:w-auto p-0 lg:px-2 text-red-500 hover:text-red-700 hover:bg-red-50 dark:text-red-400 dark:hover:text-red-300 dark:hover:bg-red-950/30 gap-1"
+                          title="Eliminar representante"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                          <span className="hidden lg:inline text-xs">
+                            Eliminar
+                          </span>
+                        </Button>
                         <CardHeader className="pb-3">
-                          <div className="flex items-center gap-3">
-                            <div className="bg-[#ffb900]/20 dark:bg-[#ffb900]/20 rounded-full p-2">
+                          <div className="flex items-start gap-3">
+                            <div className="bg-[#ffb900]/20 dark:bg-[#ffb900]/20 rounded-full p-2 shrink-0">
                               <User className="h-5 w-5 text-[#ffb900]" />
                             </div>
                             <div className="flex-1">
@@ -417,11 +483,23 @@ export default function Representantes() {
                     {representantes.map((rep, i) => (
                       <Card
                         key={i}
-                        className="hover:shadow-md transition-shadow border-2 hover:border-[#68A243]/30 dark:bg-[#143E29]/40 dark:border-gray-700/50 dark:hover:border-[#68A243]/30 dark:hover:shadow-lg dark:hover:shadow-[#68A243]/10"
+                        className="relative group hover:shadow-md transition-shadow border-2 hover:border-[#68A243]/30 dark:bg-[#143E29]/40 dark:border-gray-700/50 dark:hover:border-[#68A243]/30 dark:hover:shadow-lg dark:hover:shadow-[#68A243]/10"
                       >
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleDelete(rep)}
+                          className="absolute top-3 right-3 opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity h-8 w-8 lg:w-auto p-0 lg:px-2 text-red-500 hover:text-red-700 hover:bg-red-50 dark:text-red-400 dark:hover:text-red-300 dark:hover:bg-red-950/30 gap-1"
+                          title="Eliminar representante"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                          <span className="hidden lg:inline text-xs">
+                            Eliminar
+                          </span>
+                        </Button>
                         <CardHeader className="pb-3">
-                          <div className="flex items-center gap-3">
-                            <div className="bg-[#143E29]/10 dark:bg-[#68A243]/20 rounded-full p-2">
+                          <div className="flex items-start gap-3">
+                            <div className="bg-[#143E29]/10 dark:bg-[#68A243]/20 rounded-full p-2 shrink-0">
                               <User className="h-5 w-5 text-[#143E29] dark:text-[#68A243]" />
                             </div>
                             <div className="flex-1">
@@ -479,11 +557,21 @@ export default function Representantes() {
               {representantes.map((rep, i) => (
                 <Card
                   key={i}
-                  className="hover:shadow-md transition-shadow border-2 hover:border-[#68A243]/30 dark:bg-[#143E29]/40 dark:border-gray-700/50 dark:hover:border-[#68A243]/30 dark:hover:shadow-lg dark:hover:shadow-[#68A243]/10"
+                  className="relative group hover:shadow-md transition-shadow border-2 hover:border-[#68A243]/30 dark:bg-[#143E29]/40 dark:border-gray-700/50 dark:hover:border-[#68A243]/30 dark:hover:shadow-lg dark:hover:shadow-[#68A243]/10"
                 >
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => handleDelete(rep)}
+                    className="absolute top-3 right-3 opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity h-8 w-8 lg:w-auto p-0 lg:px-2 text-red-500 hover:text-red-700 hover:bg-red-50 dark:text-red-400 dark:hover:text-red-300 dark:hover:bg-red-950/30 gap-1"
+                    title="Eliminar representante"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                    <span className="hidden lg:inline text-xs">Eliminar</span>
+                  </Button>
                   <CardHeader className="pb-3">
-                    <div className="flex items-center gap-3">
-                      <div className="bg-[#143E29]/10 dark:bg-[#68A243]/20 rounded-full p-2">
+                    <div className="flex items-start gap-3">
+                      <div className="bg-[#143E29]/10 dark:bg-[#68A243]/20 rounded-full p-2 shrink-0">
                         <User className="h-5 w-5 text-[#143E29] dark:text-[#68A243]" />
                       </div>
                       <div>
@@ -521,6 +609,36 @@ export default function Representantes() {
           )}
         </div>
       </div>
+
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent className="dark:bg-[#0F141A] dark:border-gray-700/50">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="dark:text-white">
+              Eliminar representante
+            </AlertDialogTitle>
+            <AlertDialogDescription className="dark:text-gray-300">
+              ¿Estás seguro de que deseas eliminar a{" "}
+              <span className="font-semibold dark:text-white">
+                {repToDelete?.nombre} {repToDelete?.apellido}
+              </span>
+              ? Esta acción no se puede deshacer.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <div className="flex gap-2 justify-end">
+            <AlertDialogCancel className="dark:bg-[#143E29] dark:border-gray-700/50 dark:text-white dark:hover:bg-[#1a3f30]">
+              Cancelar
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmDelete}
+              disabled={deleting}
+              className="bg-red-600 hover:bg-red-700 dark:bg-red-600 dark:hover:bg-red-700 disabled:opacity-50"
+            >
+              {deleting ? "Eliminando..." : "Eliminar"}
+            </AlertDialogAction>
+          </div>
+        </AlertDialogContent>
+      </AlertDialog>
+
       <Footer />
     </>
   );
