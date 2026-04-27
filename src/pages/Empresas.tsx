@@ -3,6 +3,7 @@ import Navbar from "../components/Navbar";
 import Footer from "../layout/Footer";
 import CompanyCard from "../components/CompanyCard";
 import CompanyModal from "../components/CompanyModal";
+import { useUserStore } from "../store/userStore";
 
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
@@ -39,6 +40,7 @@ function CompanyCardSkeleton() {
 
 export default function Companies() {
   const { isAuthenticated, isAdmin } = useCurrentUser();
+  const { user } = useUserStore();
   const navigate = useNavigate();
   const [companies, setCompanies] = useState<EmpresaResponse[]>([]);
 
@@ -194,6 +196,7 @@ export default function Companies() {
                     company={company}
                     onClick={handleCompanyClick}
                     isAdmin={isAdmin}
+                    isCurrentUserCompany={user?.empresa_id === company.id}
                   />
                 </div>
               ))}

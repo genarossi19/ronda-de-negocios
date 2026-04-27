@@ -8,12 +8,14 @@ interface CompanyCardProps {
   company: EmpresaResponse;
   onClick?: (company: EmpresaResponse) => void;
   isAdmin?: boolean;
+  isCurrentUserCompany?: boolean;
 }
 
 export default function CompanyCard({
   company,
   onClick,
   isAdmin,
+  isCurrentUserCompany = false,
 }: CompanyCardProps) {
   const [imageError, setImageError] = useState(false);
 
@@ -43,9 +45,11 @@ export default function CompanyCard({
 
   return (
     <Card
-      className={`cursor-pointer border border-gray-200 dark:border-[#68A243]/20 rounded-xl shadow-sm hover:shadow-xl hover:-translate-y-1 hover:border-[#68A243] dark:bg-[#143E29] dark:hover:border-[#68A243]/60 transition-all duration-300 group p-4 ${
-        isDeleted ? "opacity-60 dark:opacity-50" : ""
-      }`}
+      className={`cursor-pointer rounded-xl shadow-sm hover:shadow-xl hover:-translate-y-1 dark:bg-[#143E29] transition-all duration-300 group p-4 ${
+        isCurrentUserCompany
+          ? "border-2 border-orange-400/60 dark:border-orange-500/50 hover:border-orange-500 dark:hover:border-orange-400 hover:shadow-orange-200/50 dark:hover:shadow-orange-500/20"
+          : "border border-gray-200 dark:border-[#68A243]/20 hover:border-[#68A243] dark:hover:border-[#68A243]/60"
+      } ${isDeleted ? "opacity-60 dark:opacity-50" : ""}`}
       onClick={handleClick}
     >
       <div className="flex flex-col items-center text-center relative">
