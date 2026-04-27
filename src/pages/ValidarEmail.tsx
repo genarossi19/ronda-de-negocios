@@ -95,7 +95,7 @@ export default function ValidarEmail() {
     <div className="min-h-screen bg-white dark:bg-[#0a1a15] transition-colors duration-300 flex flex-col">
       <Navbar />
 
-      <main className="flex-1 px-4 py-10 sm:py-14">
+      <main className="flex-1 px-4 pt-20 sm:pt-28 pb-10 sm:pb-14">
         <div className="mx-auto max-w-2xl">
           <m.div
             initial={{ opacity: 0, y: 24 }}
