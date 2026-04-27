@@ -66,7 +66,9 @@ export default function ImageCropperNew({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const imgRef = useRef<HTMLImageElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const contentRef = useRef<HTMLDivElement>(null);
   const isChangingImageRef = useRef(false);
+  const skipAutoRestoreRef = useRef(false);
   const objectUrlsRef = useRef(new Set<string>());
 
   const [imageSrc, setImageSrc] = useState<string>("");
@@ -88,6 +90,7 @@ export default function ImageCropperNew({
   const [imageKey, setImageKey] = useState<string>("");
   const [sourceFileName, setSourceFileName] = useState("logo.png");
   const [sourceMimeType, setSourceMimeType] = useState("image/png");
+  const [isDragOver, setIsDragOver] = useState(false);
 
   const trackObjectUrl = (url: string) => {
     if (url.startsWith("blob:")) {
@@ -108,18 +111,24 @@ export default function ImageCropperNew({
 
   // Cleanup blob URLs only when component unmounts.
   useEffect(() => {
+    const urlsRef = objectUrlsRef.current;
     return () => {
-      objectUrlsRef.current.forEach((url) => {
+      urlsRef.forEach((url) => {
         URL.revokeObjectURL(url);
       });
-      objectUrlsRef.current.clear();
+      urlsRef.clear();
     };
   }, []);
 
   // Restaurar estado si hay initialBlob (imagen guardada anteriormente)
   // SOLO si estamos en upload o si no hay imagen en edición
-  // Respetar el flag de cambio de imagen
+  // Respetar el flag de cambio de imagen y el flag de reset manual
   useEffect(() => {
+    if (skipAutoRestoreRef.current) {
+      skipAutoRestoreRef.current = false;
+      return;
+    }
+
     if (
       !isChangingImageRef.current &&
       initialBlob &&
@@ -155,14 +164,49 @@ export default function ImageCropperNew({
     }
   }, [imageSrc, mode]);
 
+  // Auto-scroll cuando entra en modo edit o preview
+  useEffect(() => {
+    if ((mode === "edit" || mode === "preview") && contentRef.current) {
+      setTimeout(() => {
+        contentRef.current?.scrollIntoView({
+          behavior: "smooth",
+          block: "start",
+        });
+      }, 100);
+    }
+  }, [mode]);
+
   const handleOpenFileSelector = () => {
     fileInputRef.current?.click();
   };
 
-  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+  const handleCancelEditAndReset = () => {
+    // Prevenir restauración automática después de un reset manual
+    skipAutoRestoreRef.current = true;
 
+    // Limpiar completamente todo el estado para volver a upload limpio
+    revokeTrackedUrl(imageSrc);
+    revokeTrackedUrl(originalImageSrc);
+    revokeTrackedUrl(croppedBlobUrl);
+    setImageSrc("");
+    setOriginalImageSrc("");
+    setCroppedBlobUrl("");
+    setImageLoaded(false);
+    setScale(1);
+    setCompletedCrop(null);
+    setCrop({
+      unit: "px",
+      width: CROP_SIZE,
+      height: CROP_SIZE,
+      x: 0,
+      y: 0,
+    });
+    setImageKey("");
+    setMode("upload");
+    setError(null);
+  };
+
+  const processFile = (file: File) => {
     // Marcar que estamos cambiando imagen
     isChangingImageRef.current = true;
 
@@ -215,18 +259,67 @@ export default function ImageCropperNew({
     }, 0);
   };
 
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    processFile(file);
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragOver(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragOver(false);
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragOver(false);
+
+    const files = e.dataTransfer.files;
+    if (!files || files.length === 0) return;
+
+    const file = files[0];
+    if (!file.type.startsWith("image/")) {
+      setError("Por favor, arrastra un archivo de imagen válido");
+      return;
+    }
+
+    processFile(file);
+  };
+
   const handleImageLoaded = () => {
     setImageLoaded(true);
     setCompletedCrop(null);
-    if (imgRef.current && imgRef.current.width && imgRef.current.height) {
+    if (
+      imgRef.current &&
+      imgRef.current.naturalWidth &&
+      imgRef.current.naturalHeight
+    ) {
+      const naturalHeight = imgRef.current.naturalHeight;
+      const naturalWidth = imgRef.current.naturalWidth;
+
+      // El zoom siempre debe ser 1 (100%)
+      // El contenedor maxHeight: 400px ya limita lo visible
+      setScale(1);
+
+      // Configurar el crop area al tamaño máximo cuadrado posible
       const smaller =
-        imgRef.current.width < imgRef.current.height
-          ? imgRef.current.width
-          : imgRef.current.height;
+        naturalWidth < naturalHeight ? naturalWidth : naturalHeight;
+
+      // El crop debe ocupar el máximo tamaño (lado más pequeño de la imagen)
+      const cropSize = Math.min(smaller, CROP_SIZE);
+
       setCrop({
         unit: "px",
-        width: Math.min(smaller, CROP_SIZE),
-        height: Math.min(smaller, CROP_SIZE),
+        width: cropSize,
+        height: cropSize,
         x: 0,
         y: 0,
       });
@@ -239,12 +332,6 @@ export default function ImageCropperNew({
 
   const handleZoomOut = () => {
     setScale((prev) => Math.max(prev - ZOOM_STEP, MIN_ZOOM));
-  };
-
-  const handleWheel = (e: React.WheelEvent<HTMLDivElement>) => {
-    e.preventDefault();
-    const delta = e.deltaY > 0 ? -ZOOM_STEP : ZOOM_STEP;
-    setScale((prev) => Math.max(MIN_ZOOM, Math.min(prev + delta, MAX_ZOOM)));
   };
 
   const generateCroppedImage = async (pixelCrop: PixelCrop) => {
@@ -407,13 +494,16 @@ export default function ImageCropperNew({
       return;
     }
 
+    // Marcar que estamos cambiando imagen
     isChangingImageRef.current = true;
     setError(null);
-    setImageSrc(sourceToEdit);
-    setMode("edit");
-    setImageLoaded(false);
-    setScale(1);
+
+    // Limpiar estado anterior
+    setCroppedBlobUrl("");
     setCompletedCrop(null);
+    setScale(1);
+
+    // Resetear crop al tamaño por defecto
     setCrop({
       unit: "px",
       width: CROP_SIZE,
@@ -421,7 +511,12 @@ export default function ImageCropperNew({
       x: 0,
       y: 0,
     });
+
+    // Cambiar imagen y modo (en último lugar para que los otros estados se actualicen primero)
     setImageKey(`${Date.now()}-${Math.random()}`);
+    setImageLoaded(false);
+    setImageSrc(sourceToEdit);
+    setMode("edit");
 
     setTimeout(() => {
       isChangingImageRef.current = false;
@@ -447,11 +542,24 @@ export default function ImageCropperNew({
           type="button"
           variant="outline"
           onClick={() => fileInputRef.current?.click()}
-          className="w-full !h-32 border-2 border-dashed hover:border-primary hover:bg-primary/5 flex items-center justify-center"
+          onDragOver={handleDragOver}
+          onDragLeave={handleDragLeave}
+          onDrop={handleDrop}
+          className={`w-full !h-32 border-2 border-dashed flex items-center justify-center transition-all ${
+            isDragOver
+              ? "border-green-500 bg-green-50 dark:bg-green-950/20 dark:border-green-400"
+              : "border-gray-300 dark:border-gray-600 hover:border-primary hover:bg-primary/5"
+          }`}
         >
           <div className="flex flex-col items-center gap-2">
-            <Upload className="h-8 w-8 text-muted-foreground" />
-            <span className="text-sm font-medium">Seleccionar imagen</span>
+            <Upload
+              className={`h-8 w-8 ${isDragOver ? "text-green-500 dark:text-green-400" : "text-muted-foreground"}`}
+            />
+            <span
+              className={`text-sm font-medium ${isDragOver ? "text-green-600 dark:text-green-400" : ""}`}
+            >
+              {isDragOver ? "¡Suelta la imagen aquí!" : "Seleccionar imagen"}
+            </span>
             <span className="text-xs text-muted-foreground">
               Haz clic o arrastra una imagen
             </span>
@@ -476,8 +584,8 @@ export default function ImageCropperNew({
         </div>
 
         <div
-          className="flex justify-center relative bg-white rounded-lg p-4 border-2 border-gray-200"
-          onWheel={handleWheel}
+          className="flex flex-col items-center justify-center mx-auto relative bg-white rounded-lg p-4 border-2 border-gray-200"
+          style={{ width: "380px", height: "380px" }}
         >
           {!imageLoaded && (
             <div className="absolute inset-0 flex items-center justify-center z-10 bg-white/50 rounded-lg">
@@ -500,8 +608,11 @@ export default function ImageCropperNew({
               alt="Crop"
               onLoad={handleImageLoaded}
               style={{
-                maxWidth: "100%",
-                maxHeight: "400px",
+                maxWidth: "350px",
+                maxHeight: "350px",
+                width: "auto",
+                height: "auto",
+                objectFit: "contain",
                 scale: scale,
               }}
             />
@@ -538,7 +649,7 @@ export default function ImageCropperNew({
         </div>
 
         <p className="text-xs text-center text-muted-foreground">
-          Usa la rueda del ratón o los botones para hacer zoom
+          Usa los botones para hacer zoom
         </p>
 
         {error && (
@@ -552,7 +663,7 @@ export default function ImageCropperNew({
             type="button"
             variant="ghost"
             size="sm"
-            onClick={handleOpenFileSelector}
+            onClick={handleCancelEditAndReset}
             disabled={isProcessing}
           >
             <X className="h-4 w-4 mr-1" />
@@ -592,10 +703,10 @@ export default function ImageCropperNew({
           </p>
         </div>
 
-        <div className="flex justify-center">
+        <div className="flex justify-center w-full">
           <div
             className="relative rounded-lg border-2 border-gray-200 bg-gray-50 overflow-hidden"
-            style={{ width: "280px", height: "280px" }}
+            style={{ width: "200px", height: "200px" }}
           >
             <img
               src={croppedBlobUrl}
@@ -649,7 +760,7 @@ export default function ImageCropperNew({
         onChange={handleFileSelect}
         className="hidden"
       />
-      {content}
+      <div ref={contentRef}>{content}</div>
     </>
   );
 }
