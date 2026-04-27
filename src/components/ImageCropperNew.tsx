@@ -263,7 +263,9 @@ export default function ImageCropperNew({
       return;
     }
 
-    const ctx = canvas.getContext("2d", { alpha: true });
+    // Para JPG: no usar alpha (no soporta transparencia). Para PNG/WebP: usar alpha
+    const useAlpha = sourceMimeType !== "image/jpeg";
+    const ctx = canvas.getContext("2d", { alpha: useAlpha });
     if (!ctx) {
       setError("No se pudo obtener el contexto del canvas");
       return;
@@ -276,7 +278,12 @@ export default function ImageCropperNew({
 
     ctx.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0);
     ctx.imageSmoothingQuality = "high";
-    ctx.clearRect(0, 0, CROP_SIZE, CROP_SIZE);
+    
+    // Para JPG: llenar con blanco (no soporta transparencia). Para PNG: dejar transparente
+    if (!useAlpha) {
+      ctx.fillStyle = "#ffffff";
+      ctx.fillRect(0, 0, CROP_SIZE, CROP_SIZE);
+    }
 
     // Con scale CSS, ReactCrop reporta coordenadas en el espacio sin escalar
     // Necesitamos ajustar por el scale y convertir al espacio natural
