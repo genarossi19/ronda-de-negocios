@@ -545,7 +545,7 @@ export default function ImageCropperNew({
           onDragOver={handleDragOver}
           onDragLeave={handleDragLeave}
           onDrop={handleDrop}
-          className={`w-full !h-32 border-2 border-dashed flex items-center justify-center transition-all ${
+          className={`w-full !h-32 border-2 border-dashed flex items-center justify-center transition-all group ${
             isDragOver
               ? "border-green-500 bg-green-50 dark:bg-green-950/20 dark:border-green-400"
               : "border-gray-300 dark:border-gray-600 hover:border-primary hover:bg-primary/5"
@@ -553,14 +553,14 @@ export default function ImageCropperNew({
         >
           <div className="flex flex-col items-center gap-2">
             <Upload
-              className={`h-8 w-8 ${isDragOver ? "text-green-500 dark:text-green-400" : "text-muted-foreground"}`}
+              className={`h-8 w-8 ${isDragOver ? "text-green-500 dark:text-green-400" : "text-muted-foreground group-hover:text-primary"}`}
             />
             <span
-              className={`text-sm font-medium ${isDragOver ? "text-green-600 dark:text-green-400" : ""}`}
+              className={`text-sm font-medium transition-colors ${isDragOver ? "text-green-600 dark:text-green-400" : "text-foreground group-hover:text-primary"}`}
             >
               {isDragOver ? "¡Suelta la imagen aquí!" : "Seleccionar imagen"}
             </span>
-            <span className="text-xs text-muted-foreground">
+            <span className="text-xs text-muted-foreground group-hover:text-primary/70">
               Haz clic o arrastra una imagen
             </span>
           </div>
