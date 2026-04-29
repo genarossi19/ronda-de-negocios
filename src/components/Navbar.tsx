@@ -1,5 +1,13 @@
 import { Button } from "../components/ui/button";
-import { Building2, Menu, X, LogOut, User2Icon, Clock3 } from "lucide-react";
+import {
+  Building2,
+  Menu,
+  X,
+  LogOut,
+  User2Icon,
+  Clock3,
+  Settings,
+} from "lucide-react";
 import { Sheet, SheetContent, SheetTrigger } from "../components/ui/sheet";
 import {
   DropdownMenu,
@@ -429,6 +437,12 @@ export default function Navbar() {
                     <DropdownMenuItem className="cursor-pointer transition-colors duration-200">
                       <User2Icon className="mr-2 h-4 w-4" />
                       <span className="text-sm">Representantes</span>
+                    </DropdownMenuItem>
+                  </Link>
+                  <Link to="/settings">
+                    <DropdownMenuItem className="cursor-pointer transition-colors duration-200">
+                      <Settings className="mr-2 h-4 w-4" />
+                      <span className="text-sm">Configuración</span>
                     </DropdownMenuItem>
                   </Link>
                   <DropdownMenuSeparator className="bg-[#669649]/30 dark:bg-[#1a5032]" />

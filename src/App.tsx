@@ -8,6 +8,7 @@ import Shifts from "./pages/Shifts";
 import { BookingProvider } from "./context/BookingContext";
 import { AuthProvider } from "./context/AuthContext";
 import { ThemeProvider } from "./context/ThemeContext";
+import { MotionPreferencesProvider } from "./context/MotionPreferencesContext";
 import Login from "./pages/Login";
 import Tables from "./pages/Tables";
 import Test from "./pages/Test";
@@ -26,6 +27,7 @@ import ValidarEmail from "./pages/ValidarEmail";
 import VerificarEmailRepresentante from "./pages/VerificarEmailRepresentante";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
+import Settings from "./pages/Settings";
 import { useEffect } from "react";
 import {
   AUTH_SESSION_EXPIRED_EVENT,
@@ -167,6 +169,14 @@ function AppRoutes() {
             </ProtectedRoute>
           }
         />
+        <Route
+          path="/settings"
+          element={
+            <ProtectedRoute>
+              <Settings />
+            </ProtectedRoute>
+          }
+        />
         <Route path="*" element={<NotFound />} />
       </Routes>
     </ThemeProvider>
@@ -178,13 +188,15 @@ export default function App() {
     <AuthProvider>
       <BookingProvider>
         <CompanyProvider>
-          {/* Quitamos el bg-background de aquí si ya lo pusiste en el CSS del body.
-             Si lo dejas aquí, el padding del body siempre mostrará el color de "atrás".
-          */}
-          <div className="min-h-screen">
-            <AppRoutes />
-          </div>
-          <Toaster richColors position="top-right" closeButton />
+          <MotionPreferencesProvider>
+            {/* Quitamos el bg-background de aquí si ya lo pusiste en el CSS del body.
+               Si lo dejas aquí, el padding del body siempre mostrará el color de "atrás".
+            */}
+            <div className="min-h-screen">
+              <AppRoutes />
+            </div>
+            <Toaster richColors position="top-right" closeButton />
+          </MotionPreferencesProvider>
         </CompanyProvider>
       </BookingProvider>
     </AuthProvider>

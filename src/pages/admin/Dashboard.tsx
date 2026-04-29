@@ -20,6 +20,7 @@ import { getCompanies } from "../../api/EmpresaService";
 import { getEventos } from "../../api/EventoService";
 import { getMesasByTurnoId } from "../../api/MesaService";
 import { getTurnoByEventoId } from "../../api/TurnoService";
+import { useMotionContext } from "../../context/MotionPreferencesContext";
 import Navbar from "../../components/Navbar";
 import { Badge } from "../../components/ui/badge";
 import { Button } from "../../components/ui/button";
@@ -158,6 +159,7 @@ function HighlightsSkeleton() {
 
 export default function AdminDashboard() {
   const navigate = useNavigate();
+  const { shouldReduceMotion } = useMotionContext();
   const [eventos, setEventos] = useState<EventoResponse[]>([]);
   const [companies, setCompanies] = useState<EmpresaResponse[]>([]);
   const [activeEventTurnos, setActiveEventTurnos] = useState<TurnoResponse[]>(
@@ -165,6 +167,8 @@ export default function AdminDashboard() {
   );
   const [activeEventMesas, setActiveEventMesas] = useState<MesaResponse[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+
+  console.log("[Dashboard] shouldReduceMotion:", shouldReduceMotion);
 
   useEffect(() => {
     const fetchDashboardData = async () => {
@@ -418,25 +422,76 @@ export default function AdminDashboard() {
     navigate(action.href);
   };
 
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.1,
-        delayChildren: 0.2,
-      },
-    },
-  };
+  // Variantes que se adaptan a shouldReduceMotion
+  const containerVariants = shouldReduceMotion
+    ? {
+        hidden: { opacity: 1 },
+        visible: {
+          opacity: 1,
+          transition: {
+            staggerChildren: 0,
+            delayChildren: 0,
+          },
+        },
+      }
+    : {
+        hidden: { opacity: 0 },
+        visible: {
+          opacity: 1,
+          transition: {
+            staggerChildren: 0.1,
+            delayChildren: 0.2,
+          },
+        },
+      };
 
   const itemVariants = {
     hidden: { opacity: 0, y: 20 },
     visible: {
       opacity: 1,
       y: 0,
-      transition: { duration: 0.6 },
+      transition: shouldReduceMotion ? { duration: 0 } : { duration: 0.6 },
     },
   };
+
+  // Cuando shouldReduceMotion=true, comenzar directamente visible sin animación
+  // Cuando shouldReduceMotion=false, comenzar oculto y animar hacia visible
+  const itemInitial = shouldReduceMotion ? "visible" : "hidden";
+
+  // Variantes sutiles específicas para acciones rápidas - aparición de abajo hacia arriba
+  const quickActionVariants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: shouldReduceMotion ? { duration: 0 } : { duration: 0.5 },
+    },
+  };
+
+  // Contenedor de acciones rápidas con stagger effect
+  const quickActionContainerVariants = shouldReduceMotion
+    ? {
+        hidden: { opacity: 1 },
+        visible: {
+          opacity: 1,
+          transition: {
+            staggerChildren: 0,
+            delayChildren: 0,
+          },
+        },
+      }
+    : {
+        hidden: { opacity: 1 },
+        visible: {
+          opacity: 1,
+          transition: {
+            staggerChildren: 0.12,
+            delayChildren: 0.05,
+          },
+        },
+      };
+
+  const quickActionInitial = shouldReduceMotion ? "visible" : "hidden";
 
   return (
     <div className="flex min-h-screen flex-col bg-white transition-colors duration-300 dark:bg-[#0a1a15]">
@@ -446,7 +501,7 @@ export default function AdminDashboard() {
         <div className="mx-auto max-w-7xl">
           <m.div
             variants={itemVariants}
-            initial="hidden"
+            initial={itemInitial}
             animate="visible"
             className="mb-8 flex items-start justify-between"
           >
@@ -467,7 +522,7 @@ export default function AdminDashboard() {
 
           <m.section
             variants={itemVariants}
-            initial="hidden"
+            initial={itemInitial}
             animate="visible"
             className="mb-12 overflow-hidden rounded-[2rem] border border-[#68A243]/15 bg-gradient-to-br from-[#F7FBF3] via-white to-[#EEF6E7] p-6 shadow-[0_24px_60px_-36px_rgba(20,62,41,0.35)] dark:border-[#68A243]/20 dark:bg-none dark:bg-[#10271d]"
           >
@@ -483,7 +538,7 @@ export default function AdminDashboard() {
             </div>
 
             <m.div
-              variants={containerVariants}
+              variants={quickActionContainerVariants}
               initial="hidden"
               animate="visible"
               className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-4"
@@ -491,8 +546,8 @@ export default function AdminDashboard() {
               {quickActions.map((action, index) => (
                 <m.div
                   key={index}
-                  variants={itemVariants}
-                  initial="hidden"
+                  variants={quickActionVariants}
+                  initial={quickActionInitial}
                   animate="visible"
                 >
                   <Card
@@ -528,7 +583,7 @@ export default function AdminDashboard() {
 
           <m.section
             variants={itemVariants}
-            initial="hidden"
+            initial={itemInitial}
             animate="visible"
             className="mb-4"
           >
@@ -564,7 +619,7 @@ export default function AdminDashboard() {
             <>
               <m.div
                 variants={containerVariants}
-                initial="hidden"
+                initial={itemInitial}
                 animate="visible"
                 className="mb-8 grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4"
               >
@@ -572,7 +627,7 @@ export default function AdminDashboard() {
                   <m.div
                     key={index}
                     variants={itemVariants}
-                    initial="hidden"
+                    initial={itemInitial}
                     animate="visible"
                   >
                     <Card className="h-full border-[#68A243]/20 transition-all duration-300 dark:border-[#68A243]/30 dark:bg-[#143E29]">
@@ -601,13 +656,13 @@ export default function AdminDashboard() {
 
               <m.div
                 variants={containerVariants}
-                initial="hidden"
+                initial={itemInitial}
                 animate="visible"
                 className="mb-10 grid grid-cols-1 gap-6 xl:grid-cols-[1.1fr_1.6fr]"
               >
                 <m.div
                   variants={itemVariants}
-                  initial="hidden"
+                  initial={itemInitial}
                   animate="visible"
                 >
                   <Card className="h-full overflow-hidden border-[#68A243]/20 dark:border-[#68A243]/30 dark:bg-[#143E29]">
@@ -702,7 +757,7 @@ export default function AdminDashboard() {
 
                 <m.div
                   variants={itemVariants}
-                  initial="hidden"
+                  initial={itemInitial}
                   animate="visible"
                 >
                   <Card className="h-full overflow-hidden border-[#68A243]/20 dark:border-[#68A243]/30 dark:bg-[#143E29]">

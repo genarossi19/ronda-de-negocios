@@ -1,5 +1,6 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { useNavigate } from "react-router";
+import { AnimatePresence, motion } from "motion/react";
 import {
   ArrowLeft,
   Trash2,
@@ -15,6 +16,8 @@ import {
   Tag,
   MailCheck,
   MailX,
+  Mail,
+  Loader2,
 } from "lucide-react";
 import { Button } from "../../components/ui/button";
 import { Badge } from "../../components/ui/badge";
@@ -44,6 +47,7 @@ import {
 } from "../../api/EmpresaService";
 import type { EmpresaResponse } from "../../types/Empresa";
 import { useCurrentUser } from "../../hooks/useCurrentUser";
+import { useMotionContext } from "../../context/MotionPreferencesContext";
 import { getApiErrorMessage, isSessionExpiredError } from "../../lib/axios";
 
 function CompanyRow({
@@ -51,18 +55,108 @@ function CompanyRow({
   onApprove,
   onDelete,
   onView,
+  isSelected,
+  onSelect,
+  isSelectionMode,
+  animatingAction,
 }: {
   company: EmpresaResponse;
   onApprove: (c: EmpresaResponse) => void;
   onDelete: (c: EmpresaResponse) => void;
   onView: (c: EmpresaResponse) => void;
+  isSelected?: boolean;
+  onSelect?: (c: EmpresaResponse) => void;
+  isSelectionMode?: boolean;
+  animatingAction?: "approved" | "unapproved" | "deleted" | null;
 }) {
-  const emailConfirmado =
-    company.email_confirmado ?? company.email_confirmardo ?? false;
+  const emailConfirmado = company.email_confirmardo ?? false;
+  const { shouldReduceMotion } = useMotionContext();
+
+  // Helpers para transiciones que respeten shouldReduceMotion
+  const getInstantTransition = () =>
+    shouldReduceMotion ? { duration: 0 } : { duration: 0.12 };
+  const getQuickTransition = () =>
+    shouldReduceMotion ? { duration: 0 } : { duration: 0.2 };
+  const getSpringTransition = () =>
+    shouldReduceMotion
+      ? { duration: 0 }
+      : { duration: 0.3, type: "spring" as const, stiffness: 200 };
+
+  const handleCardClick = () => {
+    onSelect?.(company);
+  };
 
   return (
-    <div className="bg-white dark:bg-[#143E29] rounded-lg border border-gray-200 dark:border-[#68A243]/20 p-4 hover:border-[#68A243]/50 transition-all">
+    <motion.div
+      onClick={handleCardClick}
+      initial={false}
+      animate={{
+        scale: animatingAction === "deleted" ? 0.95 : isSelected ? 0.98 : 1,
+        borderColor:
+          animatingAction === "approved"
+            ? "#68A243"
+            : isSelected
+              ? "#68A243"
+              : "#e5e7eb",
+        backgroundColor:
+          animatingAction === "approved"
+            ? "rgba(104, 162, 67, 0.15)"
+            : animatingAction === "deleted"
+              ? "rgba(239, 68, 68, 0.08)"
+              : isSelected
+                ? "rgba(104, 162, 67, 0.05)"
+                : "transparent",
+        opacity: animatingAction === "deleted" ? 0.6 : 1,
+      }}
+      transition={{
+        duration: shouldReduceMotion ? 0 : animatingAction ? 0.4 : 0.2,
+        type: "spring",
+        stiffness: animatingAction ? 150 : 100,
+      }}
+      className={`relative bg-white dark:bg-[#143E29] rounded-lg border-2 p-4 transition-all cursor-pointer ${
+        isSelected
+          ? "border-[#68A243] bg-[#68A243]/5 dark:bg-[#68A243]/10"
+          : "border-gray-200 dark:border-[#68A243]/20 hover:border-[#68A243]/50"
+      }`}
+    >
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        {/* Checkbox */}
+        <AnimatePresence>
+          {isSelectionMode && (
+            <motion.div
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.8, opacity: 0 }}
+              transition={getInstantTransition()}
+              className="flex-shrink-0 w-5 h-5 cursor-pointer"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {isSelected ? (
+                <motion.div
+                  initial={{ scale: 0.8, rotate: -90 }}
+                  animate={{ scale: 1, rotate: 0 }}
+                  transition={getSpringTransition()}
+                  className="w-5 h-5 bg-[#68A243] rounded-md flex items-center justify-center"
+                >
+                  <motion.div
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    transition={
+                      shouldReduceMotion
+                        ? { duration: 0 }
+                        : { duration: 0.2, delay: 0.1 }
+                    }
+                  >
+                    <CheckCircle className="h-5 w-5 text-white" />
+                  </motion.div>
+                </motion.div>
+              ) : (
+                <div className="w-5 h-5 border-2 border-gray-300 dark:border-gray-500 rounded-md" />
+              )}
+            </motion.div>
+          )}
+        </AnimatePresence>
+
         {/* Company Info with Logo/Icon */}
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-4">
@@ -86,25 +180,24 @@ function CompanyRow({
               <h3 className="font-bold text-lg text-gray-900 dark:text-white truncate">
                 {company.razon_social}
               </h3>
-              <div className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300 truncate">
-                <Building2 className="h-3 w-3 flex-shrink-0" />
-                <span className="truncate">CUIT: {company.cuit}</span>
-              </div>
-              <div className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300 truncate">
-                <Phone className="h-3 w-3 flex-shrink-0" />
-                <span className="truncate">{company.telefono_contacto}</span>
-              </div>
+              {company.email && (
+                <div className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300 truncate">
+                  <Mail className="h-3 w-3 flex-shrink-0" />
+                  <span className="truncate">{company.email}</span>
+                </div>
+              )}
+              {company.sector && (
+                <div className="flex items-center gap-2 text-sm text-green-700 dark:text-green-300 truncate mt-1">
+                  <Tag className="h-3 w-3 flex-shrink-0" />
+                  <span className="truncate">{company.sector.nombre}</span>
+                </div>
+              )}
             </div>
           </div>
         </div>
 
         {/* Status & Sector */}
         <div className="flex flex-wrap gap-2 sm:justify-end">
-          {company.sector && (
-            <Badge className="bg-blue-100 text-blue-800 dark:bg-blue-950/30 dark:text-blue-400">
-              {company.sector.nombre}
-            </Badge>
-          )}
           <Badge
             className={
               emailConfirmado
@@ -144,48 +237,267 @@ function CompanyRow({
         </div>
 
         {/* Actions */}
-        <div className="flex gap-2 sm:justify-end">
-          {company.aprobada ? (
+        {!isSelectionMode && !company.eliminado && (
+          <div
+            className="flex gap-2 sm:justify-end"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {company.aprobada ? (
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={() => onApprove(company)}
+                className="gap-2 border-gray-300 text-gray-700 hover:bg-red-50 hover:text-red-600 hover:border-red-200  dark:border-[#68A243]/40 dark:text-[#68A243] dark:hover:bg-[#68A243]/10 transition-colors ease-in-out duration-300"
+              >
+                <XCircle className="h-4 w-4" />
+                Desaprobar
+              </Button>
+            ) : (
+              <Button
+                size="sm"
+                onClick={() => onApprove(company)}
+                className="gap-2 bg-[#68A243] hover:bg-[#5a9038] text-white"
+              >
+                <CheckCircle className="h-4 w-4" />
+                Aprobar
+              </Button>
+            )}
+
             <Button
               size="sm"
               variant="ghost"
-              onClick={() => onApprove(company)}
-              className="gap-2 border-gray-300 text-gray-700 hover:bg-red-50 hover:text-red-600 hover:border-red-200  dark:border-[#68A243]/40 dark:text-[#68A243] dark:hover:bg-[#68A243]/10 transition-colors ease-in-out duration-300"
+              onClick={(e) => {
+                e.stopPropagation();
+                onView(company);
+              }}
+              className="border-gray-300 text-gray-700 hover:bg-gray-100 hover:text-gray-700 dark:border-[#68A243]/40 dark:text-[#68A243] dark:hover:bg-[#68A243]/10"
             >
-              <XCircle className="h-4 w-4" />
-              Desaprobar
+              <Eye className="h-4 w-4" />
             </Button>
-          ) : (
+
             <Button
               size="sm"
-              onClick={() => onApprove(company)}
-              className="gap-2 bg-[#68A243] hover:bg-[#5a9038] text-white"
+              variant="ghost"
+              onClick={() => onDelete(company)}
+              className="text-red-600 hover:bg-red-50 hover:text-red-600 dark:text-red-400 dark:hover:bg-red-950/30"
             >
-              <CheckCircle className="h-4 w-4" />
-              Aprobar
+              <Trash2 className="h-4 w-4" />
             </Button>
-          )}
+          </div>
+        )}
 
+        {/* Eye button when in selection mode */}
+        {isSelectionMode && !company.eliminado && (
           <Button
             size="sm"
             variant="ghost"
-            onClick={() => onView(company)}
+            onClick={(e) => {
+              e.stopPropagation();
+              onView(company);
+            }}
             className="border-gray-300 text-gray-700 hover:bg-gray-100 hover:text-gray-700 dark:border-[#68A243]/40 dark:text-[#68A243] dark:hover:bg-[#68A243]/10"
           >
             <Eye className="h-4 w-4" />
           </Button>
+        )}
 
-          <Button
-            size="sm"
-            variant="ghost"
-            onClick={() => onDelete(company)}
-            className="text-red-600 hover:bg-red-50 hover:text-red-600 dark:text-red-400 dark:hover:bg-red-950/30"
-          >
-            <Trash2 className="h-4 w-4" />
-          </Button>
-        </div>
+        {/* Animation Overlay */}
+        <AnimatePresence>
+          {animatingAction === "approved" && !shouldReduceMotion && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={getQuickTransition()}
+              className="absolute inset-0 rounded-lg bg-[#68A243]/5 flex items-center justify-center pointer-events-none"
+            >
+              <div className="flex flex-col items-center gap-3">
+                {/* Círculo expandible */}
+                <motion.div
+                  initial={{ scale: 0, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  transition={{
+                    duration: 0.35,
+                    type: "spring",
+                    stiffness: 120,
+                    damping: 14,
+                  }}
+                  className="relative w-16 h-16"
+                >
+                  {/* Círculo de fondo */}
+                  <motion.div
+                    animate={shouldReduceMotion ? {} : { scale: [1, 1.1, 1] }}
+                    transition={
+                      shouldReduceMotion
+                        ? { duration: 0 }
+                        : { duration: 0.8, repeat: 1, repeatType: "loop" }
+                    }
+                    className="absolute inset-0 rounded-full bg-[#68A243]/20 border-2 border-[#68A243]"
+                  />
+                  {/* Checkmark */}
+                  <motion.div
+                    initial={{ rotate: -180, opacity: 0 }}
+                    animate={{ rotate: 0, opacity: 1 }}
+                    transition={
+                      shouldReduceMotion
+                        ? { duration: 0 }
+                        : {
+                            duration: 0.3,
+                            delay: 0.1,
+                            type: "spring",
+                            stiffness: 160,
+                          }
+                    }
+                    className="absolute inset-0 flex items-center justify-center"
+                  >
+                    <CheckCircle className="h-16 w-16 text-[#68A243]" />
+                  </motion.div>
+                </motion.div>
+                {/* Texto */}
+                <motion.span
+                  initial={{ opacity: 0, y: 5 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={
+                    shouldReduceMotion
+                      ? { duration: 0 }
+                      : { duration: 0.25, delay: 0.2 }
+                  }
+                  className="text-sm font-bold text-[#68A243]"
+                >
+                  ¡Aprobada!
+                </motion.span>
+              </div>
+            </motion.div>
+          )}
+
+          {animatingAction === "deleted" && !shouldReduceMotion && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={getQuickTransition()}
+              className="absolute inset-0 rounded-lg bg-red-500/5 flex items-center justify-center pointer-events-none"
+            >
+              <div className="flex flex-col items-center gap-3">
+                {/* Círculo expandible */}
+                <motion.div
+                  initial={{ scale: 0, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  transition={{
+                    duration: 0.35,
+                    type: "spring",
+                    stiffness: 120,
+                    damping: 14,
+                  }}
+                  className="relative w-16 h-16"
+                >
+                  {/* Círculo de fondo */}
+                  <motion.div
+                    animate={{ scale: [1, 1.1, 1] }}
+                    transition={{
+                      duration: 0.8,
+                      repeat: 1,
+                      repeatType: "loop",
+                    }}
+                    className="absolute inset-0 rounded-full bg-red-500/20 border-2 border-red-500"
+                  />
+                  {/* X Icon */}
+                  <motion.div
+                    initial={{ rotate: 180, opacity: 0 }}
+                    animate={{ rotate: 0, opacity: 1 }}
+                    transition={{
+                      duration: 0.3,
+                      delay: 0.1,
+                      type: "spring",
+                      stiffness: 160,
+                    }}
+                    className="absolute inset-0 flex items-center justify-center"
+                  >
+                    <XCircle className="h-16 w-16 text-red-500" />
+                  </motion.div>
+                </motion.div>
+                {/* Texto */}
+                <motion.span
+                  initial={{ opacity: 0, y: 5 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={
+                    shouldReduceMotion
+                      ? { duration: 0 }
+                      : { duration: 0.25, delay: 0.2 }
+                  }
+                  className="text-sm font-bold text-red-600"
+                >
+                  Eliminada
+                </motion.span>
+              </div>
+            </motion.div>
+          )}
+
+          {animatingAction === "unapproved" && !shouldReduceMotion && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={getQuickTransition()}
+              className="absolute inset-0 rounded-lg bg-orange-500/5 flex items-center justify-center pointer-events-none"
+            >
+              <div className="flex flex-col items-center gap-3">
+                {/* Círculo expandible */}
+                <motion.div
+                  initial={{ scale: 0, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  transition={{
+                    duration: 0.35,
+                    type: "spring",
+                    stiffness: 120,
+                    damping: 14,
+                  }}
+                  className="relative w-16 h-16"
+                >
+                  {/* Círculo de fondo */}
+                  <motion.div
+                    animate={{ scale: [1, 1.1, 1] }}
+                    transition={{
+                      duration: 0.8,
+                      repeat: 1,
+                      repeatType: "loop",
+                    }}
+                    className="absolute inset-0 rounded-full bg-orange-500/20 border-2 border-orange-500"
+                  />
+                  {/* X Icon */}
+                  <motion.div
+                    initial={{ rotate: 180, opacity: 0 }}
+                    animate={{ rotate: 0, opacity: 1 }}
+                    transition={{
+                      duration: 0.3,
+                      delay: 0.1,
+                      type: "spring",
+                      stiffness: 160,
+                    }}
+                    className="absolute inset-0 flex items-center justify-center"
+                  >
+                    <XCircle className="h-16 w-16 text-orange-600" />
+                  </motion.div>
+                </motion.div>
+                {/* Texto */}
+                <motion.span
+                  initial={{ opacity: 0, y: 5 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={
+                    shouldReduceMotion
+                      ? { duration: 0 }
+                      : { duration: 0.25, delay: 0.2 }
+                  }
+                  className="text-sm font-bold text-orange-600"
+                >
+                  Desaprobada
+                </motion.span>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
-    </div>
+    </motion.div>
   );
 }
 
@@ -274,6 +586,7 @@ function CompanyRowSkeleton() {
 export default function CompaniesManagement() {
   const navigate = useNavigate();
   const { isAdmin } = useCurrentUser();
+  const { shouldReduceMotion } = useMotionContext();
   const [companies, setCompanies] = useState<EmpresaResponse[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedCompany, setSelectedCompany] =
@@ -289,6 +602,26 @@ export default function CompaniesManagement() {
   const [filterStatus, setFilterStatus] = useState<
     "all" | "pending" | "approved" | "deleted"
   >("all");
+  const [selectedCompanies, setSelectedCompanies] = useState<Set<number>>(
+    new Set(),
+  );
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [processProgress, setProcessProgress] = useState(0);
+  const [bulkResults, setBulkResults] = useState<{
+    success: { name: string }[];
+    failed: { name: string; error: string }[];
+  } | null>(null);
+  const [isResultsOpen, setIsResultsOpen] = useState(false);
+  const [isFooterVisible, setIsFooterVisible] = useState(false);
+  const footerRef = useRef<HTMLDivElement | null>(null);
+  const [animatingCompanies, setAnimatingCompanies] = useState<
+    Map<number, "approved" | "unapproved" | "deleted">
+  >(new Map());
+  const [isApproving, setIsApproving] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  // isSelectionMode is computed based on selectedCompanies
+  const isSelectionMode = selectedCompanies.size > 0;
 
   // Proteger: solo admin puede acceder
   useEffect(() => {
@@ -318,29 +651,68 @@ export default function CompaniesManagement() {
     fetchCompanies();
   }, []);
 
+  // Detectar si el footer es visible en el viewport
+  useEffect(() => {
+    if (!footerRef.current) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        setIsFooterVisible(entry.isIntersecting);
+      },
+      { threshold: 0.1 },
+    );
+
+    observer.observe(footerRef.current);
+    return () => observer.disconnect();
+  }, []);
+
+  // DEBUG: Log motion preference changes
+  useEffect(() => {
+    console.log(
+      "[CompaniesManagement] shouldReduceMotion changed:",
+      shouldReduceMotion,
+    );
+  }, [shouldReduceMotion]);
+
   const pendingCompanies = companies.filter((c) => !c.aprobada);
   const approvedCompanies = companies.filter((c) => c.aprobada);
 
-  const filteredCompanies = companies
-    .filter((company) => {
-      const matchesSearch =
-        company.razon_social.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (company.cuit &&
-          company.cuit.toLowerCase().includes(searchTerm.toLowerCase()));
+  const filteredCompanies = useMemo(() => {
+    return companies
+      .filter((company) => {
+        const matchesSearch =
+          company.razon_social
+            .toLowerCase()
+            .includes(searchTerm.toLowerCase()) ||
+          (company.cuit &&
+            company.cuit.toLowerCase().includes(searchTerm.toLowerCase()));
 
-      if (filterStatus === "deleted")
-        return !!company.eliminado && matchesSearch;
-      if (filterStatus === "pending")
-        return !company.eliminado && !company.aprobada && matchesSearch;
-      if (filterStatus === "approved")
-        return !company.eliminado && !!company.aprobada && matchesSearch;
-      // "all": excluir eliminadas
-      return !company.eliminado && matchesSearch;
-    })
-    .sort((a, b) => {
-      if (filterStatus !== "all") return 0;
-      return Number(a.aprobada) - Number(b.aprobada);
-    });
+        if (filterStatus === "deleted")
+          return !!company.eliminado && matchesSearch;
+        if (filterStatus === "pending")
+          return !company.eliminado && !company.aprobada && matchesSearch;
+        if (filterStatus === "approved")
+          return !company.eliminado && !!company.aprobada && matchesSearch;
+        // "all": excluir eliminadas
+        return !company.eliminado && matchesSearch;
+      })
+      .sort((a, b) => {
+        if (filterStatus !== "all") return 0;
+        return Number(a.aprobada) - Number(b.aprobada);
+      });
+  }, [companies, filterStatus, searchTerm]);
+
+  // Deseleccionar empresas que ya no son visibles cuando cambia el filtro o búsqueda
+  useEffect(() => {
+    const visibleIds = new Set(filteredCompanies.map((c) => c.id));
+    const newSelected = new Set(
+      Array.from(selectedCompanies).filter((id) => visibleIds.has(id)),
+    );
+    if (newSelected.size !== selectedCompanies.size) {
+      setSelectedCompanies(newSelected);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filteredCompanies]);
 
   const handleApproveClick = (company: EmpresaResponse) => {
     setCompanyToApprove(company);
@@ -351,21 +723,50 @@ export default function CompaniesManagement() {
     if (companyToApprove) {
       const nuevoEstado = !companyToApprove.aprobada;
 
+      setIsApproving(true);
       try {
         await approveCompany(companyToApprove.id, nuevoEstado);
 
-        // Actualizar UI automáticamente
-        setCompanies(
-          companies.map((c) =>
-            c.id === companyToApprove.id ? { ...c, aprobada: nuevoEstado } : c,
+        // Agregar animación (approved si nuevoEstado es true, unapproved si es false)
+        setAnimatingCompanies((prev) =>
+          new Map(prev).set(
+            companyToApprove.id,
+            nuevoEstado ? "approved" : "unapproved",
           ),
         );
+
+        // Esperar a que la animación termine completamente
+        // Si shouldReduceMotion es true, el timeout es inmediato
+        const animationDuration = shouldReduceMotion ? 0 : 1300;
+        const exitDuration = shouldReduceMotion ? 0 : 350;
+
+        setTimeout(() => {
+          // Limpiar animación primero para que desaparezca
+          setAnimatingCompanies((prev) => {
+            const newMap = new Map(prev);
+            newMap.delete(companyToApprove.id);
+            return newMap;
+          });
+
+          // Esperar a que la animación de salida (exit) termine
+          setTimeout(() => {
+            // Actualizar UI después de que la animación haya desaparecido
+            setCompanies(
+              companies.map((c) =>
+                c.id === companyToApprove.id
+                  ? { ...c, aprobada: nuevoEstado }
+                  : c,
+              ),
+            );
+          }, exitDuration);
+        }, animationDuration);
 
         toast.success(
           nuevoEstado
             ? `${companyToApprove.razon_social} ha sido aprobada correctamente`
             : `${companyToApprove.razon_social} ha sido desaprobada correctamente`,
         );
+
         setIsApproveOpen(false);
         setCompanyToApprove(null);
       } catch (err) {
@@ -378,6 +779,8 @@ export default function CompaniesManagement() {
         }
 
         console.error("Error approving company:", err);
+      } finally {
+        setIsApproving(false);
       }
     }
   };
@@ -389,19 +792,43 @@ export default function CompaniesManagement() {
 
   const handleConfirmDelete = async () => {
     if (companyToDelete) {
+      setIsDeleting(true);
       try {
         await deleteCompany(companyToDelete.id);
 
-        // Actualizar UI automáticamente
-        setCompanies(
-          companies.map((c) =>
-            c.id === companyToDelete.id ? { ...c, eliminado: true } : c,
-          ),
+        // Agregar animación
+        setAnimatingCompanies((prev) =>
+          new Map(prev).set(companyToDelete.id, "deleted"),
         );
+
+        // Esperar a que la animación termine completamente
+        // Si shouldReduceMotion es true, el timeout es inmediato
+        const animationDuration = shouldReduceMotion ? 0 : 1300;
+        const exitDuration = shouldReduceMotion ? 0 : 350;
+
+        setTimeout(() => {
+          // Limpiar animación primero para que desaparezca
+          setAnimatingCompanies((prev) => {
+            const newMap = new Map(prev);
+            newMap.delete(companyToDelete.id);
+            return newMap;
+          });
+
+          // Esperar a que la animación de salida (exit) termine
+          setTimeout(() => {
+            // Actualizar UI después de que la animación haya desaparecido
+            setCompanies(
+              companies.map((c) =>
+                c.id === companyToDelete.id ? { ...c, eliminado: true } : c,
+              ),
+            );
+          }, exitDuration);
+        }, animationDuration);
 
         toast.success(
           `${companyToDelete.razon_social} ha sido eliminada correctamente`,
         );
+
         setIsDeleteOpen(false);
         setCompanyToDelete(null);
       } catch (err) {
@@ -414,6 +841,8 @@ export default function CompaniesManagement() {
         }
 
         console.error("Error deleting company:", err);
+      } finally {
+        setIsDeleting(false);
       }
     }
   };
@@ -421,6 +850,103 @@ export default function CompaniesManagement() {
   const handleViewDetail = (company: EmpresaResponse) => {
     setSelectedCompany(company);
     setIsDetailOpen(true);
+  };
+
+  const handleSelectCompany = (company: EmpresaResponse) => {
+    const newSelected = new Set(selectedCompanies);
+    if (newSelected.has(company.id)) {
+      newSelected.delete(company.id);
+    } else {
+      newSelected.add(company.id);
+    }
+    setSelectedCompanies(newSelected);
+  };
+
+  const handleCancelSelection = () => {
+    setSelectedCompanies(new Set());
+  };
+
+  const handleSelectAll = () => {
+    if (selectedCompanies.size === filteredCompanies.length) {
+      // Si todas están seleccionadas, deseleccionar todas
+      setSelectedCompanies(new Set());
+    } else {
+      // Si no están todas seleccionadas, seleccionar todas
+      const allIds = new Set(filteredCompanies.map((c) => c.id));
+      setSelectedCompanies(allIds);
+    }
+  };
+
+  // Verificar si todas las seleccionadas son desaprobadas (aprobada: false)
+  const canApprove =
+    selectedCompanies.size > 0 &&
+    Array.from(selectedCompanies).every((id) => {
+      const company = companies.find((c) => c.id === id);
+      return company && !company.aprobada;
+    });
+
+  const processBulkAction = async (
+    action: "approve" | "delete",
+    state: boolean,
+  ) => {
+    setIsProcessing(true);
+    const selectedCompanyList = companies.filter((c) =>
+      selectedCompanies.has(c.id),
+    );
+
+    let processed = 0;
+    const results: {
+      success: { name: string }[];
+      failed: { name: string; error: string }[];
+    } = { success: [], failed: [] };
+
+    for (const company of selectedCompanyList) {
+      try {
+        if (action === "approve") {
+          await approveCompany(company.id, state);
+          setCompanies((prev) =>
+            prev.map((c) =>
+              c.id === company.id ? { ...c, aprobada: state } : c,
+            ),
+          );
+          results.success.push({ name: company.razon_social });
+        } else if (action === "delete") {
+          await deleteCompany(company.id);
+          setCompanies((prev) =>
+            prev.map((c) =>
+              c.id === company.id ? { ...c, eliminado: true } : c,
+            ),
+          );
+          results.success.push({ name: company.razon_social });
+        }
+      } catch (err) {
+        const errorMessage =
+          getApiErrorMessage(err, "Error desconocido") || "Error desconocido";
+        results.failed.push({
+          name: company.razon_social,
+          error: errorMessage,
+        });
+        console.error(`Error en ${action} para empresa ${company.id}:`, err);
+      }
+
+      processed++;
+      setProcessProgress(
+        Math.round((processed / selectedCompanyList.length) * 100),
+      );
+    }
+
+    setIsProcessing(false);
+    setProcessProgress(0);
+    setSelectedCompanies(new Set());
+
+    if (results.failed.length === 0) {
+      toast.success(
+        `${results.success.length} empresa(s) ${action === "approve" ? "procesada(s)" : "eliminada(s)"} correctamente`,
+      );
+    } else {
+      setBulkResults(results);
+      setIsResultsOpen(true);
+    }
   };
 
   // No renderizar si no es admin
@@ -587,6 +1113,51 @@ export default function CompaniesManagement() {
 
           {/* Companies List */}
           <div className="space-y-3">
+            {/* Select All Checkbox */}
+            <AnimatePresence>
+              {isSelectionMode && filteredCompanies.length > 0 && (
+                <motion.div
+                  initial={
+                    shouldReduceMotion
+                      ? { opacity: 1, y: 0 }
+                      : { opacity: 0, y: -8 }
+                  }
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -8 }}
+                  transition={
+                    shouldReduceMotion ? { duration: 0 } : { duration: 0.15 }
+                  }
+                  className="mb-4 flex items-center gap-3 p-4 bg-white dark:bg-[#143E29] rounded-lg border-2 border-gray-200 dark:border-[#68A243]/20"
+                >
+                  <motion.div
+                    onClick={handleSelectAll}
+                    className="flex-shrink-0 w-5 h-5 cursor-pointer"
+                    whileHover={{ scale: 1.1 }}
+                    whileTap={{ scale: 0.95 }}
+                  >
+                    {selectedCompanies.size === filteredCompanies.length ? (
+                      <motion.div
+                        initial={{ scale: 0.8, rotate: -90 }}
+                        animate={{ scale: 1, rotate: 0 }}
+                        transition={{
+                          duration: 0.3,
+                          type: "spring",
+                          stiffness: 200,
+                        }}
+                        className="w-5 h-5 bg-[#68A243] rounded-md flex items-center justify-center"
+                      >
+                        <CheckCircle className="h-5 w-5 text-white" />
+                      </motion.div>
+                    ) : (
+                      <div className="w-5 h-5 border-2 border-gray-300 dark:border-gray-500 rounded-md" />
+                    )}
+                  </motion.div>
+                  <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                    Seleccionar todo ({filteredCompanies.length})
+                  </span>
+                </motion.div>
+              )}
+            </AnimatePresence>
             {filteredCompanies.length === 0 ? (
               <div className="text-center py-12 bg-white dark:bg-[#143E29] rounded-lg border border-dashed border-gray-300 dark:border-[#68A243]/20">
                 <Building2 className="mx-auto h-12 w-12 text-gray-300 dark:text-gray-600 mb-4" />
@@ -604,12 +1175,130 @@ export default function CompaniesManagement() {
                   onApprove={handleApproveClick}
                   onDelete={handleDeleteClick}
                   onView={handleViewDetail}
+                  isSelected={selectedCompanies.has(company.id)}
+                  onSelect={handleSelectCompany}
+                  isSelectionMode={isSelectionMode}
+                  animatingAction={animatingCompanies.get(company.id)}
                 />
               ))
             )}
           </div>
         </div>
       </main>
+
+      {/* Selection Bar + Footer Wrapper */}
+      <div className={`flex flex-col ${isFooterVisible ? "relative" : ""}`}>
+        {/* Selection Mode Action Bar */}
+        <AnimatePresence>
+          {isSelectionMode && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={
+                shouldReduceMotion ? { duration: 0 } : { duration: 0.12 }
+              }
+              className={`${
+                isFooterVisible ? "absolute" : "fixed"
+              } left-0 right-0 bg-white dark:bg-[#143E29] border-t-2 border-[#68A243] p-4 shadow-lg z-40`}
+              style={{
+                bottom: "0px",
+              }}
+            >
+              <div className="max-w-7xl mx-auto flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                    {selectedCompanies.size} seleccionada
+                    {selectedCompanies.size !== 1 ? "s" : ""}
+                  </span>
+                  {isProcessing && (
+                    <div className="flex items-center gap-2">
+                      <div className="w-32 h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+                        <div
+                          className="h-full bg-[#68A243] transition-all duration-300"
+                          style={{ width: `${processProgress}%` }}
+                        />
+                      </div>
+                      <span className="text-xs text-gray-600 dark:text-gray-400">
+                        {processProgress}%
+                      </span>
+                    </div>
+                  )}
+                </div>
+
+                <div className="flex gap-2">
+                  <Button
+                    onClick={handleCancelSelection}
+                    disabled={isProcessing}
+                    variant="ghost"
+                    className="border-gray-300 text-gray-700 hover:bg-gray-100 dark:border-[#68A243]/40 dark:text-[#68A243] dark:hover:bg-[#68A243]/10"
+                  >
+                    Cancelar
+                  </Button>
+
+                  <Button
+                    onClick={() => processBulkAction("approve", true)}
+                    disabled={isProcessing || !canApprove}
+                    className="gap-2 bg-[#68A243] hover:bg-[#5a9038] text-white disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {isProcessing ? (
+                      <>
+                        <motion.div
+                          animate={{ rotate: 360 }}
+                          transition={{
+                            duration: 1,
+                            repeat: Infinity,
+                            ease: "linear",
+                          }}
+                        >
+                          <Loader2 className="h-4 w-4" />
+                        </motion.div>
+                        Aprobando...
+                      </>
+                    ) : (
+                      <>
+                        <CheckCircle className="h-4 w-4" />
+                        Aprobar
+                      </>
+                    )}
+                  </Button>
+
+                  <Button
+                    onClick={() => processBulkAction("delete", false)}
+                    disabled={isProcessing}
+                    className="gap-2 bg-red-600 hover:bg-red-700 text-white disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {isProcessing ? (
+                      <>
+                        <motion.div
+                          animate={{ rotate: 360 }}
+                          transition={{
+                            duration: 1,
+                            repeat: Infinity,
+                            ease: "linear",
+                          }}
+                        >
+                          <Loader2 className="h-4 w-4" />
+                        </motion.div>
+                        Eliminando...
+                      </>
+                    ) : (
+                      <>
+                        <Trash2 className="h-4 w-4" />
+                        Eliminar
+                      </>
+                    )}
+                  </Button>
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        <div ref={footerRef} className={isFooterVisible ? "" : ""}>
+          <Footer />
+        </div>
+      </div>
 
       {/* Detail Modal */}
       <Dialog open={isDetailOpen} onOpenChange={setIsDetailOpen}>
@@ -647,30 +1336,24 @@ export default function CompaniesManagement() {
                     </p>
                     <div className="flex flex-wrap gap-2">
                       {selectedCompany.sector && (
-                        <Badge className="bg-blue-100 text-blue-800 dark:bg-blue-950/40 dark:text-blue-400 text-sm">
+                        <Badge className="bg-green-100 text-green-800 dark:bg-[#68A243]/20 dark:text-[#68A243] text-sm">
                           <Tag className="h-3 w-3 mr-1" />
                           {selectedCompany.sector.nombre}
                         </Badge>
                       )}
                       <Badge
                         className={`text-sm ${
-                          (selectedCompany.email_confirmado ??
-                          selectedCompany.email_confirmardo ??
-                          false)
+                          (selectedCompany.email_confirmardo ?? false)
                             ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-950/30 dark:text-emerald-400"
                             : "bg-amber-100 text-amber-800 dark:bg-amber-950/30 dark:text-amber-400"
                         }`}
                       >
-                        {(selectedCompany.email_confirmado ??
-                        selectedCompany.email_confirmardo ??
-                        false) ? (
+                        {(selectedCompany.email_confirmardo ?? false) ? (
                           <MailCheck className="h-3 w-3 mr-1" />
                         ) : (
                           <MailX className="h-3 w-3 mr-1" />
                         )}
-                        {(selectedCompany.email_confirmado ??
-                        selectedCompany.email_confirmardo ??
-                        false)
+                        {(selectedCompany.email_confirmardo ?? false)
                           ? "Email validado"
                           : "Email sin validar"}
                       </Badge>
@@ -720,16 +1403,12 @@ export default function CompaniesManagement() {
                             )}
                             <Badge
                               className={
-                                (selectedCompany.email_confirmado ??
-                                selectedCompany.email_confirmardo ??
-                                false)
+                                (selectedCompany.email_confirmardo ?? false)
                                   ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-950/30 dark:text-emerald-400"
                                   : "bg-amber-100 text-amber-800 dark:bg-amber-950/30 dark:text-amber-400"
                               }
                             >
-                              {(selectedCompany.email_confirmado ??
-                              selectedCompany.email_confirmardo ??
-                              false)
+                              {(selectedCompany.email_confirmardo ?? false)
                                 ? "Validado"
                                 : "Sin validar"}
                             </Badge>
@@ -825,7 +1504,10 @@ export default function CompaniesManagement() {
       </Dialog>
 
       {/* Delete Modal */}
-      <Dialog open={isDeleteOpen} onOpenChange={setIsDeleteOpen}>
+      <Dialog
+        open={isDeleteOpen}
+        onOpenChange={(open) => !isDeleting && setIsDeleteOpen(open)}
+      >
         <DialogContent className="border-gray-200 dark:border-[#68A243]/20 bg-white dark:bg-[#143E29] max-w-md">
           <DialogHeader>
             <DialogTitle className="text-gray-900 dark:text-white">
@@ -844,23 +1526,45 @@ export default function CompaniesManagement() {
             <Button
               variant="outline"
               onClick={() => setIsDeleteOpen(false)}
-              className="border-gray-300 text-gray-700 hover:bg-gray-100 dark:border-[#68A243]/40 dark:text-[#68A243] dark:hover:bg-[#68A243]/10"
+              disabled={isDeleting}
+              className="border-gray-300 text-gray-700 hover:bg-gray-100 disabled:opacity-50 dark:border-[#68A243]/40 dark:text-[#68A243] dark:hover:bg-[#68A243]/10"
             >
               Cancelar
             </Button>
             <Button
               variant="destructive"
               onClick={handleConfirmDelete}
-              className="bg-red-600 hover:bg-red-700 text-white"
+              disabled={isDeleting}
+              className="bg-red-600 hover:bg-red-700 text-white disabled:bg-red-600 disabled:opacity-75"
             >
-              Eliminar
+              {isDeleting ? (
+                <>
+                  <motion.div
+                    animate={{ rotate: 360 }}
+                    transition={{
+                      duration: 1,
+                      repeat: Infinity,
+                      ease: "linear",
+                    }}
+                    className="inline-block mr-2"
+                  >
+                    <Loader2 className="h-4 w-4" />
+                  </motion.div>
+                  Eliminando...
+                </>
+              ) : (
+                <>Eliminar</>
+              )}
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
       {/* Approve Confirmation Modal */}
-      <Dialog open={isApproveOpen} onOpenChange={setIsApproveOpen}>
+      <Dialog
+        open={isApproveOpen}
+        onOpenChange={(open) => !isApproving && setIsApproveOpen(open)}
+      >
         <DialogContent className="border-gray-200 dark:border-[#68A243]/20 bg-white dark:bg-[#143E29] max-w-md">
           <DialogHeader>
             <DialogTitle className="text-gray-900 dark:text-white">
@@ -893,25 +1597,118 @@ export default function CompaniesManagement() {
             <Button
               variant="outline"
               onClick={() => setIsApproveOpen(false)}
-              className="border-gray-300 text-gray-700 hover:bg-gray-100 dark:border-[#68A243]/40 dark:text-[#68A243] dark:hover:bg-[#68A243]/10"
+              disabled={isApproving}
+              className="border-gray-300 text-gray-700 hover:bg-gray-100 disabled:opacity-50 dark:border-[#68A243]/40 dark:text-[#68A243] dark:hover:bg-[#68A243]/10"
             >
               Cancelar
             </Button>
             <Button
               onClick={handleConfirmApprove}
+              disabled={isApproving}
               className={`text-white ${
                 companyToApprove?.aprobada
-                  ? "bg-amber-500 hover:bg-amber-600"
-                  : "bg-[#68A243] hover:bg-[#5a9038]"
+                  ? "bg-amber-500 hover:bg-amber-600 disabled:bg-amber-500 disabled:opacity-75"
+                  : "bg-[#68A243] hover:bg-[#5a9038] disabled:bg-[#68A243] disabled:opacity-75"
               }`}
             >
-              {companyToApprove?.aprobada ? "Desaprobar" : "Aprobar"}
+              {isApproving ? (
+                <>
+                  <motion.div
+                    animate={{ rotate: 360 }}
+                    transition={{
+                      duration: 1,
+                      repeat: Infinity,
+                      ease: "linear",
+                    }}
+                    className="inline-block mr-2"
+                  >
+                    <Loader2 className="h-4 w-4" />
+                  </motion.div>
+                  {companyToApprove?.aprobada
+                    ? "Desaprobando..."
+                    : "Aprobando..."}
+                </>
+              ) : (
+                <>{companyToApprove?.aprobada ? "Desaprobar" : "Aprobar"}</>
+              )}
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
-      <Footer />
+      {/* Bulk Results Modal */}
+      <Dialog open={isResultsOpen} onOpenChange={setIsResultsOpen}>
+        <DialogContent className="border-gray-200 dark:border-[#68A243]/20 bg-white dark:bg-[#143E29] max-w-2xl max-h-[80vh]">
+          <DialogHeader>
+            <DialogTitle className="text-gray-900 dark:text-white">
+              Resultados del procesamiento
+            </DialogTitle>
+          </DialogHeader>
+
+          <div className="space-y-4 overflow-y-auto max-h-[60vh]">
+            {/* Success Section */}
+            {bulkResults?.success && bulkResults.success.length > 0 && (
+              <div>
+                <div className="flex items-center gap-2 mb-3">
+                  <CheckCircle className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
+                  <h3 className="font-semibold text-emerald-600 dark:text-emerald-400">
+                    Exitosas ({bulkResults.success.length})
+                  </h3>
+                </div>
+                <div className="bg-emerald-50 dark:bg-emerald-950/20 rounded-lg p-3 space-y-2">
+                  {bulkResults.success.map((item, idx) => (
+                    <div
+                      key={idx}
+                      className="text-sm text-emerald-900 dark:text-emerald-200 flex items-start gap-2"
+                    >
+                      <span className="text-emerald-600 dark:text-emerald-400 mt-0.5">
+                        ✓
+                      </span>
+                      <span>{item.name}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Failed Section */}
+            {bulkResults?.failed && bulkResults.failed.length > 0 && (
+              <div>
+                <div className="flex items-center gap-2 mb-3">
+                  <XCircle className="h-5 w-5 text-red-600 dark:text-red-400" />
+                  <h3 className="font-semibold text-red-600 dark:text-red-400">
+                    Fallidas ({bulkResults.failed.length})
+                  </h3>
+                </div>
+                <div className="bg-red-50 dark:bg-red-950/20 rounded-lg p-3 space-y-3">
+                  {bulkResults.failed.map((item, idx) => (
+                    <div
+                      key={idx}
+                      className="border-b border-red-200 dark:border-red-900/30 pb-2 last:border-b-0 last:pb-0"
+                    >
+                      <p className="text-sm font-medium text-red-900 dark:text-red-200">
+                        {item.name}
+                      </p>
+                      <p className="text-xs text-red-700 dark:text-red-300 mt-1">
+                        {item.error}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+
+          <DialogFooter>
+            <Button
+              onClick={() => setIsResultsOpen(false)}
+              className="bg-[#68A243] hover:bg-[#5a9038] text-white"
+            >
+              Cerrar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
