@@ -330,6 +330,9 @@ export default function MeetingsSummary() {
   const [eventos, setEventos] = useState<EventoResponse[]>([]);
   const [selectedEventId, setSelectedEventId] = useState<string>("");
   const [turnoFilter, setTurnoFilter] = useState<string>("all");
+  const [estadoMesaFilter, setEstadoMesaFilter] = useState<
+    "all" | "libre" | "parcial" | "completa"
+  >("all");
   const [eventSearchTerm, setEventSearchTerm] = useState("");
   const [turnoSearchTerm, setTurnoSearchTerm] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
@@ -418,6 +421,7 @@ export default function MeetingsSummary() {
       try {
         setIsLoadingSummary(true);
         setTurnoFilter("all");
+        setEstadoMesaFilter("all");
         setSelectedTableSummary(null);
 
         const turnos = sortTurnos(await getTurnoByEventoId(selectedEvent.id));
@@ -577,10 +581,16 @@ export default function MeetingsSummary() {
       filteredRows.map((row) => `${row.turnoId}-${row.mesaId}`),
     );
 
-    return tableSummaries.filter((tableSummary) =>
-      allowedKeys.has(`${tableSummary.turnoId}-${tableSummary.mesaId}`),
-    );
-  }, [filteredRows, tableSummaries]);
+    return tableSummaries.filter((tableSummary) => {
+      const hasKey = allowedKeys.has(
+        `${tableSummary.turnoId}-${tableSummary.mesaId}`,
+      );
+      const estadoMatches =
+        estadoMesaFilter === "all" ||
+        tableSummary.estadoMesa === estadoMesaFilter;
+      return hasKey && estadoMatches;
+    });
+  }, [filteredRows, tableSummaries, estadoMesaFilter]);
 
   const availableTurnos = useMemo(() => {
     const turnosMap = new Map<
@@ -848,6 +858,7 @@ export default function MeetingsSummary() {
                   onClick={() => {
                     setTurnoFilter("all");
                     setSearchTerm("");
+                    setEstadoMesaFilter("all");
                   }}
                   disabled={!hasActiveFilters}
                   className="h-10 justify-start border-[#68A243]/20 bg-white px-3 text-[#3F6E20] hover:bg-[#68A243]/10 hover:text-[#3F6E20] disabled:opacity-40 disabled:hover:bg-white dark:border-[#68A243]/20 dark:bg-[#143E29] dark:text-[#9FD27B] dark:hover:bg-[#68A243]/10 dark:hover:text-[#9FD27B]"
@@ -878,7 +889,7 @@ export default function MeetingsSummary() {
                   >
                     {isLoading
                       ? "Cargando reuniones"
-                      : `${filteredTableSummaries.length} mesas y ${filteredRows.length} registros`}
+                      : ` ${filteredRows.length} registros`}
                   </p>
                 </div>
 
@@ -1037,14 +1048,35 @@ export default function MeetingsSummary() {
 
               <TabsContent value="tabla" className="mt-0">
                 <Card className="border-[#68A243]/20 dark:border-[#68A243]/25 dark:bg-[#143E29] overflow-hidden">
-                  <CardHeader className="border-b border-[#68A243]/10 dark:border-[#68A243]/20">
-                    <CardTitle className="text-[#143E29] dark:text-white">
-                      Vista tabular
-                    </CardTitle>
-                    <CardDescription className="dark:text-gray-300">
-                      Una fila por mesa para ver rápido qué empresa anfitriona
-                      se cruza con qué empresa invitada.
-                    </CardDescription>
+                  <CardHeader className="border-b border-[#68A243]/10 dark:border-[#68A243]/20 flex items-center justify-between gap-4">
+                    <div>
+                      <CardTitle className="text-[#143E29] dark:text-white">
+                        Vista tabular
+                      </CardTitle>
+                      <CardDescription className="dark:text-gray-300">
+                        Una fila por mesa.
+                      </CardDescription>
+                    </div>
+                    <div className="flex gap-2">
+                      {(["all", "libre", "parcial", "completa"] as const).map(
+                        (estado) => (
+                          <button
+                            key={estado}
+                            onClick={() => setEstadoMesaFilter(estado)}
+                            className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+                              estadoMesaFilter === estado
+                                ? "bg-[#68A243] text-white"
+                                : "bg-white dark:bg-[#143E29] text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-[#68A243]/20 hover:border-[#68A243]/50"
+                            }`}
+                          >
+                            {estado === "all" && "Todas"}
+                            {estado === "libre" && "Vacías"}
+                            {estado === "parcial" && "Parciales"}
+                            {estado === "completa" && "Completas"}
+                          </button>
+                        ),
+                      )}
+                    </div>
                   </CardHeader>
                   <CardContent className="p-0">
                     <ScrollArea className="w-full">
@@ -1055,7 +1087,9 @@ export default function MeetingsSummary() {
                             <TableHead>Mesa</TableHead>
                             <TableHead>Estado</TableHead>
                             <TableHead>Anfitriona</TableHead>
+                            <TableHead>Rep. Anfitriona</TableHead>
                             <TableHead>Invitada</TableHead>
+                            <TableHead>Rep. Invitada</TableHead>
                           </TableRow>
                         </TableHeader>
                         <TableBody>
@@ -1089,47 +1123,20 @@ export default function MeetingsSummary() {
                                       {occupancyBadge.label}
                                     </Badge>
                                   </TableCell>
-                                  <TableCell className="min-w-[280px] align-top">
-                                    {anfitriona ? (
-                                      <div className="space-y-1 py-1">
-                                        <p className="font-semibold text-[#143E29] dark:text-white">
-                                          {anfitriona.empresaNombre}
-                                        </p>
-                                        <p className="text-sm text-muted-foreground dark:text-gray-300">
-                                          {anfitriona.representanteNombre ||
-                                            "Sin representante"}
-                                        </p>
-                                        <p className="text-sm text-muted-foreground dark:text-gray-400 break-all">
-                                          {anfitriona.representanteEmail ||
-                                            "Sin email"}
-                                        </p>
-                                      </div>
-                                    ) : (
-                                      <span className="text-sm text-muted-foreground dark:text-gray-300">
-                                        Sin anfitriona asignada
-                                      </span>
-                                    )}
+                                  <TableCell className="min-w-[200px] align-top font-semibold text-[#143E29] dark:text-white">
+                                    {anfitriona?.empresaNombre ||
+                                      "Sin anfitriona"}
                                   </TableCell>
-                                  <TableCell className="min-w-[280px] align-top">
-                                    {invitada ? (
-                                      <div className="space-y-1 py-1">
-                                        <p className="font-semibold text-[#143E29] dark:text-white">
-                                          {invitada.empresaNombre}
-                                        </p>
-                                        <p className="text-sm text-muted-foreground dark:text-gray-300">
-                                          {invitada.representanteNombre ||
-                                            "Sin representante"}
-                                        </p>
-                                        <p className="text-sm text-muted-foreground dark:text-gray-400 break-all">
-                                          {invitada.representanteEmail ||
-                                            "Sin email"}
-                                        </p>
-                                      </div>
-                                    ) : (
-                                      <span className="text-sm text-muted-foreground dark:text-gray-300">
-                                        Sin invitada asignada
-                                      </span>
-                                    )}
+                                  <TableCell className="min-w-[200px] align-top text-sm text-muted-foreground dark:text-gray-300">
+                                    {anfitriona?.representanteNombre ||
+                                      "Sin representante"}
+                                  </TableCell>
+                                  <TableCell className="min-w-[200px] align-top font-semibold text-[#143E29] dark:text-white">
+                                    {invitada?.empresaNombre || "Sin invitada"}
+                                  </TableCell>
+                                  <TableCell className="min-w-[200px] align-top text-sm text-muted-foreground dark:text-gray-300">
+                                    {invitada?.representanteNombre ||
+                                      "Sin representante"}
                                   </TableCell>
                                 </TableRow>
                               );
@@ -1137,7 +1144,7 @@ export default function MeetingsSummary() {
                           ) : (
                             <TableRow className="hover:bg-transparent dark:border-[#68A243]/15">
                               <TableCell
-                                colSpan={5}
+                                colSpan={7}
                                 className="py-10 text-center text-muted-foreground dark:text-gray-300"
                               >
                                 No hay registros para el filtro actual.
