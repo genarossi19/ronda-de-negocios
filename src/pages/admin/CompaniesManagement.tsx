@@ -18,6 +18,7 @@ import {
   MailX,
   Mail,
   Loader2,
+  Download,
 } from "lucide-react";
 import { Button } from "../../components/ui/button";
 import { Badge } from "../../components/ui/badge";
@@ -552,6 +553,68 @@ function FiltersSkeleton() {
   );
 }
 
+function escapeCsvValue(value: string | number | boolean) {
+  return `"${String(value).replace(/"/g, '""')}"`;
+}
+
+function downloadCsv(companies: EmpresaResponse[]) {
+  const headers = [
+    "Razón Social",
+    "CUIT",
+    "Email",
+    "Sector",
+    "Teléfono",
+    "Ubicación",
+    "Email Validado",
+    "Estado",
+  ];
+
+  const currentDate = new Date().toLocaleDateString("es-AR", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+  });
+
+  const content = [
+    `Fecha: ${currentDate}`,
+    headers.map(escapeCsvValue).join(","),
+    ...companies.map((company) => {
+      const emailValidado = company.email_confirmardo ?? false;
+      const estado = company.eliminado
+        ? "Eliminada"
+        : company.aprobada
+          ? "Aprobada"
+          : "Pendiente";
+
+      return [
+        company.razon_social,
+        company.cuit || "",
+        company.email || "",
+        company.sector?.nombre || "",
+        company.telefono_contacto || "",
+        `${company.localidad?.nombre || ""}, ${company.localidad?.provincia?.nombre || ""}`,
+        emailValidado ? "Sí" : "No",
+        estado,
+      ]
+        .map(escapeCsvValue)
+        .join(",");
+    }),
+  ].join("\n");
+
+  const blob = new Blob([`\uFEFF${content}`], {
+    type: "text/csv;charset=utf-8;",
+  });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+
+  link.href = url;
+  link.download = `empresas-${currentDate.replace(/\//g, "-")}.csv`;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+}
+
 function CompanyRowSkeleton() {
   return (
     <div className="bg-white dark:bg-[#143E29] rounded-lg border border-gray-200 dark:border-[#68A243]/20 p-4">
@@ -1010,6 +1073,25 @@ export default function CompaniesManagement() {
                   registradas.
                 </p>
               </div>
+
+              <Button
+                onClick={() => {
+                  if (filteredCompanies.length === 0) {
+                    toast.info(
+                      "No hay empresas para descargar en el filtro actual",
+                    );
+                    return;
+                  }
+                  downloadCsv(filteredCompanies);
+                  toast.success(
+                    `Descargadas ${filteredCompanies.length} empresa(s)`,
+                  );
+                }}
+                className="h-11 px-5 bg-white text-[#143E29] hover:bg-white/90 font-semibold"
+              >
+                <Download className="h-4 w-4" />
+                Descargar CSV
+              </Button>
             </div>
           </section>
 
