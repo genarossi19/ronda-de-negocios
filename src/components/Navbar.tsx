@@ -25,6 +25,7 @@ import { useUserStore } from "../store/userStore";
 import { Link, useLocation, useNavigate } from "react-router";
 import { ThemeToggle } from "./ThemeToggle";
 import { cn } from "../lib/utils";
+import { SESSION_EXPIRED_STORAGE_KEY } from "../lib/axios";
 
 export default function Navbar() {
   const { user, isAuthenticated, isPendingApproval } = useCurrentUser();
@@ -472,6 +473,7 @@ export default function Navbar() {
                   <DropdownMenuSeparator className="bg-[#669649]/30 dark:bg-[#1a5032]" />
                   <DropdownMenuItem
                     onClick={() => {
+                      localStorage.removeItem(SESSION_EXPIRED_STORAGE_KEY);
                       logout();
                       navigate("/");
                     }}
@@ -748,6 +750,9 @@ export default function Navbar() {
                       {isAuthenticated ? (
                         <Button
                           onClick={() => {
+                            localStorage.removeItem(
+                              SESSION_EXPIRED_STORAGE_KEY,
+                            );
                             logout();
                             setIsOpen(false);
                             navigate("/");
