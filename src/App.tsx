@@ -129,7 +129,7 @@ function AppRoutes() {
           }
         />
         <Route
-          path="/gestionar-rondas"
+          path="/panel-administrador/gestionar-rondas"
           element={
             <ProtectedRoute requiredAdmin>
               <GestionarRondas />

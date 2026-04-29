@@ -145,8 +145,32 @@ export default function Navbar() {
   const isPathActive = (path: string) => {
     const currentPath = location.pathname;
 
+    // Primero verificar rutas específicas del admin (más específicas primero)
+    if (path === "/panel-administrador/gestionar-rondas") {
+      return (
+        currentPath === "/panel-administrador/gestionar-rondas" ||
+        currentPath.startsWith("/panel-administrador/gestionar-rondas/")
+      );
+    }
+
+    if (path === "/panel-administrador/empresas") {
+      return (
+        currentPath === "/panel-administrador/empresas" ||
+        currentPath.startsWith("/panel-administrador/empresas/")
+      );
+    }
+
+    if (path === "/panel-administrador/reuniones") {
+      return (
+        currentPath === "/panel-administrador/reuniones" ||
+        currentPath.startsWith("/panel-administrador/reuniones/")
+      );
+    }
+
+    // Después rutas generales
     if (path === "/panel-administrador") {
-      return currentPath.startsWith("/panel-administrador");
+      // Solo activo si es exactamente /panel-administrador, no si tiene subrutas
+      return currentPath === "/panel-administrador";
     }
 
     if (path === "/empresas") {
@@ -163,13 +187,6 @@ export default function Navbar() {
       return (
         currentPath === "/representantes" ||
         currentPath.startsWith("/representantes/")
-      );
-    }
-
-    if (path === "/panel-administrador/reuniones") {
-      return (
-        currentPath === "/panel-administrador/reuniones" ||
-        currentPath.startsWith("/panel-administrador/reuniones/")
       );
     }
 
@@ -214,16 +231,23 @@ export default function Navbar() {
             to="/panel-administrador"
             className={getDesktopNavLinkClassName("/panel-administrador")}
           >
-            Panel Admin
+            Panel
           </Link>
           <Link
-            to="/empresas"
-            className={getDesktopNavLinkClassName("/empresas")}
+            to="/panel-administrador/gestionar-rondas"
+            className={getDesktopNavLinkClassName(
+              "/panel-administrador/gestionar-rondas",
+            )}
+          >
+            Rondas
+          </Link>
+          <Link
+            to="/panel-administrador/empresas"
+            className={getDesktopNavLinkClassName(
+              "/panel-administrador/empresas",
+            )}
           >
             Empresas
-          </Link>
-          <Link to="/turnos" className={getDesktopNavLinkClassName("/turnos")}>
-            Turnos
           </Link>
           <Link
             to="/panel-administrador/reuniones"
@@ -614,24 +638,43 @@ export default function Navbar() {
                                 "/panel-administrador",
                               )}
                             >
-                              Panel Admin
+                              Panel
+                            </button>
+                          </Link>
+                          <Link to="/panel-administrador/gestionar-rondas">
+                            <button
+                              onClick={() => setIsOpen(false)}
+                              className={getMobileNavButtonClassName(
+                                "/panel-administrador/gestionar-rondas",
+                              )}
+                            >
+                              Rondas
+                            </button>
+                          </Link>
+                          <Link to="/panel-administrador/empresas">
+                            <button
+                              onClick={() => setIsOpen(false)}
+                              className={getMobileNavButtonClassName(
+                                "/panel-administrador/empresas",
+                              )}
+                            >
+                              Empresas
+                            </button>
+                          </Link>
+                          <Link to="/panel-administrador/reuniones">
+                            <button
+                              onClick={() => setIsOpen(false)}
+                              className={getMobileNavButtonClassName(
+                                "/panel-administrador/reuniones",
+                              )}
+                            >
+                              Reuniones
                             </button>
                           </Link>
                         </>
                       )}
 
                       {!isAdmin && (
-                        <Link to="/empresas">
-                          <button
-                            onClick={() => setIsOpen(false)}
-                            className={getMobileNavButtonClassName("/empresas")}
-                          >
-                            Empresas
-                          </button>
-                        </Link>
-                      )}
-
-                      {isAdmin && (
                         <>
                           <Link to="/empresas">
                             <button
@@ -643,42 +686,29 @@ export default function Navbar() {
                               Empresas
                             </button>
                           </Link>
-                        </>
-                      )}
-
-                      {isAuthenticated && (
-                        <>
                           <Link to="/turnos">
                             <button
                               onClick={() => setIsOpen(false)}
                               className={getMobileNavButtonClassName("/turnos")}
                             >
-                              {isAdmin ? "Turnos" : "Mis Turnos"}
+                              Mis Turnos
                             </button>
                           </Link>
-                          {isAdmin ? (
-                            <Link to="/panel-administrador/reuniones">
-                              <button
-                                onClick={() => setIsOpen(false)}
-                                className={getMobileNavButtonClassName(
-                                  "/panel-administrador/reuniones",
-                                )}
-                              >
-                                Reuniones
-                              </button>
-                            </Link>
-                          ) : (
-                            <Link to="/representantes">
-                              <button
-                                onClick={() => setIsOpen(false)}
-                                className={getMobileNavButtonClassName(
-                                  "/representantes",
-                                )}
-                              >
-                                Representantes
-                              </button>
-                            </Link>
-                          )}
+                          <Link to="/representantes">
+                            <button
+                              onClick={() => setIsOpen(false)}
+                              className={getMobileNavButtonClassName(
+                                "/representantes",
+                              )}
+                            >
+                              Representantes
+                            </button>
+                          </Link>
+                        </>
+                      )}
+
+                      {isAuthenticated && (
+                        <>
                           <Link to="/perfil">
                             <button
                               onClick={() => setIsOpen(false)}

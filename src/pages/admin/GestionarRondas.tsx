@@ -167,19 +167,34 @@ function hasValidEventoId(
 
 function HeroSkeleton() {
   return (
-    <section className="rounded-3xl bg-gradient-to-br from-[#143E29] via-[#1a5236] to-[#143E29] px-6 py-8 md:px-8 shadow-xl shadow-[#143E29]/10">
+    <section className="rounded-3xl bg-gradient-to-br from-[#143E29] via-[#1a5236] to-[#143E29] px-6 py-8 md:px-8 text-white shadow-xl shadow-[#143E29]/10">
       <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
-        <div className="max-w-3xl w-full space-y-4">
-          <Skeleton className="h-10 w-24 bg-white/10" />
-          <div className="flex items-center gap-3">
-            <Skeleton className="h-11 w-11 rounded-2xl bg-white/10" />
-            <Skeleton className="h-10 w-60 bg-white/10" />
+        <div className="max-w-3xl space-y-4">
+          {/* Botón Volver - ESTÁTICO */}
+          <Button variant="ghost" disabled className="w-fit px-0 text-white/90">
+            <ArrowLeft className="h-4 w-4" />
+            Volver
+          </Button>
+
+          {/* Icono y Título - ESTÁTICOS */}
+          <div className="flex items-center gap-3 mb-3">
+            <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-white/10 text-[#9FD27B] ring-1 ring-white/15 backdrop-blur-sm">
+              <CalendarDays className="h-5 w-5" />
+            </div>
+            <h1 className="text-3xl sm:text-4xl font-semibold">
+              Gestionar rondas
+            </h1>
           </div>
-          <Skeleton className="h-5 w-full max-w-xl bg-white/10" />
+
+          {/* Descripción - ESTÁTICA */}
+          <p className="text-white/80 text-base max-w-2xl">
+            Creá nuevas rondas y gestioná rápidamente cuál es la activa.
+          </p>
         </div>
 
         <div className="flex flex-col sm:flex-row gap-3">
-          <Skeleton className="h-11 w-36 bg-white/10" />
+          {/* Skeleton individual solo para el botón */}
+          <Skeleton className="h-11 w-36 bg-white/20 rounded-lg" />
         </div>
       </div>
     </section>

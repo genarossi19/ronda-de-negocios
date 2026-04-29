@@ -521,7 +521,7 @@ export default function GestionarTurnos() {
 
     if (!selectedEventoId || Number.isNaN(selectedEventoId)) {
       toast.error("Seleccioná una ronda activa para gestionar sus turnos");
-      navigate("/gestionar-rondas", { replace: true });
+      navigate("/panel-administrador/gestionar-rondas", { replace: true });
       return;
     }
 
@@ -535,7 +535,7 @@ export default function GestionarTurnos() {
 
         if (!selectedEvento || selectedEvento.estado !== "activo") {
           toast.error("Solo se pueden gestionar turnos de una ronda activa");
-          navigate("/gestionar-rondas", { replace: true });
+          navigate("/panel-administrador/gestionar-rondas", { replace: true });
           return;
         }
 
@@ -1130,7 +1130,9 @@ export default function GestionarTurnos() {
                   <Button
                     variant="outline"
                     className="w-full border-[#68A243] text-[#68A243] hover:bg-[#68A243] hover:text-white bg-transparent"
-                    onClick={() => navigate("/gestionar-rondas")}
+                    onClick={() =>
+                      navigate("/panel-administrador/gestionar-rondas")
+                    }
                   >
                     <CalendarDays className="h-4 w-4" />
                     Volver a gestionar rondas

@@ -212,7 +212,7 @@ export default function Shifts() {
                       navigate(
                         activeEvent
                           ? `/panel-administrador/turnos/${activeEvent.id}`
-                          : "/gestionar-rondas",
+                          : "/panel-administrador/gestionar-rondas",
                       )
                     }
                     className="w-full h-11 gap-2 bg-[#68A243] hover:bg-[#5a9038] text-white font-semibold"

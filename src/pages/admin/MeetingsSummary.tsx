@@ -256,19 +256,47 @@ function downloadCsv(
 
 function HeroSkeleton() {
   return (
-    <section className="rounded-3xl bg-gradient-to-br from-[#143E29] via-[#1a5236] to-[#143E29] px-6 py-8 md:px-8 shadow-xl shadow-[#143E29]/10">
+    <section className="rounded-3xl bg-gradient-to-br from-[#143E29] via-[#1a5236] to-[#143E29] px-6 py-8 md:px-8 shadow-xl shadow-[#143E29]/10 text-white">
       <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
-        <div className="max-w-3xl w-full space-y-3">
-          <div className="flex items-center gap-3">
-            <Skeleton className="h-11 w-11 rounded-2xl bg-white/10" />
-            <Skeleton className="h-10 w-72 bg-white/10" />
+        <div className="max-w-3xl space-y-4">
+          {/* Botón volver - ESTÁTICO, sin skeleton */}
+          <Button variant="ghost" disabled className="w-fit text-white/90 px-0">
+            <ArrowLeft className="h-4 w-4" />
+            Volver al panel
+          </Button>
+
+          <div className="space-y-4">
+            {/* Título e icono - ESTÁTICO, sin skeleton */}
+            <div className="flex items-start gap-4">
+              <div className="rounded-2xl bg-white/10 p-3 shadow-lg shadow-black/10">
+                <Handshake className="h-7 w-7" />
+              </div>
+              <h1 className="pt-1 text-3xl md:text-4xl font-bold tracking-tight">
+                Resumen de reuniones
+              </h1>
+            </div>
+            {/* Descripción - ESTÁTICA, sin skeleton */}
+            <p className="text-white/80 text-base md:text-lg max-w-2xl">
+              Vista rápida de mesas, empresas sentadas, representantes,
+              anfitrionas y horarios por turno.
+            </p>
           </div>
-          <Skeleton className="h-5 w-full max-w-2xl bg-white/10" />
         </div>
 
-        <div className="flex gap-3">
-          <Skeleton className="h-11 w-32 bg-white/10" />
-          <Skeleton className="h-11 w-40 bg-white/10" />
+        <div className="flex flex-col items-start lg:items-end gap-3">
+          {/* Skeleton individual para la caja de evento seleccionado */}
+          <div className="rounded-2xl border border-white/15 bg-white/10 px-4 py-3 w-full lg:w-fit">
+            <p className="text-xs uppercase tracking-[0.18em] text-white/60">
+              Evento seleccionado
+            </p>
+            <div className="mt-3 space-y-2">
+              <Skeleton className="h-6 w-40 bg-white/20 rounded-lg" />
+              <Skeleton className="h-4 w-32 bg-white/15 rounded-lg" />
+            </div>
+          </div>
+
+          {/* Skeleton individual para el botón descargar */}
+          <Skeleton className="h-10 w-full lg:w-48 bg-white/20 rounded-lg" />
         </div>
       </div>
     </section>

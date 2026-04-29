@@ -336,7 +336,7 @@ export default function AdminDashboard() {
       title: "Gestionar Rondas",
       description: "Crear, editar y cerrar rondas de negocios",
       icon: Calendar,
-      href: "/gestionar-rondas",
+      href: "/panel-administrador/gestionar-rondas",
     },
     {
       title: "Gestionar Turnos",
@@ -346,7 +346,7 @@ export default function AdminDashboard() {
       icon: Clock3,
       href: activeEventId
         ? `/panel-administrador/turnos/${activeEventId}`
-        : "/gestionar-rondas",
+        : "/panel-administrador/gestionar-rondas",
       requiresActiveEvent: true,
     },
     {
@@ -743,7 +743,9 @@ export default function AdminDashboard() {
                             turnos, mesas y reuniones desde el panel.
                           </p>
                           <Button
-                            onClick={() => navigate("/gestionar-rondas")}
+                            onClick={() =>
+                              navigate("/panel-administrador/gestionar-rondas")
+                            }
                             className="bg-[#68A243] text-white hover:bg-[#5a9038]"
                           >
                             <Calendar className="h-4 w-4" />
