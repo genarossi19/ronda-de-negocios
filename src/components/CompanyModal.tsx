@@ -1,3 +1,4 @@
+import { useMemo, useState } from "react";
 import {
   Dialog,
   DialogContent,
@@ -27,6 +28,18 @@ export default function CompanyModal({
 }: CompanyModalProps) {
   if (!company) return null;
 
+  const [imageError, setImageError] = useState(false);
+
+  const companyInitials = useMemo(() => {
+    return company.razon_social
+      .trim()
+      .split(/\s+/)
+      .filter(Boolean)
+      .slice(0, 2)
+      .map((word) => word[0]?.toUpperCase() ?? "")
+      .join("");
+  }, [company.razon_social]);
+
   const emailConfirmado =
     company.email_confirmado ?? company.email_confirmardo ?? false;
   const showContactInformation = isAuthenticated || isAdmin;
@@ -36,12 +49,24 @@ export default function CompanyModal({
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto transition-colors bg-white dark:bg-[#0F141A] text-foreground dark:text-white border-[#669649] dark:border-[#1a5032]">
         <DialogHeader>
           <div className="flex flex-col items-center text-center space-y-4 pb-4">
-            <div className="h-24 w-24 rounded-xl overflow-hidden flex items-center justify-center">
-              <img
-                src={company.logo || "/placeholder.svg"}
-                alt={company.razon_social}
-                className="h-full w-full object-cover object-center rounded-xl"
-              />
+            <div className="h-24 w-24 rounded-xl overflow-hidden flex items-center justify-center relative">
+              {company.logo && !imageError ? (
+                <img
+                  src={company.logo}
+                  alt={company.razon_social}
+                  onError={() => setImageError(true)}
+                  className="absolute inset-0 w-full h-full object-cover object-center rounded-xl"
+                />
+              ) : (
+                <div
+                  aria-label={company.razon_social}
+                  className="absolute inset-0 flex items-center justify-center bg-[#68A243]/20 dark:bg-[#68A243]/35 text-[#143E29] dark:text-[#d7efc8]"
+                >
+                  <span className="text-3xl font-bold tracking-wide">
+                    {companyInitials || "?"}
+                  </span>
+                </div>
+              )}
             </div>
             <div>
               <DialogTitle className="text-2xl font-bold text-[#143E29] dark:text-white mb-2 transition-colors">
