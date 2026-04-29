@@ -52,18 +52,24 @@ import { getApiErrorMessage, isSessionExpiredError } from "../../lib/axios";
 type EstadoEvento = EventoWrite["estado"];
 type FiltroEstado = "todos" | EstadoEvento;
 type CreateFormErrors = Partial<
-  Record<"nombre" | "fecha" | "ubicacion", string>
+  Record<"nombre" | "fecha" | "hora_inicio" | "ubicacion", string>
 >;
 
 function isCreateField(
   field: keyof EventoWrite,
 ): field is keyof CreateFormErrors {
-  return field === "nombre" || field === "fecha" || field === "ubicacion";
+  return (
+    field === "nombre" ||
+    field === "fecha" ||
+    field === "hora_inicio" ||
+    field === "ubicacion"
+  );
 }
 
 const initialFormState: EventoWrite = {
   nombre: "",
   fecha: new Date().toISOString().split("T")[0],
+  hora_inicio: "08:00",
   ubicacion: "",
   estado: "activo",
 };
@@ -424,6 +430,7 @@ export default function GestionarRondas() {
     setFormData({
       nombre: evento.nombre,
       fecha: evento.fecha,
+      hora_inicio: evento.hora_inicio,
       ubicacion: evento.ubicacion,
       estado: evento.estado ?? "activo",
     });
@@ -460,6 +467,10 @@ export default function GestionarRondas() {
       nextErrors.fecha = "Seleccioná una fecha";
     }
 
+    if (!formData.hora_inicio.trim()) {
+      nextErrors.hora_inicio = "Ingresá una hora";
+    }
+
     if (!formData.ubicacion.trim()) {
       nextErrors.ubicacion = "Ingresá una ubicación";
     }
@@ -470,7 +481,7 @@ export default function GestionarRondas() {
 
   const handleSubmit = async () => {
     if (!isEditingStateOnly && !validateCreateForm()) {
-      toast.error("Completá nombre, fecha y ubicación antes de guardar");
+      toast.error("Completá nombre, fecha, hora y ubicación antes de guardar");
       return;
     }
 
@@ -837,6 +848,10 @@ export default function GestionarRondas() {
                                     <span>{formatDate(evento.fecha)}</span>
                                   </div>
                                   <div className="flex items-center gap-2">
+                                    <Clock3 className="h-4 w-4 text-[#68A243]" />
+                                    <span>{evento.hora_inicio}</span>
+                                  </div>
+                                  <div className="flex items-center gap-2">
                                     <MapPin className="h-4 w-4 text-[#68A243]" />
                                     <span>{evento.ubicacion}</span>
                                   </div>
@@ -913,13 +928,21 @@ export default function GestionarRondas() {
                       {eventoEnEdicion.nombre}
                     </p>
                   </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-sm">
                     <div>
                       <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground dark:text-gray-300 mb-1">
                         Fecha
                       </p>
                       <p className="text-[#143E29] dark:text-white">
                         {formatDate(eventoEnEdicion.fecha)}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground dark:text-gray-300 mb-1">
+                        Hora de inicio
+                      </p>
+                      <p className="text-[#143E29] dark:text-white">
+                        {eventoEnEdicion.hora_inicio}
                       </p>
                     </div>
                     <div>
@@ -1011,25 +1034,46 @@ export default function GestionarRondas() {
                   </div>
 
                   <div className="grid gap-2">
-                    <Label className="dark:text-white">Estado</Label>
-                    <Select
-                      value={formData.estado}
-                      onValueChange={(value) =>
-                        handleFormChange("estado", value as EstadoEvento)
+                    <Label htmlFor="hora_inicio" className="dark:text-white">
+                      Hora de inicio
+                    </Label>
+                    <Input
+                      id="hora_inicio"
+                      type="time"
+                      value={formData.hora_inicio}
+                      onChange={(event) =>
+                        handleFormChange("hora_inicio", event.target.value)
                       }
-                    >
-                      <SelectTrigger className="w-full border-[#68A243]/20 focus-visible:border-[#68A243] focus-visible:ring-[#68A243]/20 dark:bg-[#143E29] dark:border-[#68A243]/20 dark:text-white transition-colors">
-                        <SelectValue placeholder="Seleccionar estado" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {statusOptions.map((status) => (
-                          <SelectItem key={status.value} value={status.value}>
-                            {status.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                      aria-invalid={!!formErrors.hora_inicio}
+                      className="border-[#68A243]/20 focus-visible:border-[#68A243] focus-visible:ring-[#68A243]/20 dark:bg-[#143E29] dark:border-[#68A243]/20 dark:text-white transition-colors [color-scheme:light] dark:[color-scheme:dark] aria-invalid:border-red-500 aria-invalid:ring-red-500/20"
+                    />
+                    {formErrors.hora_inicio ? (
+                      <p className="text-red-600 text-xs">
+                        {formErrors.hora_inicio}
+                      </p>
+                    ) : null}
                   </div>
+                </div>
+
+                <div className="grid gap-2">
+                  <Label className="dark:text-white">Estado</Label>
+                  <Select
+                    value={formData.estado}
+                    onValueChange={(value) =>
+                      handleFormChange("estado", value as EstadoEvento)
+                    }
+                  >
+                    <SelectTrigger className="w-full border-[#68A243]/20 focus-visible:border-[#68A243] focus-visible:ring-[#68A243]/20 dark:bg-[#143E29] dark:border-[#68A243]/20 dark:text-white transition-colors">
+                      <SelectValue placeholder="Seleccionar estado" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {statusOptions.map((status) => (
+                        <SelectItem key={status.value} value={status.value}>
+                          {status.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
 
                 <div className="grid gap-2">

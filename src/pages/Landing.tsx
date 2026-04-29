@@ -56,6 +56,14 @@ function formatEventYear(date: string) {
   }).format(new Date(`${date}T00:00:00`));
 }
 
+function formatEventTime(time: string) {
+  if (!time) return "Hora a confirmar";
+  const [hours, minutes] = time.split(":").slice(0, 2);
+  const hoursNum = parseInt(hours, 10);
+  const minutesStr = minutes || "00";
+  return `${hoursNum}:${minutesStr} hs`;
+}
+
 function EventInfoSkeleton({ icon: Icon }: { icon: typeof Calendar }) {
   return (
     <div className="inline-flex items-center gap-3 px-4 py-3 rounded-lg border border-white/10 bg-white/5 backdrop-blur-sm">
@@ -104,6 +112,10 @@ export default function Landing() {
 
   const headlineLocation = activeEvent?.ubicacion ?? "Ubicación a confirmar";
 
+  const headlineHora = activeEvent
+    ? formatEventTime(activeEvent.hora_inicio)
+    : "Hora a confirmar";
+
   const handleViewCompanies = () => {
     navigate("/empresas");
   };
@@ -137,7 +149,7 @@ export default function Landing() {
             {isLoadingEventInfo ? (
               <EventInfoSkeleton icon={Calendar} />
             ) : (
-              <div className="inline-flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-white/5 dark:hover:bg-white/5 hover:backdrop-blur-sm hover:border hover:border-white/10 dark:hover:border-white/10 transition-all duration-150 ease-in-out">
+              <div className="inline-flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-white/5 dark:hover:bg-white/5 hover:backdrop-blur-sm transition-all duration-150 ease-in-out">
                 <Calendar className="h-6 w-6 text-secondary dark:text-[#68A243]" />
                 <div className="text-left text-white">
                   <div className="text-sm text-gray-300 dark:text-gray-400 transition-colors duration-300">
@@ -156,7 +168,7 @@ export default function Landing() {
             {isLoadingEventInfo ? (
               <EventInfoSkeleton icon={MapPin} />
             ) : (
-              <div className="inline-flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-white/5 dark:hover:bg-white/5 hover:backdrop-blur-sm hover:border hover:border-white/10 dark:hover:border-white/10 transition-all duration-150 ease-in-out">
+              <div className="inline-flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-white/5 dark:hover:bg-white/5 hover:backdrop-blur-sm transition-all duration-150 ease-in-out">
                 <MapPin className="h-6 w-6 text-secondary dark:text-[#68A243]" />
                 <div className="text-left text-white">
                   <div className="text-sm text-gray-300 dark:text-gray-400 transition-colors duration-300">
@@ -172,17 +184,14 @@ export default function Landing() {
               </div>
             )}
 
-            <div className="inline-flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-white/5 dark:hover:bg-white/5 hover:backdrop-blur-sm hover:border hover:border-white/10 dark:hover:border-white/10 transition-all duration-150 ease-in-out">
+            <div className="inline-flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-white/5 dark:hover:bg-white/5 hover:backdrop-blur-sm transition-all duration-150 ease-in-out">
               <Clock className="h-6 w-6 text-secondary dark:text-[#68A243]" />
               <div className="text-left text-white">
                 <div className="text-sm text-gray-300 dark:text-gray-400 transition-colors duration-300">
                   Hora
                 </div>
                 <div className="font-semibold flex flex-col">
-                  8:00 hs
-                  <span className="text-gray-300 dark:text-gray-400 transition-colors duration-300">
-                    Inicio formal 8:20 hs
-                  </span>
+                  {headlineHora}
                 </div>
               </div>
             </div>

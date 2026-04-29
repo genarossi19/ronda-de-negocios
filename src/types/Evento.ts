@@ -2,6 +2,7 @@ export interface EventoResponse {
   id: number;
   nombre: string;
   fecha: string;
+  hora_inicio: string;
   ubicacion: string;
   estado?: "activo" | "finalizado" | "cancelado";
   readOnly?: boolean;
@@ -10,6 +11,7 @@ export interface EventoResponse {
 export interface EventoWrite {
   nombre: string;
   fecha: string;
+  hora_inicio: string;
   ubicacion: string;
   estado: "activo" | "finalizado" | "cancelado";
 }
