@@ -793,10 +793,10 @@ export default function GestionarAsientosModal({
                                       );
                                     }}
                                   >
-                                    <SelectTrigger className="!w-full !h-11 !border-[#68A243]/20 focus-visible:!border-[#68A243] focus-visible:!ring-[#68A243]/20 dark:!bg-[#0f2f25] dark:!border-[#68A243]/20 dark:!text-white">
+                                    <SelectTrigger className="w-full border-[#68A243]/20 focus-visible:border-[#68A243] focus-visible:ring-[#68A243]/20 bg-white dark:bg-[#143E29] dark:border-[#68A243]/20 dark:text-white transition-colors h-10">
                                       <SelectValue placeholder="Seleccioná una empresa" />
                                     </SelectTrigger>
-                                    <SelectContent>
+                                    <SelectContent className="dark:bg-[#143E29] dark:border-[#68A243]/20">
                                       {availableCompanies.map((company) => (
                                         <SelectItem
                                           key={company.id}
@@ -818,14 +818,14 @@ export default function GestionarAsientosModal({
                                       variant="outline"
                                       role="combobox"
                                       aria-expanded={openRepresentativeSearch}
-                                      className="!w-full !justify-between !h-11 !border-[#68A243]/20 hover:!border-[#68A243] !bg-transparent dark:!bg-[#0f2f25] dark:!border-[#68A243]/20 dark:!text-white dark:hover:!bg-[#1a3f30]"
+                                      className="w-full justify-between h-10 border-[#68A243]/20 text-[#143E29] hover:bg-slate-50 hover:text-[#143E29] focus-visible:border-[#68A243] focus-visible:ring-[#68A243]/20 dark:bg-[#143E29] dark:border-[#68A243]/20 dark:text-white dark:hover:bg-[#1a3f30] dark:hover:text-white transition-colors"
                                       disabled={
                                         !selectedCompanyId ||
                                         loadingRepresentantes
                                       }
                                     >
                                       {loadingRepresentantes ? (
-                                        <span className="!text-gray-400">
+                                        <span className="text-gray-400">
                                           Cargando representantes...
                                         </span>
                                       ) : selectedRepresentativeId ? (
@@ -850,13 +850,13 @@ export default function GestionarAsientosModal({
                                     </Button>
                                   </PopoverTrigger>
                                   <PopoverContent
-                                    className="!w-[380px] !p-0 dark:!bg-[#143E29] dark:!border-[#68A243]/20"
+                                    className="w-[380px] p-0 dark:bg-[#143E29] dark:border-[#68A243]/20"
                                     align="start"
                                   >
                                     <Command className="dark:bg-[#143E29]">
                                       <CommandInput
                                         placeholder="Buscar representante..."
-                                        className="dark:bg-[#0f2f25] dark:text-white dark:placeholder-gray-400"
+                                        className="dark:bg-[#0f2f25] dark:text-white dark:placeholder-gray-400 dark:border-[#68A243]/20 border-[#68A243]/20"
                                       />
                                       <CommandList className="dark:bg-[#143E29]">
                                         <CommandEmpty className="dark:text-gray-400">
@@ -882,7 +882,7 @@ export default function GestionarAsientosModal({
                                                       false,
                                                     );
                                                   }}
-                                                  className="cursor-pointer dark:hover:bg-[#1a3f30] dark:focus:bg-[#1a3f30] dark:text-white"
+                                                  className="cursor-pointer"
                                                 >
                                                   <div className="flex items-center gap-3 flex-1">
                                                     <div className="h-8 w-8 rounded-full bg-[#68A243] text-white text-xs font-semibold flex items-center justify-center">

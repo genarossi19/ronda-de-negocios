@@ -10,6 +10,8 @@ import {
   Pencil,
   Plus,
   Users,
+  ArrowUp,
+  ArrowDown,
 } from "lucide-react";
 import Navbar from "../../components/Navbar";
 import Footer from "../../layout/Footer";
@@ -282,6 +284,7 @@ export default function GestionarTurnos() {
   );
   const [formData, setFormData] = useState<TurnoFormState>(initialFormState);
   const [isEndTimeManuallyEdited, setIsEndTimeManuallyEdited] = useState(false);
+  const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
 
   const loadTurnos = async (selectedEventoId: number) => {
     const data = await getTurnoByEventoId(selectedEventoId);
@@ -334,7 +337,7 @@ export default function GestionarTurnos() {
   }, [eventoId, navigate]);
 
   const turnosOrdenados = useMemo(() => {
-    return [...turnos].sort((first, second) => {
+    const sorted = [...turnos].sort((first, second) => {
       const a = getTurnoSortValue(first);
       const b = getTurnoSortValue(second);
 
@@ -344,7 +347,9 @@ export default function GestionarTurnos() {
 
       return a.hour.localeCompare(b.hour);
     });
-  }, [turnos]);
+
+    return sortDirection === "desc" ? sorted.reverse() : sorted;
+  }, [turnos, sortDirection]);
 
   const stats = useMemo(
     () => ({
@@ -711,9 +716,28 @@ export default function GestionarTurnos() {
                   <CardTitle className="text-xl text-[#143E29] dark:text-white">
                     Todos los turnos
                   </CardTitle>
-                  <Badge className="w-fit bg-[#68A243]/10 text-[#3F6E20] border-[#68A243]/20 dark:bg-[#68A243]/20 dark:text-[#9FD27B] dark:border-[#68A243]/30">
-                    {turnosOrdenados.length} configurados
-                  </Badge>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() =>
+                        setSortDirection(
+                          sortDirection === "asc" ? "desc" : "asc",
+                        )
+                      }
+                      className="border-[#68A243]/30 text-[#68A243] hover:bg-[#68A243] hover:text-white"
+                      title={`Ordenar ${sortDirection === "asc" ? "de forma descendente" : "de forma ascendente"}`}
+                    >
+                      {sortDirection === "asc" ? (
+                        <ArrowUp className="h-4 w-4" />
+                      ) : (
+                        <ArrowDown className="h-4 w-4" />
+                      )}
+                    </Button>
+                    <Badge className="w-fit bg-[#68A243]/10 text-[#3F6E20] border-[#68A243]/20 dark:bg-[#68A243]/20 dark:text-[#9FD27B] dark:border-[#68A243]/30">
+                      {turnosOrdenados.length} configurados
+                    </Badge>
+                  </div>
                 </div>
               </CardHeader>
 

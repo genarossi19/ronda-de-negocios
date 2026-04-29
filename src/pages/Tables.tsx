@@ -1320,8 +1320,9 @@ export default function Tables() {
                                       setOpenRepresentativeSearch(false);
                                     }}
                                     className={cn(
-                                      "cursor-pointer dark:hover:bg-[#1a3f30] dark:focus:bg-[#1a3f30] dark:text-white transition-colors duration-200",
-                                      isOwn && "bg-yellow-50 dark:bg-[#1a3f30]",
+                                      "cursor-pointer",
+                                      isOwn &&
+                                        "bg-yellow-50 dark:bg-[#68A243]/15 dark:data-[selected=true]:bg-[#68A243]/25",
                                     )}
                                   >
                                     <div className="flex items-center gap-3 flex-1">
@@ -1740,7 +1741,8 @@ export default function Tables() {
                                     }}
                                     className={cn(
                                       "cursor-pointer",
-                                      isOwn && "bg-yellow-50",
+                                      isOwn &&
+                                        "bg-yellow-50 dark:bg-[#68A243]/15 dark:data-[selected=true]:bg-[#68A243]/25",
                                     )}
                                   >
                                     <div className="flex items-center gap-3 flex-1">

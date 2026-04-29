@@ -65,13 +65,13 @@ function CommandInput({
   return (
     <div
       data-slot="command-input-wrapper"
-      className="flex h-9 items-center gap-2 border-b px-3"
+      className="flex h-9 items-center gap-2 border-b border-[#68A243]/20 dark:border-[#68A243]/20 px-3 dark:bg-[#0f2f25]"
     >
       <SearchIcon className="size-4 shrink-0 opacity-50" />
       <CommandPrimitive.Input
         data-slot="command-input"
         className={cn(
-          "placeholder:text-muted-foreground flex h-10 w-full rounded-md bg-transparent py-3 text-sm outline-hidden disabled:cursor-not-allowed disabled:opacity-50",
+          "text-[#143E29] placeholder:text-muted-foreground flex h-10 w-full rounded-md bg-transparent py-3 text-sm outline-hidden disabled:cursor-not-allowed disabled:opacity-50 dark:text-white dark:placeholder-gray-400",
           className,
         )}
         {...props}
@@ -145,7 +145,7 @@ function CommandItem({
     <CommandPrimitive.Item
       data-slot="command-item"
       className={cn(
-        "data-[selected=true]:bg-[#669649]/10 data-[selected=true]:text-foreground dark:data-[selected=true]:bg-[#1a3f30] dark:data-[selected=true]:text-white [&_svg:not([class*='text-'])]:text-muted-foreground relative flex cursor-default items-center gap-2 rounded-sm px-2 py-1.5 text-sm outline-hidden select-none data-[disabled=true]:pointer-events-none data-[disabled=true]:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
+        "text-[#143E29] hover:bg-slate-100 hover:text-[#143E29] focus:bg-slate-100 focus:text-[#143E29] data-[selected=true]:bg-[#143E29]/12 data-[selected=true]:text-[#143E29] dark:text-white dark:hover:bg-[#1a3f30] dark:hover:text-white dark:focus:bg-[#1a3f30] dark:focus:text-white dark:data-[selected=true]:bg-[#68A243]/25 dark:data-[selected=true]:text-white [&_svg:not([class*='text-'])]:text-muted-foreground relative flex cursor-default items-center gap-2 rounded-sm px-2 py-1.5 text-sm outline-hidden select-none data-[disabled=true]:pointer-events-none data-[disabled=true]:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 transition-colors",
         className,
       )}
       {...props}

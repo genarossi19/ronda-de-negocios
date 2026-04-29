@@ -742,7 +742,7 @@ export default function MeetingsSummary() {
                     >
                       <SelectTrigger
                         aria-label="Filtrar por ronda"
-                        className="h-10 w-full border-[#68A243]/20 focus-visible:border-[#68A243] focus-visible:ring-[#68A243]/20 bg-white dark:bg-[#143E29] dark:border-[#68A243]/20 dark:text-white transition-colors"
+                        className="h-10 w-full border-[#68A243]/20 text-[#143E29] focus-visible:border-[#68A243] focus-visible:ring-[#68A243]/20 bg-white dark:bg-[#143E29] dark:border-[#68A243]/20 dark:text-white transition-colors"
                       >
                         <SelectValue placeholder="Seleccioná una ronda" />
                       </SelectTrigger>
@@ -763,7 +763,7 @@ export default function MeetingsSummary() {
                             <SelectItem
                               key={evento.id}
                               value={String(evento.id)}
-                              className="py-2.5 font-medium text-[#143E29] data-[highlighted]:bg-[#143E29]/12 data-[highlighted]:text-[#143E29] dark:text-white dark:data-[highlighted]:bg-[#68A243]/25 dark:data-[highlighted]:text-white"
+                              className="py-2.5 font-medium text-[#143E29] hover:text-[#143E29] data-[highlighted]:bg-[#143E29]/12 data-[highlighted]:text-[#143E29] dark:text-white dark:hover:text-white dark:data-[highlighted]:bg-[#68A243]/25 dark:data-[highlighted]:text-white"
                             >
                               {evento.nombre}
                             </SelectItem>
@@ -792,7 +792,7 @@ export default function MeetingsSummary() {
                     >
                       <SelectTrigger
                         aria-label="Filtrar por turno"
-                        className="h-10 w-full border-[#68A243]/20 focus-visible:border-[#68A243] focus-visible:ring-[#68A243]/20 bg-white dark:bg-[#143E29] dark:border-[#68A243]/20 dark:text-white transition-colors"
+                        className="h-10 w-full border-[#68A243]/20 text-[#143E29] focus-visible:border-[#68A243] focus-visible:ring-[#68A243]/20 bg-white dark:bg-[#143E29] dark:border-[#68A243]/20 dark:text-white transition-colors"
                       >
                         <SelectValue placeholder="Todos los turnos" />
                       </SelectTrigger>
@@ -810,7 +810,7 @@ export default function MeetingsSummary() {
                         </div>
                         <SelectItem
                           value="all"
-                          className="py-2.5 font-medium text-[#143E29] data-[highlighted]:bg-[#143E29]/12 data-[highlighted]:text-[#143E29] dark:text-white dark:data-[highlighted]:bg-[#68A243]/25 dark:data-[highlighted]:text-white"
+                          className="py-2.5 font-medium text-[#143E29] hover:text-[#143E29] data-[highlighted]:bg-[#143E29]/12 data-[highlighted]:text-[#143E29] dark:text-white dark:hover:text-white dark:data-[highlighted]:bg-[#68A243]/25 dark:data-[highlighted]:text-white"
                         >
                           Todos los turnos
                         </SelectItem>
@@ -819,7 +819,7 @@ export default function MeetingsSummary() {
                             <SelectItem
                               key={turno.id}
                               value={String(turno.id)}
-                              className="py-2.5 data-[highlighted]:bg-[#143E29]/12 data-[highlighted]:text-[#143E29] dark:data-[highlighted]:bg-[#68A243]/25 dark:data-[highlighted]:text-white"
+                              className="py-2.5 text-[#143E29] hover:text-[#143E29] data-[highlighted]:bg-[#143E29]/12 data-[highlighted]:text-[#143E29] dark:text-white dark:hover:text-white dark:data-[highlighted]:bg-[#68A243]/25 dark:data-[highlighted]:text-white"
                             >
                               <div className="flex w-full items-center justify-between gap-3">
                                 <span className="rounded-full border border-[#68A243]/25 bg-[#68A243]/10 px-2.5 py-0.5 text-xs font-semibold text-[#3F6E20] dark:border-[#68A243]/30 dark:bg-[#68A243]/15 dark:text-[#9FD27B]">
