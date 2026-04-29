@@ -21,6 +21,12 @@ import {
 } from "../components/ui/select";
 import { Dialog, DialogTrigger } from "../components/ui/dialog";
 import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "../components/ui/tooltip";
+import {
   AlertDialog,
   AlertDialogAction,
   AlertDialogCancel,
@@ -49,10 +55,12 @@ import {
   deleteRepresentante,
 } from "../api/RepresentanteService";
 import { getCargos } from "../api/CargoService";
+import { getCompanies } from "../api/EmpresaService";
 import type {
   RepresentanteResponse,
   RepresentanteWrite,
 } from "../types/Representante";
+import type { EmpresaResponse } from "../types/Empresa";
 import type { GenericType } from "../types/GenericType";
 import { useCurrentUser } from "../hooks/useCurrentUser";
 import { toast } from "sonner";
@@ -69,10 +77,8 @@ export default function Representantes() {
   const [representantes, setRepresentantes] = useState<RepresentanteResponse[]>(
     [],
   );
-  const [ownRepresentantes, setOwnRepresentantes] = useState<
-    RepresentanteResponse[]
-  >([]);
   const [cargos, setCargos] = useState<GenericType[]>([]);
+  const [empresas, setEmpresas] = useState<EmpresaResponse[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -91,47 +97,41 @@ export default function Representantes() {
     try {
       setLoading(true);
       setError(null);
-      // Si es superadmin, obtener todos los representantes
+      // Obtener todos los representantes si es superadmin, sino los de su empresa
       const params = user?.is_superuser ? { all: true } : {};
       const data = await getRepresentantes(params);
-
-      if (user?.is_superuser && user?.empresa_id) {
-        // Separar entre propios y otros
-        const own = data.filter((rep) => rep.empresa_id === user.empresa_id);
-        const others = data.filter((rep) => rep.empresa_id !== user.empresa_id);
-        setOwnRepresentantes(own);
-        setRepresentantes(others);
-      } else {
-        setRepresentantes(data);
-      }
+      setRepresentantes(data);
     } catch {
       setError("No se pudieron cargar los representantes. Intentá de nuevo.");
     } finally {
       setLoading(false);
     }
-  }, [user?.is_superuser, user?.empresa_id]);
+  }, [user?.is_superuser]);
 
   useEffect(() => {
     const loadData = async () => {
       try {
-        const [repsData, cargosData] = await Promise.all([
+        const [repsData, cargosData, empresasData] = await Promise.all([
           getRepresentantes(user?.is_superuser ? { all: true } : {}),
           getCargos(),
+          getCompanies(),
         ]);
         setCargos(cargosData);
+        setEmpresas(empresasData);
 
-        if (user?.is_superuser && user?.empresa_id) {
-          const own = repsData.filter(
-            (rep) => rep.empresa_id === user.empresa_id,
+        // Mapear representantes con empresa_nombre
+        const repsWithEmpresa = repsData.map((rep) => {
+          const empresa = empresasData.find(
+            (e: EmpresaResponse) => e.id === (rep.empresa || rep.empresa_id),
           );
-          const others = repsData.filter(
-            (rep) => rep.empresa_id !== user.empresa_id,
-          );
-          setOwnRepresentantes(own);
-          setRepresentantes(others);
-        } else {
-          setRepresentantes(repsData);
-        }
+          return {
+            ...rep,
+            empresa_id: rep.empresa || rep.empresa_id,
+            empresa_nombre: rep.empresa_nombre || empresa?.razon_social,
+          };
+        });
+
+        setRepresentantes(repsWithEmpresa);
         setLoading(false);
       } catch {
         setError("No se pudieron cargar los representantes. Intentá de nuevo.");
@@ -140,7 +140,7 @@ export default function Representantes() {
     };
 
     loadData();
-  }, [user?.is_superuser, user?.empresa_id]);
+  }, [user?.is_superuser]);
 
   const validate = (): boolean => {
     const errors: Partial<RepresentanteWrite> = {};
@@ -170,20 +170,23 @@ export default function Representantes() {
         (typeof nuevo.cargo === "object" && !nuevo.cargo.nombre)
       ) {
         // Si cargo no tiene nombre, buscar en la lista de cargos por ID
-        const cargoCompleto = cargos.find((c) => c.id === form.cargo);
+        const cargoId =
+          typeof nuevo.cargo === "number" ? nuevo.cargo : form.cargo;
+        const cargoCompleto = cargos.find((c) => c.id === cargoId);
         nuevo = { ...nuevo, cargo: cargoCompleto as any };
       }
 
-      // Actualizar la lista correctamente
-      if (user?.is_superuser && user?.empresa_id) {
-        if (nuevo.empresa_id === user.empresa_id) {
-          setOwnRepresentantes((prev) => [...prev, nuevo]);
-        } else {
-          setRepresentantes((prev) => [...prev, nuevo]);
-        }
-      } else {
-        setRepresentantes((prev) => [...prev, nuevo]);
-      }
+      // Mapear empresa_nombre
+      const empresaId = nuevo.empresa || nuevo.empresa_id;
+      const empresa = empresas.find((e) => e.id === empresaId);
+      nuevo = {
+        ...nuevo,
+        empresa_id: empresaId,
+        empresa_nombre: nuevo.empresa_nombre || empresa?.razon_social,
+      };
+
+      // Actualizar la lista
+      setRepresentantes((prev) => [...prev, nuevo]);
       toast.success("Representante agregado correctamente.");
       setDialogOpen(false);
       setForm(EMPTY_FORM);
@@ -220,7 +223,9 @@ export default function Representantes() {
           .includes(searchName.toLowerCase());
       const matchesCargo =
         selectedCargos.length === 0 ||
-        selectedCargos.includes(rep.cargo?.id || 0);
+        selectedCargos.includes(
+          typeof rep.cargo === "number" ? rep.cargo : rep.cargo?.id || 0,
+        );
       return matchesName && matchesCargo;
     });
   };
@@ -240,7 +245,6 @@ export default function Representantes() {
     setSelectedCargos([]);
   };
 
-  const filteredOwnRepresentantes = filterRepresentantes(ownRepresentantes);
   const filteredRepresentantes = filterRepresentantes(representantes);
 
   const confirmDelete = async () => {
@@ -249,22 +253,8 @@ export default function Representantes() {
     try {
       await deleteRepresentante(repToDelete.id);
 
-      // Actualizar la lista correctamente
-      if (user?.is_superuser && user?.empresa_id) {
-        if (repToDelete.empresa_id === user.empresa_id) {
-          setOwnRepresentantes((prev) =>
-            prev.filter((r) => r.id !== repToDelete.id),
-          );
-        } else {
-          setRepresentantes((prev) =>
-            prev.filter((r) => r.id !== repToDelete.id),
-          );
-        }
-      } else {
-        setRepresentantes((prev) =>
-          prev.filter((r) => r.id !== repToDelete.id),
-        );
-      }
+      // Actualizar la lista
+      setRepresentantes((prev) => prev.filter((r) => r.id !== repToDelete.id));
 
       toast.success("Representante eliminado correctamente.");
       setDeleteDialogOpen(false);
@@ -298,39 +288,13 @@ export default function Representantes() {
               </div>
               <div className="hidden md:block">
                 <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 border border-white/20">
-                  {user?.is_superuser ? (
-                    <div className="flex gap-6">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2 text-sm mb-2">
-                          <Users className="h-4 w-4 text-[#ffb900]" />
-                          <span className="font-semibold">Propios</span>
-                        </div>
-                        <p className="text-2xl font-bold">
-                          {filteredOwnRepresentantes.length}
-                        </p>
-                      </div>
-                      <div className="flex-1 border-l border-white/20 pl-6">
-                        <div className="flex items-center gap-2 text-sm mb-2">
-                          <Users className="h-4 w-4 text-[#68A243]" />
-                          <span className="font-semibold">Total</span>
-                        </div>
-                        <p className="text-2xl font-bold">
-                          {filteredOwnRepresentantes.length +
-                            filteredRepresentantes.length}
-                        </p>
-                      </div>
-                    </div>
-                  ) : (
-                    <>
-                      <div className="flex items-center gap-2 text-sm mb-1">
-                        <Users className="h-4 w-4 text-[#68A243]" />
-                        <span className="font-semibold">Total</span>
-                      </div>
-                      <p className="text-3xl font-bold">
-                        {filteredRepresentantes.length}
-                      </p>
-                    </>
-                  )}
+                  <div className="flex items-center gap-2 text-sm mb-1">
+                    <Users className="h-4 w-4 text-[#68A243]" />
+                    <span className="font-semibold">Total</span>
+                  </div>
+                  <p className="text-3xl font-bold">
+                    {filteredRepresentantes.length}
+                  </p>
                 </div>
               </div>
             </div>
@@ -515,175 +479,6 @@ export default function Representantes() {
                 </Button>
               </CardContent>
             </Card>
-          ) : user?.is_superuser ? (
-            <>
-              {/* Vista Superadmin: Mis Representantes */}
-              <div className="mb-8">
-                <div className="mb-6">
-                  <h2 className="text-2xl font-bold text-[#143E29] dark:text-white flex items-center gap-2">
-                    <Badge className="bg-[#ffb900] text-black">
-                      {ownRepresentantes.length}
-                    </Badge>
-                    Mis Representantes
-                  </h2>
-                  <p className="text-gray-600 dark:text-gray-400 text-sm mt-1 transition-colors duration-300">
-                    Representantes de {user?.razon_social || "tu empresa"}
-                  </p>
-                </div>
-                {filteredOwnRepresentantes.length === 0 ? (
-                  <Card className="text-center py-8 border-2 border-dashed border-[#ffb900]/30 dark:bg-[#143E29]/30 dark:border-[#ffb900]/20 transition-colors duration-300">
-                    <CardHeader>
-                      <div className="flex justify-center mb-2">
-                        <Users className="h-10 w-10 text-gray-300" />
-                      </div>
-                      <CardTitle className="text-gray-500 text-base">
-                        {searchName || selectedCargos.length > 0
-                          ? "No se encontraron representantes propios"
-                          : "Sin representantes propios"}
-                      </CardTitle>
-                    </CardHeader>
-                  </Card>
-                ) : (
-                  <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                    {filteredOwnRepresentantes.map((rep, i) => (
-                      <Card
-                        key={i}
-                        className="relative group hover:shadow-md transition-shadow border-2 border-[#ffb900]/20 dark:bg-[#143E29]/40 dark:border-[#ffb900]/30 dark:hover:shadow-lg dark:hover:shadow-[#ffb900]/10"
-                      >
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleDelete(rep)}
-                          className="absolute top-3 right-3 opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity h-8 w-8 lg:w-auto p-0 lg:px-2 text-red-500 hover:text-red-700 hover:bg-red-50 dark:text-red-400 dark:hover:text-red-300 dark:hover:bg-red-950/30 gap-1"
-                          title="Eliminar representante"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                          <span className="hidden lg:inline text-xs">
-                            Eliminar
-                          </span>
-                        </Button>
-                        <CardHeader className="pb-3">
-                          <div className="flex items-start gap-3">
-                            <div className="bg-[#ffb900]/20 dark:bg-[#ffb900]/20 rounded-full p-2 shrink-0">
-                              <User className="h-5 w-5 text-[#ffb900]" />
-                            </div>
-                            <div className="flex-1">
-                              <CardTitle className="text-base text-[#143E29] dark:text-white">
-                                {rep.nombre} {rep.apellido}
-                              </CardTitle>
-                              <Badge
-                                variant="secondary"
-                                className="text-xs mt-0.5 dark:bg-[#ffb900]/20 dark:text-[#ffb900]"
-                              >
-                                {rep.cargo?.nombre || "Sin cargo"}
-                              </Badge>
-                            </div>
-                          </div>
-                        </CardHeader>
-                        <CardContent className="space-y-2 text-sm text-gray-600 dark:text-gray-400">
-                          <div className="flex items-center gap-2">
-                            <Mail className="h-4 w-4 text-[#68A243] shrink-0" />
-                            <span className="truncate">{rep.email}</span>
-                          </div>
-                          {rep.telefono && (
-                            <div className="flex items-center gap-2">
-                              <Phone className="h-4 w-4 text-[#68A243] shrink-0" />
-                              <span>{rep.telefono}</span>
-                            </div>
-                          )}
-                        </CardContent>
-                      </Card>
-                    ))}
-                  </div>
-                )}
-              </div>
-
-              {/* Vista Superadmin: Todos los Representantes */}
-              <div>
-                <div className="mb-6">
-                  <h2 className="text-2xl font-bold text-[#143E29] dark:text-white flex items-center gap-2">
-                    <Badge className="bg-[#68A243]">
-                      {representantes.length}
-                    </Badge>
-                    Todos los Representantes
-                  </h2>
-                  <p className="text-gray-600 dark:text-gray-400 text-sm mt-1 transition-colors duration-300">
-                    Representantes de otras empresas
-                  </p>
-                </div>
-                {filteredRepresentantes.length === 0 ? (
-                  <Card className="text-center py-8 border-2 border-dashed border-gray-300 dark:bg-[#143E29]/30 dark:border-gray-600/30 transition-colors duration-300">
-                    <CardHeader>
-                      <div className="flex justify-center mb-2">
-                        <Users className="h-10 w-10 text-gray-300" />
-                      </div>
-                      <CardTitle className="text-gray-500 dark:text-gray-400 text-base">
-                        {searchName || selectedCargos.length > 0
-                          ? "No se encontraron representantes"
-                          : "Sin otros representantes"}
-                      </CardTitle>
-                    </CardHeader>
-                  </Card>
-                ) : (
-                  <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                    {filteredRepresentantes.map((rep, i) => (
-                      <Card
-                        key={i}
-                        className="relative group hover:shadow-md transition-shadow border-2 hover:border-[#68A243]/30 dark:bg-[#143E29]/40 dark:border-gray-700/50 dark:hover:border-[#68A243]/30 dark:hover:shadow-lg dark:hover:shadow-[#68A243]/10"
-                      >
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleDelete(rep)}
-                          className="absolute top-3 right-3 opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity h-8 w-8 lg:w-auto p-0 lg:px-2 text-red-500 hover:text-red-700 hover:bg-red-50 dark:text-red-400 dark:hover:text-red-300 dark:hover:bg-red-950/30 gap-1"
-                          title="Eliminar representante"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                          <span className="hidden lg:inline text-xs">
-                            Eliminar
-                          </span>
-                        </Button>
-                        <CardHeader className="pb-3">
-                          <div className="flex items-start gap-3">
-                            <div className="bg-[#143E29]/10 dark:bg-[#68A243]/20 rounded-full p-2 shrink-0">
-                              <User className="h-5 w-5 text-[#143E29] dark:text-[#68A243]" />
-                            </div>
-                            <div className="flex-1">
-                              <CardTitle className="text-base text-[#143E29] dark:text-white">
-                                {rep.nombre} {rep.apellido}
-                              </CardTitle>
-                              <Badge
-                                variant="outline"
-                                className="text-xs mt-0.5 dark:text-gray-300 dark:border-[#68A243]/30"
-                              >
-                                <Building2 className="h-3 w-3 mr-1" />
-                                {rep.empresa_nombre || "Sin empresa"}
-                              </Badge>
-                            </div>
-                          </div>
-                        </CardHeader>
-                        <CardContent className="space-y-2 text-sm text-gray-600 dark:text-gray-400">
-                          <div className="flex items-center gap-2">
-                            <Mail className="h-4 w-4 text-[#68A243] shrink-0" />
-                            <span className="truncate">{rep.email}</span>
-                          </div>
-                          {rep.telefono && (
-                            <div className="flex items-center gap-2">
-                              <Phone className="h-4 w-4 text-[#68A243] shrink-0" />
-                              <span>{rep.telefono}</span>
-                            </div>
-                          )}
-                          <div className="flex items-center gap-2">
-                            <Briefcase className="h-4 w-4 text-[#68A243] shrink-0" />
-                            <span>{rep.cargo?.nombre || "Sin cargo"}</span>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    ))}
-                  </div>
-                )}
-              </div>
-            </>
           ) : filteredRepresentantes.length === 0 ? (
             <Card className="text-center py-12 dark:bg-[#143E29]/40 dark:border-gray-700/50 transition-colors duration-300">
               <CardHeader>
@@ -698,7 +493,9 @@ export default function Representantes() {
                 <CardDescription className="dark:text-gray-500">
                   {searchName || selectedCargos.length > 0
                     ? "Intenta con otros filtros"
-                    : "Todavía no hay representantes registrados para tu empresa."}
+                    : user?.is_superuser
+                      ? "No hay representantes disponibles"
+                      : "Todavía no hay representantes registrados para tu empresa."}
                 </CardDescription>
               </CardHeader>
             </Card>
@@ -724,16 +521,29 @@ export default function Representantes() {
                       <div className="bg-[#143E29]/10 dark:bg-[#68A243]/20 rounded-full p-2 shrink-0">
                         <User className="h-5 w-5 text-[#143E29] dark:text-[#68A243]" />
                       </div>
-                      <div>
+                      <div className="flex-1">
                         <CardTitle className="text-base text-[#143E29] dark:text-white">
                           {rep.nombre} {rep.apellido}
                         </CardTitle>
-                        <Badge
-                          variant="secondary"
-                          className="text-xs mt-0.5 dark:bg-[#1a5032] dark:text-[#68A243]"
-                        >
-                          {rep.cargo?.nombre || "Sin cargo"}
-                        </Badge>
+                        {user?.is_superuser && (
+                          <Badge
+                            variant="outline"
+                            className="text-xs mt-0.5 dark:text-gray-300 dark:border-[#68A243]/30"
+                          >
+                            <Building2 className="h-3 w-3 mr-1" />
+                            {rep.empresa_nombre || "Sin empresa"}
+                          </Badge>
+                        )}
+                        {!user?.is_superuser && (
+                          <Badge
+                            variant="secondary"
+                            className="text-xs mt-0.5 dark:bg-[#1a5032] dark:text-[#68A243]"
+                          >
+                            {typeof rep.cargo === "number"
+                              ? "Sin cargo"
+                              : rep.cargo?.nombre || "Sin cargo"}
+                          </Badge>
+                        )}
                       </div>
                     </div>
                   </CardHeader>
@@ -741,6 +551,16 @@ export default function Representantes() {
                     <div className="flex items-center gap-2">
                       <Mail className="h-4 w-4 text-[#68A243] shrink-0" />
                       <span className="truncate">{rep.email}</span>
+                      {!rep.email_confirmado && (
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <AlertCircle className="h-4 w-4 text-orange-500 dark:text-orange-400 shrink-0 cursor-help" />
+                            </TooltipTrigger>
+                            <TooltipContent>Email sin confirmar</TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                      )}
                     </div>
                     {rep.telefono && (
                       <div className="flex items-center gap-2">
@@ -750,7 +570,11 @@ export default function Representantes() {
                     )}
                     <div className="flex items-center gap-2">
                       <Briefcase className="h-4 w-4 text-[#68A243] shrink-0" />
-                      <span>{rep.cargo?.nombre || "Sin cargo"}</span>
+                      <span>
+                        {typeof rep.cargo === "number"
+                          ? "Sin cargo"
+                          : rep.cargo?.nombre || "Sin cargo"}
+                      </span>
                     </div>
                   </CardContent>
                 </Card>

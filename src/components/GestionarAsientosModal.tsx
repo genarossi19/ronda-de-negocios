@@ -140,14 +140,24 @@ export default function GestionarAsientosModal({
     async (companyId: number) => {
       try {
         setLoadingRepresentantes(true);
-        const data = await getRepresentantes({ empresa: companyId });
-        // Asegurar que todos los representantes tengan empresa_id asignado
-        // (en caso de que la API no lo devuelva en el filtrado)
-        const dataWithCompanyId = data.map((rep) => ({
-          ...rep,
-          empresa_id: rep.empresa_id || companyId,
-        }));
-        setRepresentantes(dataWithCompanyId);
+        const [representantesData, empresasData] = await Promise.all([
+          getRepresentantes({ empresa: companyId }),
+          getCompanies(),
+        ]);
+
+        // Mapear representantes con empresa_nombre
+        const dataWithCompanyName = representantesData.map((rep) => {
+          const empresa = empresasData.find(
+            (e: EmpresaResponse) => e.id === (rep.empresa || rep.empresa_id),
+          );
+          return {
+            ...rep,
+            empresa_id: rep.empresa || rep.empresa_id || companyId,
+            empresa_nombre: rep.empresa_nombre || empresa?.razon_social,
+          };
+        });
+
+        setRepresentantes(dataWithCompanyName);
       } catch (error) {
         if (!isSessionExpiredError(error)) {
           const message = getApiErrorMessage(
@@ -312,7 +322,8 @@ export default function GestionarAsientosModal({
     const selectedRepresentative = representantes.find(
       (representante) =>
         representante.id.toString() === selectedRepresentativeId &&
-        representante.empresa_id === selectedCompanyIdNum,
+        (representante.empresa || representante.empresa_id) ===
+          selectedCompanyIdNum,
     );
 
     if (!selectedRepresentative) {

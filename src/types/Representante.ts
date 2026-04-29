@@ -6,9 +6,11 @@ export interface RepresentanteResponse {
   apellido: string;
   email: string;
   telefono?: string;
-  cargo: GenericType;
+  cargo: GenericType | number;
+  empresa?: number;
   empresa_id?: number;
   empresa_nombre?: string;
+  email_confirmado?: boolean;
 }
 
 export interface RepresentanteWrite {
