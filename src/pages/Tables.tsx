@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import * as DialogPrimitive from "@radix-ui/react-dialog";
 import Navbar from "../components/Navbar";
 import Footer from "../layout/Footer";
@@ -47,7 +47,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "../components/ui/popover";
-import { cn } from "../lib/utils";
+import { cn, createTurnoNumberMap } from "../lib/utils";
 import { HelpTutorial } from "../components/HelpTutorial";
 import { AddRepresentativeModal } from "../components/AddRepresentativeModal";
 import { useParams, useNavigate } from "react-router";
@@ -63,6 +63,8 @@ import {
   deleteAsiento,
   updateAsiento,
 } from "../api/AsientoService";
+import { getTurnoByEventoId } from "../api/TurnoService";
+import { getEventos } from "../api/EventoService";
 import type { MesaResponse } from "../types/Mesa";
 import type { GenericType } from "../types/GenericType";
 import type { AsientoResponse } from "../types/Asiento";
@@ -211,6 +213,7 @@ export default function Tables() {
   const [tables, setTables] = useState<TableUIData[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [turnoNumber, setTurnoNumber] = useState<number | null>(null);
   const [selectedTable, setSelectedTable] = useState<TableUIData | null>(null);
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
   const [showChangeRepDialog, setShowChangeRepDialog] = useState(false);
@@ -372,6 +375,33 @@ export default function Tables() {
     loadTables();
   }, [turnoId, refreshTables]);
 
+  // Cargar turno número basado en hora_inicio
+  useEffect(() => {
+    const loadTurnoNumber = async () => {
+      if (!turnoId) return;
+
+      try {
+        const eventos = await getEventos();
+        const activeEvent = eventos.find((e) => e.estado === "activo");
+
+        if (!activeEvent) {
+          setTurnoNumber(null);
+          return;
+        }
+
+        const turnos = await getTurnoByEventoId(activeEvent.id);
+        const turnoNumberMap = createTurnoNumberMap(turnos);
+        const number = turnoNumberMap.get(parseInt(turnoId));
+        setTurnoNumber(number ?? null);
+      } catch (err) {
+        console.error("Error cargando número de turno:", err);
+        setTurnoNumber(null);
+      }
+    };
+
+    loadTurnoNumber();
+  }, [turnoId]);
+
   useEffect(() => {
     const loadCargos = async () => {
       try {
@@ -434,7 +464,9 @@ export default function Tables() {
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
               <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                 <div>
-                  <h1 className="text-3xl font-bold mb-2">Turno {turnoId}</h1>
+                  <h1 className="text-3xl font-bold mb-2">
+                    Turno {turnoNumber}
+                  </h1>
                   <div className="flex flex-wrap items-center gap-4 text-gray-200">
                     <div className="flex items-center gap-2">
                       <Clock className="h-4 w-4" />
@@ -590,7 +622,9 @@ export default function Tables() {
 
               <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                 <div>
-                  <h1 className="text-3xl font-bold mb-2">Turno {turnoId}</h1>
+                  <h1 className="text-3xl font-bold mb-2">
+                    Turno {turnoNumber}
+                  </h1>
                   <div className="flex flex-wrap items-center gap-4 text-gray-200">
                     <div className="flex items-center gap-2">
                       <Clock className="h-4 w-4" />
@@ -968,7 +1002,7 @@ export default function Tables() {
 
             <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
               <div>
-                <h1 className="text-3xl font-bold mb-2">Turno {turnoId}</h1>
+                <h1 className="text-3xl font-bold mb-2">Turno {turnoNumber}</h1>
                 <div className="flex flex-wrap items-center gap-4 text-gray-200">
                   <div className="flex items-center gap-2">
                     <Clock className="h-4 w-4" />
@@ -1312,7 +1346,7 @@ export default function Tables() {
                                 return (
                                   <CommandItem
                                     key={rep.id}
-                                    value={`${rep.nombre} ${rep.apellido}`}
+                                    value={`${rep.nombre} ${rep.apellido} ${rep.email}`}
                                     onSelect={() => {
                                       setSelectedRepresentative(
                                         rep.id.toString(),
@@ -1557,7 +1591,7 @@ export default function Tables() {
                           requestCancelSeat(ownSeatInSelectedTable)
                         }
                         disabled={submittingBooking}
-                        className="border-[#ffb900]/40 bg-white/70 text-[#b57b00] hover:bg-[#ffb900]/12 hover:border-[#ffb900] dark:bg-[#0f2f25] dark:text-[#ffb900] dark:hover:bg-[#ffb900]/10"
+                        className="border-[#ffb900]/40 bg-white/70 text-[#b57b00] hover:bg-[#ffb900]/60 hover:text-white hover:border-[#ffb900] dark:bg-[#0f2f25] dark:text-[#ffb900] dark:hover:bg-[#ffb900]/10 dark:hover:text-white"
                       >
                         <LogOut className="h-4 w-4" />
                         Salir de la mesa
@@ -1627,7 +1661,7 @@ export default function Tables() {
                               requestCancelSeat(selectedTable.asientos[0])
                             }
                             disabled={submittingBooking}
-                            className="border-[#ffb900]/40 bg-white/70 text-[#b57b00] hover:bg-[#ffb900]/12 hover:border-[#ffb900] dark:bg-[#0f2f25] dark:text-[#ffb900] dark:hover:bg-[#ffb900]/10"
+                            className="border-[#ffb900]/40 bg-white/70 text-[#b57b00] hover:bg-[#ffb900]/60 hover:text-white hover:border-[#ffb900] dark:bg-[#0f2f25] dark:text-[#ffb900] dark:hover:bg-[#ffb900]/10 dark:hover:text-white"
                           >
                             <LogOut className="h-4 w-4" />
                             Salir de la mesa
@@ -1732,7 +1766,7 @@ export default function Tables() {
                                 return (
                                   <CommandItem
                                     key={rep.id}
-                                    value={`${rep.nombre} ${rep.apellido}`}
+                                    value={`${rep.nombre} ${rep.apellido} ${rep.email}`}
                                     onSelect={() => {
                                       setSelectedRepresentative(
                                         rep.id.toString(),

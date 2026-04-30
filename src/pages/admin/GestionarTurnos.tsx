@@ -8,7 +8,6 @@ import {
   LayoutGrid,
   MapPin,
   Pencil,
-  Plus,
   Users,
   ArrowUp,
   ArrowDown,
@@ -16,6 +15,8 @@ import {
 import Navbar from "../../components/Navbar";
 import Footer from "../../layout/Footer";
 import GestionarAsientosModal from "../../components/GestionarAsientosModal";
+import TurnoFormModal from "../../components/TurnoFormModal";
+import CreateTurnoButton from "../../components/CreateTurnoButton";
 import { Button } from "../../components/ui/button";
 import { Badge } from "../../components/ui/badge";
 import {
@@ -24,54 +25,18 @@ import {
   CardHeader,
   CardTitle,
 } from "../../components/ui/card";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "../../components/ui/dialog";
-import { Input } from "../../components/ui/input";
-import { Label } from "../../components/ui/label";
 import { ScrollArea } from "../../components/ui/scroll-area";
 import { Skeleton } from "../../components/ui/skeleton";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "../../components/ui/select";
 import { toast } from "sonner";
 import { getEventos } from "../../api/EventoService";
-import {
-  createTurno,
-  editTurno,
-  getTurnoByEventoId,
-} from "../../api/TurnoService";
+import { getTurnoByEventoId } from "../../api/TurnoService";
 import type { EventoResponse } from "../../types/Evento";
 import type { TurnoResponse } from "../../types/Turno";
 import { getApiErrorMessage, isSessionExpiredError } from "../../lib/axios";
-
-type EstadoEditableTurno = "abierto" | "cerrado";
-
-type TurnoFormState = {
-  hora_inicio: string;
-  hora_fin: string;
-  cant_mesas: string;
-  estado: EstadoEditableTurno;
-};
-
-const initialFormState: TurnoFormState = {
-  hora_inicio: "",
-  hora_fin: "",
-  cant_mesas: "1",
-  estado: "abierto",
-};
+import { createTurnoNumberMap } from "../../lib/utils";
 
 const turnoStatusOptions: Array<{
-  value: EstadoEditableTurno;
+  value: "abierto" | "cerrado";
   label: string;
   badgeClassName: string;
 }> = [
@@ -88,30 +53,6 @@ const turnoStatusOptions: Array<{
       "bg-[#143E29]/10 text-[#143E29] border-[#143E29]/20 dark:bg-[#143E29]/40 dark:text-white dark:border-[#143E29]/60",
   },
 ];
-
-function addMinutesToTime(time: string, minutesToAdd: number) {
-  const [hours, minutes] = time.split(":").map(Number);
-
-  if (
-    Number.isNaN(hours) ||
-    Number.isNaN(minutes) ||
-    hours < 0 ||
-    hours > 23 ||
-    minutes < 0 ||
-    minutes > 59
-  ) {
-    return "";
-  }
-
-  const totalMinutes = hours * 60 + minutes + minutesToAdd;
-  const normalizedMinutes = ((totalMinutes % 1440) + 1440) % 1440;
-  const nextHours = Math.floor(normalizedMinutes / 60)
-    .toString()
-    .padStart(2, "0");
-  const nextMinutes = (normalizedMinutes % 60).toString().padStart(2, "0");
-
-  return `${nextHours}:${nextMinutes}`;
-}
 
 function formatDate(date: string) {
   return new Intl.DateTimeFormat("es-AR", {
@@ -140,25 +81,6 @@ function getTurnoSortValue(turno: TurnoResponse) {
   const priority =
     turno.estado === "abierto" ? 0 : turno.estado === "full" ? 1 : 2;
   return { priority, hour: turno.hora_inicio };
-}
-
-function normalizeTurno(turno: TurnoResponse): TurnoResponse {
-  return {
-    ...turno,
-    mesas_ocupadas: Number.isFinite(turno.mesas_ocupadas)
-      ? turno.mesas_ocupadas
-      : 0,
-  };
-}
-
-function parseCantMesas(value: string) {
-  const parsed = Number(value);
-
-  if (!value || Number.isNaN(parsed) || parsed < 1) {
-    return null;
-  }
-
-  return parsed;
 }
 
 function HeroSkeleton() {
@@ -282,13 +204,11 @@ export default function GestionarTurnos() {
   const [turnoEnEdicion, setTurnoEnEdicion] = useState<TurnoResponse | null>(
     null,
   );
-  const [formData, setFormData] = useState<TurnoFormState>(initialFormState);
-  const [isEndTimeManuallyEdited, setIsEndTimeManuallyEdited] = useState(false);
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
 
   const loadTurnos = async (selectedEventoId: number) => {
     const data = await getTurnoByEventoId(selectedEventoId);
-    setTurnos(data.map(normalizeTurno));
+    setTurnos(data);
   };
 
   useEffect(() => {
@@ -351,6 +271,8 @@ export default function GestionarTurnos() {
     return sortDirection === "desc" ? sorted.reverse() : sorted;
   }, [turnos, sortDirection]);
 
+  const turnoNumberMap = useMemo(() => createTurnoNumberMap(turnos), [turnos]);
+
   const stats = useMemo(
     () => ({
       total: turnos.length,
@@ -364,155 +286,18 @@ export default function GestionarTurnos() {
     [turnos],
   );
 
-  const ultimoTurnoCreado = useMemo(() => {
-    if (turnos.length === 0) {
-      return null;
-    }
-
-    return [...turnos].sort((first, second) => {
-      if (first.hora_fin !== second.hora_fin) {
-        return first.hora_fin.localeCompare(second.hora_fin);
-      }
-
-      return first.hora_inicio.localeCompare(second.hora_inicio);
-    })[turnos.length - 1];
-  }, [turnos]);
-
   const handleOpenSeatManager = (turno: TurnoResponse) => {
     setTurnoGestionado(turno);
   };
 
-  const resetForm = () => {
-    setFormData(initialFormState);
-    setTurnoEnEdicion(null);
-    setIsEndTimeManuallyEdited(false);
-  };
-
-  const openCreateDialog = () => {
-    resetForm();
-
-    if (ultimoTurnoCreado) {
-      setFormData({
-        ...initialFormState,
-        hora_inicio: ultimoTurnoCreado.hora_fin,
-        hora_fin: addMinutesToTime(ultimoTurnoCreado.hora_fin, 15),
-      });
-    }
-
-    setIsFormOpen(true);
-  };
-
   const openEditDialog = (turno: TurnoResponse) => {
     setTurnoEnEdicion(turno);
-    setFormData({
-      hora_inicio: turno.hora_inicio,
-      hora_fin: turno.hora_fin,
-      cant_mesas: String(turno.cant_mesas),
-      estado: turno.estado === "cerrado" ? "cerrado" : "abierto",
-    });
-    setIsEndTimeManuallyEdited(true);
     setIsFormOpen(true);
   };
 
-  const handleFormChange = <K extends keyof TurnoFormState>(
-    field: K,
-    value: TurnoFormState[K],
-  ) => {
-    setFormData((current) => ({ ...current, [field]: value }));
-  };
-
-  const handleStartTimeChange = (value: string) => {
-    setFormData((current) => ({
-      ...current,
-      hora_inicio: value,
-      hora_fin: isEndTimeManuallyEdited
-        ? current.hora_fin
-        : addMinutesToTime(value, 15),
-    }));
-  };
-
-  const handleEndTimeChange = (value: string) => {
-    setIsEndTimeManuallyEdited(true);
-    setFormData((current) => ({ ...current, hora_fin: value }));
-  };
-
-  const handleCantMesasChange = (value: string) => {
-    if (/^\d*$/.test(value)) {
-      handleFormChange("cant_mesas", value);
-    }
-  };
-
-  const handleSubmit = async () => {
-    if (!evento) {
-      return;
-    }
-
-    const cantMesas = parseCantMesas(formData.cant_mesas);
-
-    if (!turnoEnEdicion) {
-      if (!formData.hora_inicio || !formData.hora_fin || cantMesas === null) {
-        toast.error("Completá horario y cantidad de mesas antes de guardar");
-        return;
-      }
-
-      if (formData.hora_inicio >= formData.hora_fin) {
-        toast.error("La hora de fin debe ser posterior a la hora de inicio");
-        return;
-      }
-    }
-
-    if (cantMesas === null) {
-      toast.error("Ingresá una cantidad de mesas válida");
-      return;
-    }
-
-    try {
-      setIsSaving(true);
-
-      if (turnoEnEdicion) {
-        const payload = {
-          ...(turnoEnEdicion.cant_mesas !== cantMesas && {
-            cant_mesas: cantMesas,
-          }),
-          ...(turnoEnEdicion.estado !== formData.estado && {
-            estado: formData.estado,
-          }),
-        };
-
-        if (Object.keys(payload).length === 0) {
-          toast.info("No hubo cambios para guardar en el turno");
-          setIsFormOpen(false);
-          resetForm();
-          return;
-        }
-
-        await editTurno(turnoEnEdicion.id, payload);
-        await loadTurnos(evento.id);
-        toast.success("El turno fue actualizado correctamente");
-      } else {
-        await createTurno({
-          hora_inicio: formData.hora_inicio,
-          hora_fin: formData.hora_fin,
-          cant_mesas: cantMesas,
-          evento: evento.id,
-          estado: formData.estado,
-        });
-        await loadTurnos(evento.id);
-        toast.success("El turno fue creado correctamente");
-      }
-
-      setIsFormOpen(false);
-      resetForm();
-    } catch (error) {
-      const message = getApiErrorMessage(
-        error,
-        "Ocurrió un error al guardar el turno",
-      );
-      if (message) {
-        toast.error(message);
-      }
-    } finally {
-      setIsSaving(false);
+  const handleFormSubmitSuccess = async () => {
+    if (evento) {
+      await loadTurnos(evento.id);
     }
   };
 
@@ -577,13 +362,10 @@ export default function GestionarTurnos() {
               </div>
 
               <div className="flex flex-col sm:flex-row gap-3">
-                <Button
-                  onClick={openCreateDialog}
-                  className="h-11 px-5 bg-[#68A243] hover:bg-[#5a9038] text-white shadow-lg shadow-[#68A243]/20"
-                >
-                  <Plus className="h-4 w-4" />
-                  Nuevo turno
-                </Button>
+                <CreateTurnoButton
+                  evento={evento}
+                  onTurnoCreated={() => evento && loadTurnos(evento.id)}
+                />
               </div>
             </div>
           </section>
@@ -766,7 +548,7 @@ export default function GestionarTurnos() {
                               <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
                                 <div className="flex flex-wrap items-center gap-2">
                                   <h3 className="text-xl font-semibold text-[#143E29] dark:text-white">
-                                    Turno {turno.id}
+                                    Turno {turnoNumberMap.get(turno.id)}
                                   </h3>
                                   <Badge className={statusMeta.badgeClassName}>
                                     {statusMeta.label}
@@ -855,13 +637,11 @@ export default function GestionarTurnos() {
                       Creá el primer turno de esta ronda activa para empezar a
                       organizar las mesas.
                     </p>
-                    <Button
-                      onClick={openCreateDialog}
-                      className="bg-[#68A243] hover:bg-[#5a9038] text-white"
-                    >
-                      <Plus className="h-4 w-4" />
-                      Crear primer turno
-                    </Button>
+                    <CreateTurnoButton
+                      evento={evento}
+                      onTurnoCreated={() => evento && loadTurnos(evento.id)}
+                      variant="empty-state"
+                    />
                   </div>
                 )}
               </CardContent>
@@ -872,187 +652,15 @@ export default function GestionarTurnos() {
 
       <Footer />
 
-      <Dialog
-        open={isFormOpen}
-        onOpenChange={(open) => {
-          setIsFormOpen(open);
-          if (!open) {
-            resetForm();
-          }
-        }}
-      >
-        <DialogContent className="sm:max-w-xl border-gray-200 dark:border-[#68A243]/20 bg-white dark:bg-[#11161d]">
-          <DialogHeader>
-            <DialogTitle className="text-[#143E29] dark:text-white">
-              {turnoEnEdicion ? "Editar turno" : "Crear nuevo turno"}
-            </DialogTitle>
-            <DialogDescription className="dark:text-gray-300">
-              {turnoEnEdicion
-                ? "Podés ajustar la cantidad de mesas y el estado del turno. El horario se muestra como referencia."
-                : "Definí el horario, la capacidad y el estado inicial del turno para la ronda activa."}
-            </DialogDescription>
-          </DialogHeader>
-
-          <div className="grid gap-4 py-2">
-            <div className="rounded-2xl border border-[#68A243]/20 bg-[#68A243]/5 dark:bg-[#143E29]/60 p-4 space-y-2">
-              <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground dark:text-gray-300">
-                Evento asociado
-              </p>
-              <p className="text-base font-semibold text-[#143E29] dark:text-white">
-                {evento.nombre}
-              </p>
-              <p className="text-sm text-muted-foreground dark:text-gray-300">
-                {formatDate(evento.fecha)} - {evento.ubicacion}
-              </p>
-            </div>
-
-            {turnoEnEdicion ? (
-              <>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="grid gap-2">
-                    <Label className="dark:text-white">Horario</Label>
-                    <Input
-                      value={`${turnoEnEdicion.hora_inicio} - ${turnoEnEdicion.hora_fin}`}
-                      readOnly
-                      className="border-[#68A243]/20 dark:bg-[#143E29] dark:border-[#68A243]/20 dark:text-white"
-                    />
-                  </div>
-
-                  <div className="grid gap-2">
-                    <Label
-                      htmlFor="cant_mesas_edit"
-                      className="dark:text-white"
-                    >
-                      Cantidad de mesas
-                    </Label>
-                    <Input
-                      id="cant_mesas_edit"
-                      type="number"
-                      min={1}
-                      value={formData.cant_mesas}
-                      onChange={(event) =>
-                        handleCantMesasChange(event.target.value)
-                      }
-                      className="border-[#68A243]/20 focus-visible:border-[#68A243] focus-visible:ring-[#68A243]/20 dark:bg-[#143E29] dark:border-[#68A243]/20 dark:text-white transition-colors"
-                    />
-                  </div>
-                </div>
-
-                <div className="grid gap-2">
-                  <Label className="dark:text-white">Estado</Label>
-                  <Select
-                    value={formData.estado}
-                    onValueChange={(value) =>
-                      handleFormChange("estado", value as EstadoEditableTurno)
-                    }
-                  >
-                    <SelectTrigger className="w-full border-[#68A243]/20 focus-visible:border-[#68A243] focus-visible:ring-[#68A243]/20 dark:bg-[#143E29] dark:border-[#68A243]/20 dark:text-white transition-colors">
-                      <SelectValue placeholder="Seleccionar estado" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {turnoStatusOptions.map((status) => (
-                        <SelectItem key={status.value} value={status.value}>
-                          {status.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </>
-            ) : (
-              <>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="grid gap-2">
-                    <Label htmlFor="hora_inicio" className="dark:text-white">
-                      Hora de inicio
-                    </Label>
-                    <Input
-                      id="hora_inicio"
-                      type="time"
-                      value={formData.hora_inicio}
-                      onChange={(event) =>
-                        handleStartTimeChange(event.target.value)
-                      }
-                      className="border-[#68A243]/20 focus-visible:border-[#68A243] focus-visible:ring-[#68A243]/20 dark:bg-[#143E29] dark:border-[#68A243]/20 dark:text-white transition-colors [color-scheme:light] dark:[color-scheme:dark]"
-                    />
-                  </div>
-
-                  <div className="grid gap-2">
-                    <Label htmlFor="hora_fin" className="dark:text-white">
-                      Hora de fin
-                    </Label>
-                    <Input
-                      id="hora_fin"
-                      type="time"
-                      value={formData.hora_fin}
-                      onChange={(event) =>
-                        handleEndTimeChange(event.target.value)
-                      }
-                      className="border-[#68A243]/20 focus-visible:border-[#68A243] focus-visible:ring-[#68A243]/20 dark:bg-[#143E29] dark:border-[#68A243]/20 dark:text-white transition-colors [color-scheme:light] dark:[color-scheme:dark]"
-                    />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="grid gap-2">
-                    <Label htmlFor="cant_mesas" className="dark:text-white">
-                      Cantidad de mesas
-                    </Label>
-                    <Input
-                      id="cant_mesas"
-                      type="number"
-                      min={1}
-                      value={formData.cant_mesas}
-                      onChange={(event) =>
-                        handleCantMesasChange(event.target.value)
-                      }
-                      className="border-[#68A243]/20 focus-visible:border-[#68A243] focus-visible:ring-[#68A243]/20 dark:bg-[#143E29] dark:border-[#68A243]/20 dark:text-white transition-colors"
-                    />
-                  </div>
-
-                  <div className="grid gap-2">
-                    <Label className="dark:text-white">Estado inicial</Label>
-                    <Select
-                      value={formData.estado}
-                      onValueChange={(value) =>
-                        handleFormChange("estado", value as EstadoEditableTurno)
-                      }
-                    >
-                      <SelectTrigger className="w-full border-[#68A243]/20 focus-visible:border-[#68A243] focus-visible:ring-[#68A243]/20 dark:bg-[#143E29] dark:border-[#68A243]/20 dark:text-white transition-colors">
-                        <SelectValue placeholder="Seleccionar estado" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {turnoStatusOptions.map((status) => (
-                          <SelectItem key={status.value} value={status.value}>
-                            {status.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-              </>
-            )}
-          </div>
-
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsFormOpen(false)}>
-              Cancelar
-            </Button>
-            <Button
-              onClick={handleSubmit}
-              disabled={isSaving}
-              className="bg-[#68A243] hover:bg-[#5a9038] text-white"
-            >
-              {isSaving
-                ? "Guardando..."
-                : turnoEnEdicion
-                  ? "Actualizar turno"
-                  : "Crear turno"}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <TurnoFormModal
+        isOpen={isFormOpen}
+        onOpenChange={setIsFormOpen}
+        evento={evento}
+        turnoEnEdicion={turnoEnEdicion}
+        onSubmitSuccess={handleFormSubmitSuccess}
+        isSaving={isSaving}
+        onSavingChange={setIsSaving}
+      />
 
       <GestionarAsientosModal
         isOpen={Boolean(turnoGestionado)}

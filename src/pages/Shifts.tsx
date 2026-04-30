@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Navbar from "../components/Navbar";
 import Footer from "../layout/Footer";
 import { Button } from "../components/ui/button";
@@ -27,6 +27,7 @@ import { Link, useNavigate } from "react-router";
 import { getTurnoByEventoId } from "../api/TurnoService";
 import { getEventos } from "../api/EventoService";
 import { getApiErrorMessage } from "../lib/axios";
+import { createTurnoNumberMap } from "../lib/utils";
 import type { EventoResponse } from "../types/Evento";
 import type { TurnoResponse } from "../types/Turno";
 
@@ -113,6 +114,11 @@ export default function Shifts() {
   }, [isPendingApproval]);
 
   const filteredShifts = shifts;
+
+  const turnoNumberMap = useMemo(
+    () => createTurnoNumberMap(filteredShifts),
+    [filteredShifts],
+  );
 
   const getStatusBadge = (status: TurnoResponse["estado"]) => {
     switch (status) {
@@ -365,7 +371,7 @@ export default function Shifts() {
                     <div className="flex items-start justify-between">
                       <div>
                         <CardTitle className="text-2xl text-[#143E29] dark:text-white mb-1 transition-colors duration-300">
-                          Turno {shift.id}
+                          Turno {turnoNumberMap.get(shift.id)}
                         </CardTitle>
                         <CardDescription className="text-base dark:text-gray-200 transition-colors duration-300">
                           Ronda de negocios - Reuniones 1 a 1

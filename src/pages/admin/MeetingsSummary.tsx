@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import Navbar from "../../components/Navbar";
 import Footer from "../../layout/Footer";
+import GestionarAsientosModal from "../../components/GestionarAsientosModal";
 import { Button } from "../../components/ui/button";
 import { Badge } from "../../components/ui/badge";
 import {
@@ -92,6 +93,7 @@ type TableSummary = {
   ocupacionActual: number;
   estadoMesa: "libre" | "parcial" | "completa";
   anfitrionaEmpresa: string | null;
+  turno: TurnoResponse;
   participantes: Array<{
     asientoId: number;
     empresaNombre: string;
@@ -343,6 +345,9 @@ export default function MeetingsSummary() {
   const [isLoadingSummary, setIsLoadingSummary] = useState(false);
   const [summaryRows, setSummaryRows] = useState<SummarySeatRow[]>([]);
   const [tableSummaries, setTableSummaries] = useState<TableSummary[]>([]);
+  const [turnoGestionado, setTurnoGestionado] = useState<TurnoResponse | null>(
+    null,
+  );
 
   useEffect(() => {
     const fetchEventos = async () => {
@@ -467,6 +472,7 @@ export default function MeetingsSummary() {
                 turnoEstado: turno.estado,
                 ocupacionActual,
                 estadoMesa,
+                turno,
                 anfitrionaEmpresa:
                   participantes.find((participante) => participante.anfitriona)
                     ?.empresaNombre ?? null,
@@ -638,6 +644,23 @@ export default function MeetingsSummary() {
         String(turno.id).includes(query),
     );
   }, [availableTurnos, turnoSearchTerm]);
+
+  const turnoNumberMap = useMemo(() => {
+    const map = new Map<number, number>();
+    availableTurnos.forEach((turno, index) => {
+      map.set(turno.id, index + 1);
+    });
+    return map;
+  }, [availableTurnos]);
+
+  const handleCloseTurnoModal = () => {
+    setTurnoGestionado(null);
+  };
+
+  const handleTurnoUpdated = async () => {
+    // En MeetingsSummary, no necesitamos recargar porque los datos ya están en el estado
+    setTurnoGestionado(null);
+  };
 
   const hasActiveFilters =
     turnoFilter !== "all" || searchTerm.trim().length > 0;
@@ -823,7 +846,7 @@ export default function MeetingsSummary() {
                             >
                               <div className="flex w-full items-center justify-between gap-3">
                                 <span className="rounded-full border border-[#68A243]/25 bg-[#68A243]/10 px-2.5 py-0.5 text-xs font-semibold text-[#3F6E20] dark:border-[#68A243]/30 dark:bg-[#68A243]/15 dark:text-[#9FD27B]">
-                                  Turno {turno.id}
+                                  Turno {turnoNumberMap.get(turno.id)}
                                 </span>
                                 <span className="text-sm font-medium text-[#425249] dark:text-gray-200">
                                   {turno.horario}
@@ -1113,7 +1136,16 @@ export default function MeetingsSummary() {
                                   className="dark:border-[#68A243]/15"
                                 >
                                   <TableCell className="min-w-[140px] font-medium text-[#143E29] dark:text-white">
-                                    {tableSummary.turnoHorario}
+                                    <button
+                                      type="button"
+                                      onClick={() =>
+                                        setTurnoGestionado(tableSummary.turno)
+                                      }
+                                      className="cursor-pointer text-[#68A243] hover:text-[#5a9038] hover:underline transition-colors"
+                                      aria-label={`Gestionar asientos para turno ${tableSummary.turnoHorario}`}
+                                    >
+                                      {tableSummary.turnoHorario}
+                                    </button>
                                   </TableCell>
                                   <TableCell>
                                     Mesa {tableSummary.mesaNumero}
@@ -1275,6 +1307,16 @@ export default function MeetingsSummary() {
           ) : null}
         </DialogContent>
       </Dialog>
+
+      <GestionarAsientosModal
+        isOpen={Boolean(turnoGestionado)}
+        onClose={handleCloseTurnoModal}
+        turnoGestionado={turnoGestionado}
+        evento={selectedEvent}
+        loadTurnos={async () => {
+          handleTurnoUpdated();
+        }}
+      />
 
       <Footer />
     </div>

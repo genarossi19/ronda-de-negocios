@@ -1,4 +1,4 @@
-import { Building2, Mail, MapPin } from "lucide-react";
+import { Building2, Mail, MapPin, Phone } from "lucide-react";
 import { Link } from "react-router";
 
 export default function Footer() {
@@ -64,6 +64,15 @@ export default function Footer() {
                   className="hover:text-accent transition-colors"
                 >
                   secretaria.produccion@trenquelauquen.gov.ar
+                </a>
+              </li>
+              <li className="flex items-start gap-2 text-gray-300">
+                <Phone className="h-5 w-5 text-secondary mt-0.5 flex-shrink-0" />
+                <a
+                  href="tel:2392549920"
+                  className="hover:text-accent transition-colors"
+                >
+                  2392 549920
                 </a>
               </li>
             </ul>
