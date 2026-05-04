@@ -39,3 +39,7 @@ export interface EmpresaWrite {
 export type EmpresaUpdate = Partial<Omit<EmpresaResponse, "id">> & {
   id: number;
 };
+
+// Aliases for backward compatibility
+export type CompanyResponse = EmpresaResponse;
+export type Company = EmpresaResponse;

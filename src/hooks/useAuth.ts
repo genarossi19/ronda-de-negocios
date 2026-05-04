@@ -40,19 +40,14 @@ export const useAuth = () => {
     const token = Cookies.get(TOKEN_COOKIE_NAME);
 
     if (!token) {
-      // console.log("[useAuth] No token found in cookies");
       clearUser();
       return;
     }
 
-    // console.log("[useAuth] Token found, decoding...");
     // Decodificar y validar el token
     const decoded = decodeToken(token);
 
-    // console.log("[useAuth] Decoded token:", decoded);
-
     if (!decoded) {
-      // console.log("[useAuth] Failed to decode token");
       clearUser();
       Cookies.remove(TOKEN_COOKIE_NAME);
       return;
@@ -61,17 +56,12 @@ export const useAuth = () => {
     // Verificar que el token no haya expirado
     const now = Date.now() / 1000;
     if (decoded.exp <= now) {
-      // console.log("[useAuth] Token expired");
       clearUser();
       Cookies.remove(TOKEN_COOKIE_NAME);
       return;
     }
 
     // Token válido, establecer usuario en el store
-    // console.log("[useAuth] Valid token, setting user in store", {
-    //   user_id: decoded.user_id,
-    //   is_superuser: decoded.is_superuser,
-    // });
     setUser({
       user_id: decoded.user_id,
       empresa_id: decoded.empresa_id,
@@ -146,18 +136,6 @@ export const useAuth = () => {
     clearUser();
     Cookies.remove(TOKEN_COOKIE_NAME);
   }, [clearUser]);
-
-  const checkIsAuthenticated = useCallback(() => {
-    const token = getToken();
-    if (!token) return false;
-
-    const decoded = decodeToken(token);
-    if (!decoded) return false;
-
-    // Verificar si el token ha expirado
-    const now = Date.now() / 1000;
-    return decoded.exp > now;
-  }, [getToken]);
 
   return {
     user,

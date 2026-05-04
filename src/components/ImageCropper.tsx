@@ -60,16 +60,8 @@ export default function ImageCropper({
   // === EFFECT: Actualizar imagen del preview cuando croppedBlob cambia ===
   useEffect(() => {
     if (previewImageRef.current && croppedBlob) {
-      console.log("[ImageCropper] useEffect: Creating blob URL from blob");
-
-      // Crear URL del blob cuando sea necesario
       const blobUrl = URL.createObjectURL(croppedBlob);
       previewImageRef.current.src = blobUrl;
-
-      console.log(
-        "[ImageCropper] Preview URL actualizada:",
-        blobUrl.substring(0, 50) + "...",
-      );
 
       return () => {
         URL.revokeObjectURL(blobUrl);
@@ -156,7 +148,6 @@ export default function ImageCropper({
 
     setIsProcessing(true);
     setError(null);
-    console.log("[ImageCropper] handleCrop iniciado");
 
     // Limpiar timeout anterior si existe
     if (blobTimeoutRef.current !== null) {
@@ -175,12 +166,6 @@ export default function ImageCropper({
 
       canvas.width = CROP_SIZE;
       canvas.height = CROP_SIZE;
-      console.log(
-        "[ImageCropper] Canvas dimensiones:",
-        canvas.width,
-        "x",
-        canvas.height,
-      );
 
       const image = new Image();
 
@@ -191,13 +176,6 @@ export default function ImageCropper({
       };
 
       image.onload = async () => {
-        console.log(
-          "[ImageCropper] Imagen cargada:",
-          image.width,
-          "x",
-          image.height,
-        );
-
         try {
           if (image.width <= 0 || image.height <= 0) {
             throw new Error("Imagen con dimensiones inválidas");
@@ -226,17 +204,6 @@ export default function ImageCropper({
             Math.min(CROP_SIZE / cropState.zoom, image.height - sourceY),
           );
 
-          console.log("[ImageCropper] Crop geometry:", {
-            sourceX,
-            sourceY,
-            sourceWidth,
-            sourceHeight,
-            destinationX: 0,
-            destinationY: 0,
-            destinationWidth: CROP_SIZE,
-            destinationHeight: CROP_SIZE,
-          });
-
           ctx.clearRect(0, 0, CROP_SIZE, CROP_SIZE);
 
           ctx.drawImage(
@@ -250,8 +217,6 @@ export default function ImageCropper({
             CROP_SIZE,
             CROP_SIZE,
           );
-          console.log("[ImageCropper] drawImage ejecutado");
-
           // Guardar estado de edición para re-editar después
           setSavedEditState({ ...cropState });
 
@@ -280,18 +245,14 @@ export default function ImageCropper({
               throw new Error("Failed to generate blob from canvas");
             }
 
-            console.log("[ImageCropper] Blob generado:", blob.size, "bytes");
-
             // Guardar blob en estado
             setCroppedBlob(blob);
 
             // Callback para upload al backend
             onCropComplete?.(blob);
-            console.log("[ImageCropper] onCropComplete ejecutado");
 
             // SOLO cambiar a preview después de que el blob esté listo
             setMode("preview");
-            console.log("[ImageCropper] Mode cambiado a preview");
           } catch (blobErr) {
             console.error("[ImageCropper] Error generando blob:", blobErr);
             setError("Error al procesar la imagen");
@@ -554,8 +515,6 @@ export default function ImageCropper({
 
   // === RENDER: PREVIEW MODE (Post-guardado) ===
   if (mode === "preview" && croppedBlob) {
-    console.log("[ImageCropper] Renderizando PREVIEW MODE");
-
     return (
       <div style={{ width: "100%", padding: "20px", boxSizing: "border-box" }}>
         {/* Mensaje de éxito */}

@@ -48,15 +48,6 @@ export default function Companies() {
   const [searchQuery, setSearchQuery] = useState("");
   const [isLoading, setIsLoading] = useState(true);
 
-  // Debug: Desactivado - usar solo si es necesario diagnosticar autenticación
-  // useEffect(() => {
-  //   console.log("=== DEBUG EMPRESAS ===");
-  //   console.log("isAdmin:", isAdmin);
-  //   console.log("isAuthenticated:", isAuthenticated);
-  //   console.log("user:", user);
-  //   console.log("====================");
-  // }, [isAdmin, isAuthenticated, user]);
-
   const [selectedCompany, setSelectedCompany] =
     useState<EmpresaResponse | null>(null);
   const [modalOpen, setModalOpen] = useState(false);

@@ -86,7 +86,6 @@ export const useMotionPreferences = () => {
     const mediaQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
 
     const handleChange = (e: MediaQueryListEvent | MediaQueryList) => {
-      console.log("[Motion] OS prefers-reduced-motion changed:", e.matches); // DEBUG
       setAutoDetected(e.matches);
       // Si no hay override manual, actualizar automáticamente
       if (manualOverride === null) {
@@ -104,13 +103,8 @@ export const useMotionPreferences = () => {
   useEffect(() => {
     if (manualOverride === null) {
       setShouldReduceMotion(autoDetected);
-      console.log("[Motion] Auto mode: shouldReduceMotion =", autoDetected); // DEBUG
     } else {
       setShouldReduceMotion(manualOverride);
-      console.log(
-        "[Motion] Manual override: shouldReduceMotion =",
-        manualOverride,
-      ); // DEBUG
     }
   }, [manualOverride, autoDetected]);
 
@@ -118,10 +112,6 @@ export const useMotionPreferences = () => {
   useEffect(() => {
     const handleStorageChange = (event: StorageEvent) => {
       if (event.key === STORAGE_KEY) {
-        console.log(
-          "[Motion] localStorage changed from another source:",
-          event.newValue,
-        ); // DEBUG
         const newStored = event.newValue;
 
         if (newStored === null) {
@@ -143,24 +133,14 @@ export const useMotionPreferences = () => {
    * null = auto, true = reducir, false = normal
    */
   const setPreference = useCallback((value: boolean | null) => {
-    console.log("[Motion] setPreference called with:", value); // DEBUG
-
     if (value === null) {
       localStorage.removeItem(STORAGE_KEY);
       setManualOverride(null);
-      console.log("[Motion] Preference cleared, reverting to auto mode"); // DEBUG
     } else {
       localStorage.setItem(STORAGE_KEY, String(value));
       setManualOverride(value);
-      console.log("[Motion] Preference saved to localStorage:", value); // DEBUG
     }
   }, []);
-
-  console.log("[Motion] Current state:", {
-    shouldReduceMotion,
-    manualOverride,
-    autoDetected,
-  }); // DEBUG
 
   return {
     shouldReduceMotion,

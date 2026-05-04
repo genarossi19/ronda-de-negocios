@@ -4,7 +4,7 @@
 
 import { createContext, type ReactNode } from "react";
 
-const AuthContext = createContext(undefined);
+export const AuthContext = createContext(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   return <>{children}</>;

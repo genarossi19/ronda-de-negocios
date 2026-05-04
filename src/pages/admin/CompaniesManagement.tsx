@@ -729,14 +729,6 @@ export default function CompaniesManagement() {
     return () => observer.disconnect();
   }, []);
 
-  // DEBUG: Log motion preference changes
-  useEffect(() => {
-    console.log(
-      "[CompaniesManagement] shouldReduceMotion changed:",
-      shouldReduceMotion,
-    );
-  }, [shouldReduceMotion]);
-
   const pendingCompanies = companies.filter((c) => !c.aprobada);
   const approvedCompanies = companies.filter((c) => c.aprobada);
 

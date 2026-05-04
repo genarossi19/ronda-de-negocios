@@ -10,7 +10,7 @@ import {
   DialogTitle,
 } from "../components/ui/dialog";
 import { Badge } from "../components/ui/badge";
-import { HelpCircle, ChevronLeft, ChevronRight, X } from "lucide-react";
+import { HelpCircle, ChevronLeft, ChevronRight } from "lucide-react";
 
 interface Step {
   title: string | React.ReactNode;

@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, type ReactNode } from "react";
-import type { CompanyResponse, Company } from "../types/Empresa";
+import type { CompanyResponse } from "../types/Empresa";
 
 // export interface Company {
 //   id: string;
@@ -87,7 +87,7 @@ export function CompanyProvider({ children }: { children: ReactNode }) {
     // },
   ]);
 
-  const [error, setError] = useState<string | null>(null);
+  const [error] = useState<string | null>(null);
 
   const addCompany = (company: Omit<CompanyResponse, "id">) => {
     const newCompany = {

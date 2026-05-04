@@ -24,12 +24,10 @@ import { Avatar, AvatarFallback } from "../components/ui/avatar";
 import { useState, useEffect, useRef } from "react";
 import { useAuth } from "../hooks/useAuth";
 import { useCurrentUser } from "../hooks/useCurrentUser";
-import { useNavigate } from "react-router";
 
 export default function Navbar() {
   const { logout } = useAuth();
   const { user, isAuthenticated, isAdmin } = useCurrentUser();
-  const navigate = useNavigate();
 
   const [isOpen, setIsOpen] = useState(false);
   const [isVisible, setIsVisible] = useState(true);

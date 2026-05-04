@@ -101,8 +101,6 @@ export default function Register() {
   const handleSubmit = () => {
     setIsLoading(true);
     setTimeout(() => {
-      console.log("📋 Registro completado con datos:");
-      console.log(formData);
       navigate("/iniciar-sesion");
     }, 1200);
   };

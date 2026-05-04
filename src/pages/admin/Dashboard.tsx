@@ -168,8 +168,6 @@ export default function AdminDashboard() {
   const [activeEventMesas, setActiveEventMesas] = useState<MesaResponse[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  console.log("[Dashboard] shouldReduceMotion:", shouldReduceMotion);
-
   useEffect(() => {
     const fetchDashboardData = async () => {
       try {
@@ -470,7 +468,7 @@ export default function AdminDashboard() {
         ? { duration: 0 }
         : {
             duration: 0.42,
-            ease: [0.32, 0.72, 0.26, 1], // Custom ease: smooth with slight overshoot
+            ease: [0.32, 0.72, 0.26, 1] as [number, number, number, number], // Custom ease: smooth with slight overshoot
           },
     },
   };

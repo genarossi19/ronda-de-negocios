@@ -85,7 +85,6 @@ export default function RegisterStep() {
   const handleSubmit = () => {
     setIsLoading(true);
     setTimeout(() => {
-      console.log("📋 Empresa registrada:", formData);
       navigate("/iniciar-sesion");
     }, 1200);
   };

@@ -252,7 +252,7 @@ export default function CompanyDetail() {
                     <div>
                       <p className="text-xs text-muted-foreground">Contacto</p>
                       <p className="font-medium text-foreground">
-                        {company.contactName || "Sin contacto"}
+                        {company.razon_social || "Sin contacto"}
                       </p>
                     </div>
                   </div>
@@ -325,10 +325,10 @@ export default function CompanyDetail() {
                       Teléfono
                     </p>
                     <a
-                      href={`tel:${company.phone}`}
+                      href={`tel:${company.telefono_contacto}`}
                       className="text-sm text-[#68A243] hover:text-[#143E29] font-medium transition-colors"
                     >
-                      {company.phone || "Sin teléfono"}
+                      {company.telefono_contacto || "Sin teléfono"}
                     </a>
                   </div>
                 </div>

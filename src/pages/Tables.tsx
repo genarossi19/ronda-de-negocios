@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useCallback } from "react";
 import * as DialogPrimitive from "@radix-ui/react-dialog";
 import Navbar from "../components/Navbar";
 import Footer from "../layout/Footer";

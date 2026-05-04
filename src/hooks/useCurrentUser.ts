@@ -9,7 +9,6 @@ export const useCurrentUser = () => {
   const isAdmin = user?.is_superuser ?? false;
   const isApprovedCompany = user?.aprobada ?? false;
   const isPendingApproval = Boolean(user) && !isAdmin && !isApprovedCompany;
-  // console.log("[useCurrentUser] user:", user, "isAdmin:", isAdmin);
   return {
     user,
     isAuthenticated,
