@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState, useMemo } from "react";
+import { useCallback, useEffect, useState, useMemo, useRef } from "react";
 import {
   Check,
   LayoutGrid,
@@ -123,6 +123,7 @@ export default function GestionarAsientosModal({
     [],
   );
   const [companies, setCompanies] = useState<EmpresaResponse[]>([]);
+  const companiesRef = useRef<EmpresaResponse[]>([]);
   const [loadingCompanies, setLoadingCompanies] = useState(false);
   const [loadingRepresentantes, setLoadingRepresentantes] = useState(false);
   const [selectedCompanyId, setSelectedCompanyId] = useState("");
@@ -140,24 +141,16 @@ export default function GestionarAsientosModal({
     async (companyId: number) => {
       try {
         setLoadingRepresentantes(true);
-        const [representantesData, empresasData] = await Promise.all([
-          getRepresentantes({ empresa: companyId }),
-          getCompanies(),
-        ]);
-
-        // Mapear representantes con empresa_nombre
-        const dataWithCompanyName = representantesData.map((rep) => {
-          const empresa = empresasData.find(
-            (e: EmpresaResponse) => e.id === (rep.empresa || rep.empresa_id),
-          );
-          return {
-            ...rep,
-            empresa_id: rep.empresa || rep.empresa_id || companyId,
-            empresa_nombre: rep.empresa_nombre || empresa?.razon_social,
-          };
+        const representantesData = await getRepresentantes({
+          empresa: companyId,
         });
 
-        setRepresentantes(dataWithCompanyName);
+        // Filtrar representantes activos (no eliminados)
+        const activeRepresentantes = representantesData.filter(
+          (rep) => rep.eliminado === false,
+        );
+
+        setRepresentantes(activeRepresentantes);
       } catch (error) {
         if (!isSessionExpiredError(error)) {
           const message = getApiErrorMessage(
@@ -184,6 +177,7 @@ export default function GestionarAsientosModal({
         (first: EmpresaResponse, second: EmpresaResponse) =>
           first.razon_social.localeCompare(second.razon_social),
       );
+      companiesRef.current = orderedCompanies;
       setCompanies(orderedCompanies);
     } catch (error) {
       if (!isSessionExpiredError(error)) {
@@ -273,9 +267,15 @@ export default function GestionarAsientosModal({
   }, [turnoGestionado, refreshMesasForTurno, loadCompaniesCallback]);
 
   const representativesForSelectedCompany = useMemo(() => {
-    // Ya filtramos desde la API cuando seleccionamos empresa,
-    // así que aquí solo retornamos todos los que tenemos cargados
-    return representantes;
+    // Deduplicar representantes por ID para evitar duplicados visuales
+    const seen = new Set<number>();
+    return representantes.filter((rep) => {
+      if (seen.has(rep.id)) {
+        return false;
+      }
+      seen.add(rep.id);
+      return true;
+    });
   }, [representantes]);
 
   const availableCompanies = useMemo(() => {
@@ -705,7 +705,9 @@ export default function GestionarAsientosModal({
                             className="!h-10 !px-4 !bg-[#F05826] hover:!bg-[#d84f21] !text-white"
                           >
                             <Trash2 className="h-4 w-4" />
-                            {isDeletingSeat ? "Eliminando..." : "Eliminar mesa"}
+                            {isDeletingSeat
+                              ? "Eliminando..."
+                              : "Eliminar asientos"}
                           </Button>
                         </div>
                       </div>
@@ -720,7 +722,7 @@ export default function GestionarAsientosModal({
                               <div className="!space-y-2">
                                 <div className="!flex !flex-wrap !items-center !gap-2">
                                   <p className="!font-semibold !text-[#143E29] dark:!text-white">
-                                    {asiento.empresa_nombre}
+                                    {formatRepresentativeName(asiento)}
                                   </p>
                                   {asiento.anfitriona && (
                                     <Badge className="!bg-[#68A243]/10 !text-[#3F6E20] !border-[#68A243]/20 dark:!bg-[#68A243]/20 dark:!text-[#9FD27B] dark:!border-[#68A243]/30">
@@ -728,14 +730,14 @@ export default function GestionarAsientosModal({
                                     </Badge>
                                   )}
                                 </div>
-                                <p className="!text-sm !text-gray-700 dark:!text-gray-200">
-                                  {formatRepresentativeName(asiento)}
-                                </p>
                                 {asiento.representante_email && (
                                   <p className="!text-xs text-muted-foreground dark:!text-gray-400">
                                     {asiento.representante_email}
                                   </p>
                                 )}
+                                <p className="!text-xs text-gray-600 dark:text-gray-300">
+                                  {asiento.empresa_nombre}
+                                </p>
                               </div>
 
                               <Button
@@ -819,10 +821,7 @@ export default function GestionarAsientosModal({
                                       role="combobox"
                                       aria-expanded={openRepresentativeSearch}
                                       className="w-full justify-between h-10 border-[#68A243]/20 text-[#143E29] hover:bg-slate-50 hover:text-[#143E29] focus-visible:border-[#68A243] focus-visible:ring-[#68A243]/20 dark:bg-[#143E29] dark:border-[#68A243]/20 dark:text-white dark:hover:bg-[#1a3f30] dark:hover:text-white transition-colors"
-                                      disabled={
-                                        !selectedCompanyId ||
-                                        loadingRepresentantes
-                                      }
+                                      disabled={loadingRepresentantes}
                                     >
                                       {loadingRepresentantes ? (
                                         <span className="text-gray-400">
@@ -837,9 +836,11 @@ export default function GestionarAsientosModal({
                                                 selectedRepresentativeId,
                                             );
 
-                                          return selectedRepresentative
-                                            ? `${selectedRepresentative.nombre} ${selectedRepresentative.apellido}`
-                                            : "Seleccioná un representante";
+                                          if (!selectedRepresentative) {
+                                            return "Seleccioná un representante";
+                                          }
+
+                                          return `${selectedRepresentative.nombre} ${selectedRepresentative.apellido}${selectedRepresentative.email ? ` - ${selectedRepresentative.email}` : ""}`;
                                         })()
                                       ) : selectedCompanyId ? (
                                         "Buscá y seleccioná un representante"
@@ -873,7 +874,7 @@ export default function GestionarAsientosModal({
                                               return (
                                                 <CommandItem
                                                   key={representative.id}
-                                                  value={`${representative.nombre} ${representative.apellido} ${representative.empresa_nombre ?? ""}`}
+                                                  value={`${representative.nombre} ${representative.apellido} ${representative.email ?? ""} ${representative.empresa_nombre ?? ""}`}
                                                   onSelect={() => {
                                                     setSelectedRepresentativeId(
                                                       representative.id.toString(),
@@ -895,10 +896,31 @@ export default function GestionarAsientosModal({
                                                           representative.apellido
                                                         }
                                                       </p>
-                                                      <p className="text-xs text-gray-500 dark:text-gray-300 truncate">
-                                                        {representative.empresa_nombre ||
-                                                          "Sin empresa"}
-                                                      </p>
+                                                      <div className="flex flex-col gap-0.5">
+                                                        {representative.email && (
+                                                          <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
+                                                            {
+                                                              representative.email
+                                                            }
+                                                          </p>
+                                                        )}
+                                                        <p
+                                                          className={cn(
+                                                            "text-xs truncate",
+                                                            representative.telefono &&
+                                                              representative.telefono !==
+                                                                ""
+                                                              ? "text-gray-600 dark:text-gray-300"
+                                                              : "italic text-gray-400 dark:text-gray-500",
+                                                          )}
+                                                        >
+                                                          {representative.telefono &&
+                                                          representative.telefono !==
+                                                            ""
+                                                            ? representative.telefono
+                                                            : "Sin teléfono"}
+                                                        </p>
+                                                      </div>
                                                     </div>
                                                   </div>
                                                   <Check
@@ -989,7 +1011,7 @@ export default function GestionarAsientosModal({
         <DialogContent className="sm:max-w-lg border-gray-200 dark:border-[#68A243]/20 bg-white dark:bg-[#11161d]">
           <DialogHeader>
             <DialogTitle className="text-[#143E29] dark:text-white">
-              Eliminar asiento
+              Eliminar asientos
             </DialogTitle>
             <DialogDescription className="dark:text-gray-300">
               Esta acción elimina el asiento directamente desde administración.
@@ -1030,7 +1052,7 @@ export default function GestionarAsientosModal({
               disabled={isDeletingSeat}
               className="bg-[#F05826] hover:bg-[#d84f21] text-white"
             >
-              {isDeletingSeat ? "Eliminando..." : "Eliminar asiento"}
+              {isDeletingSeat ? "Eliminando..." : "Eliminar asientos"}
             </Button>
           </DialogFooter>
         </DialogContent>

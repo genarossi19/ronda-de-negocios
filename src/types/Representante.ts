@@ -5,11 +5,13 @@ export interface RepresentanteResponse {
   nombre: string;
   apellido: string;
   email: string;
-  telefono?: string;
+  telefono: string;
   cargo: GenericType | number;
   empresa?: number;
   empresa_id?: number;
   empresa_nombre?: string;
+  razon_social?: string;
+  eliminado?: boolean;
   email_confirmado?: boolean;
 }
 
