@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router";
 import {
   ArrowLeft,
+  Bell,
   CalendarDays,
   CheckCircle2,
   Clock3,
@@ -21,6 +22,16 @@ import {
   CardHeader,
   CardTitle,
 } from "../../components/ui/card";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "../../components/ui/alert-dialog";
 import {
   Dialog,
   DialogContent,
@@ -44,6 +55,7 @@ import { toast } from "sonner";
 import {
   createEvento,
   getEventos,
+  notificarEvento,
   updateEvento,
 } from "../../api/EventoService";
 import type { EventoResponse, EventoWrite } from "../../types/Evento";
@@ -322,6 +334,8 @@ export default function GestionarRondas() {
   const [filterStatus, setFilterStatus] = useState<FiltroEstado>("todos");
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [isNotifyDialogOpen, setIsNotifyDialogOpen] = useState(false);
+  const [isNotifying, setIsNotifying] = useState(false);
   const [eventoEnEdicion, setEventoEnEdicion] = useState<EventoResponse | null>(
     null,
   );
@@ -514,6 +528,34 @@ export default function GestionarRondas() {
       }
     } finally {
       setIsSaving(false);
+    }
+  };
+
+  const handleNotificar = async () => {
+    if (!eventoSeleccionado) return;
+    try {
+      setIsNotifying(true);
+      const result = await notificarEvento(eventoSeleccionado.id);
+      if (result?.details) {
+        toast.warning(result.details);
+      } else {
+        toast.success("Aviso de mails enviado correctamente");
+      }
+    } catch (error) {
+      const message = getApiErrorMessage(
+        error,
+        "Ocurrió un error al enviar el aviso de mails",
+      );
+      if (message) {
+        if (message.toLowerCase().includes("ya fue notificado")) {
+          toast.warning(message);
+        } else {
+          toast.error(message);
+        }
+      }
+    } finally {
+      setIsNotifying(false);
+      setIsNotifyDialogOpen(false);
     }
   };
 
@@ -719,31 +761,14 @@ export default function GestionarRondas() {
                       Gestionar turnos
                     </Button>
 
-                    <div className="space-y-2">
-                      <Label className="text-sm font-medium text-[#143E29] dark:text-white">
-                        Seleccionar otra ronda
-                      </Label>
-                      <Select
-                        value={eventoSeleccionado.id.toString()}
-                        onValueChange={(value) =>
-                          setSelectedEventoId(Number(value))
-                        }
-                      >
-                        <SelectTrigger className="w-full border-[#68A243]/20 focus-visible:border-[#68A243] focus-visible:ring-[#68A243]/20 dark:bg-[#143E29] dark:border-[#68A243]/20 dark:text-white transition-colors">
-                          <SelectValue placeholder="Seleccionar ronda" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {eventosActivosOrdenados.map((evento) => (
-                            <SelectItem
-                              key={evento.id}
-                              value={evento.id.toString()}
-                            >
-                              {evento.nombre}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
+                    <Button
+                      variant="outline"
+                      className="w-full border-[#68A243]/30 text-[#68A243] hover:bg-[#68A243]/10 hover:text-[#3F6E20] hover:border-[#68A243]/50 dark:border-[#68A243]/40 dark:text-[#9FD27B] dark:hover:bg-[#68A243]/20 dark:hover:text-[#9FD27B] dark:hover:border-[#68A243]/60"
+                      onClick={() => setIsNotifyDialogOpen(true)}
+                    >
+                      <Bell className="h-4 w-4" />
+                      Enviar aviso de mails
+                    </Button>
                   </div>
                 ) : (
                   <div className="rounded-2xl border border-dashed border-[#68A243]/30 bg-[#68A243]/5 dark:bg-[#143E29]/60 p-6 text-center">
@@ -862,7 +887,7 @@ export default function GestionarRondas() {
                                 <Button
                                   variant="outline"
                                   onClick={() => openEditDialog(evento)}
-                                  className="border-[#68A243]/30 text-[#68A243] hover:bg-[#68A243] hover:text-white"
+                                  className="border-[#68A243]/30 text-[#68A243] hover:bg-[#68A243]/10 hover:text-[#3F6E20] hover:border-[#68A243]/50 dark:border-[#68A243]/40 dark:text-[#9FD27B] dark:hover:bg-[#68A243]/20 dark:hover:text-[#9FD27B] dark:hover:border-[#68A243]/60"
                                 >
                                   <Pencil className="h-4 w-4" />
                                   Cambiar estado
@@ -1003,7 +1028,7 @@ export default function GestionarRondas() {
                           generateEventNameFromDate(formData.fecha),
                         )
                       }
-                      className="shrink-0 border-[#68A243]/30 text-[#68A243] hover:bg-[#68A243] hover:text-white"
+                      className="shrink-0 border-[#68A243]/30 text-[#68A243] hover:bg-[#68A243]/10 hover:text-[#3F6E20] hover:border-[#68A243]/50 dark:border-[#68A243]/40 dark:text-[#9FD27B] dark:hover:bg-[#68A243]/20 dark:hover:text-[#9FD27B] dark:hover:border-[#68A243]/60"
                     >
                       <Sparkles className="h-4 w-4" />
                     </Button>
@@ -1118,6 +1143,39 @@ export default function GestionarRondas() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <AlertDialog
+        open={isNotifyDialogOpen}
+        onOpenChange={setIsNotifyDialogOpen}
+      >
+        <AlertDialogContent className="border-gray-200 dark:border-[#68A243]/20 bg-white dark:bg-[#11161d]">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-[#143E29] dark:text-white">
+              Enviar aviso de mails
+            </AlertDialogTitle>
+            <AlertDialogDescription className="dark:text-gray-300">
+              Se enviará un mail de notificación a todos los representantes
+              asociados a la ronda{" "}
+              <span className="font-medium text-[#143E29] dark:text-white">
+                {eventoSeleccionado?.nombre}
+              </span>
+              . Esta acción no se puede deshacer. ¿Confirmás el envío?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isNotifying}>
+              Cancelar
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleNotificar}
+              disabled={isNotifying}
+              className="bg-[#68A243] hover:bg-[#5a9038] text-white"
+            >
+              {isNotifying ? "Enviando..." : "Confirmar envío"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

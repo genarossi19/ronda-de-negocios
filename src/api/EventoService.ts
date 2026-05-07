@@ -31,3 +31,12 @@ export async function deleteEvento(id: number) {
   const { data } = await api.delete(`/eventos/${id}/`);
   return data;
 }
+
+export async function notificarEvento(
+  id: number,
+): Promise<{ details?: string } | null> {
+  const { data } = await api.post<{ details?: string }>(
+    `/eventos/${id}/notificar/`,
+  );
+  return data ?? null;
+}
