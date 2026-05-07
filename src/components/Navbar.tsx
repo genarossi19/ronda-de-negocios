@@ -168,6 +168,20 @@ export default function Navbar() {
       );
     }
 
+    if (path === "/panel-administrador/gestionar-turnos") {
+      return (
+        currentPath === "/panel-administrador/gestionar-turnos" ||
+        currentPath.startsWith("/panel-administrador/gestionar-turnos/")
+      );
+    }
+
+    if (path === "/panel-administrador/otros") {
+      return (
+        currentPath === "/panel-administrador/otros" ||
+        currentPath.startsWith("/panel-administrador/otros/")
+      );
+    }
+
     // Después rutas generales
     if (path === "/panel-administrador") {
       // Solo activo si es exactamente /panel-administrador, no si tiene subrutas
@@ -257,6 +271,12 @@ export default function Navbar() {
             )}
           >
             Reuniones
+          </Link>
+          <Link
+            to="/panel-administrador/otros"
+            className={getDesktopNavLinkClassName("/panel-administrador/otros")}
+          >
+            Otros
           </Link>
         </>
       );
@@ -671,6 +691,16 @@ export default function Navbar() {
                               )}
                             >
                               Reuniones
+                            </button>
+                          </Link>
+                          <Link to="/panel-administrador/otros">
+                            <button
+                              onClick={() => setIsOpen(false)}
+                              className={getMobileNavButtonClassName(
+                                "/panel-administrador/otros",
+                              )}
+                            >
+                              Otros
                             </button>
                           </Link>
                         </>

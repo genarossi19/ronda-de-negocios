@@ -19,6 +19,7 @@ import {
   Mail,
   Loader2,
   Download,
+  Users,
 } from "lucide-react";
 import { Button } from "../../components/ui/button";
 import { Badge } from "../../components/ui/badge";
@@ -1078,24 +1079,34 @@ export default function CompaniesManagement() {
                 </p>
               </div>
 
-              <Button
-                onClick={() => {
-                  if (filteredCompanies.length === 0) {
-                    toast.info(
-                      "No hay empresas para descargar en el filtro actual",
+              <div className="flex items-center gap-2 flex-wrap">
+                <Button
+                  onClick={() => navigate("/representantes")}
+                  variant="ghost"
+                  className="h-10 px-4 text-white/80 hover:bg-white/10 hover:text-white font-medium gap-2"
+                >
+                  <Users className="h-4 w-4" />
+                  Ver Representantes
+                </Button>
+                <Button
+                  onClick={() => {
+                    if (filteredCompanies.length === 0) {
+                      toast.info(
+                        "No hay empresas para descargar en el filtro actual",
+                      );
+                      return;
+                    }
+                    downloadCsv(filteredCompanies);
+                    toast.success(
+                      `Descargadas ${filteredCompanies.length} empresa(s)`,
                     );
-                    return;
-                  }
-                  downloadCsv(filteredCompanies);
-                  toast.success(
-                    `Descargadas ${filteredCompanies.length} empresa(s)`,
-                  );
-                }}
-                className="h-11 px-5 bg-white text-[#143E29] hover:bg-white/90 font-semibold"
-              >
-                <Download className="h-4 w-4" />
-                Descargar CSV
-              </Button>
+                  }}
+                  className="h-10 px-4 bg-white text-[#143E29] hover:bg-white/90 font-semibold gap-2"
+                >
+                  <Download className="h-4 w-4" />
+                  Descargar CSV
+                </Button>
+              </div>
             </div>
           </section>
 
