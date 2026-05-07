@@ -17,6 +17,11 @@ export const getSectorById = async (id: number) => {
 };
 
 export const deleteSector = async (id: number) => {
-  const { data } = await api.delete(`/sectores/${id}`);
+  const { data } = await api.delete(`/sectores/${id}/`);
+  return data;
+};
+
+export const updateSector = async (id: number, sector: GenericType) => {
+  const { data } = await api.patch(`/sectores/${id}/`, sector);
   return data;
 };
