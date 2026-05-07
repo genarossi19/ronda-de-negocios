@@ -19,7 +19,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from "../components/ui/select";
-import { Dialog, DialogTrigger } from "../components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "../components/ui/dialog";
+import { Label } from "../components/ui/label";
 import {
   Tooltip,
   TooltipContent,
@@ -48,11 +56,13 @@ import {
   Trash2,
   X,
   Search,
+  Pencil,
 } from "lucide-react";
 import {
   getRepresentantes,
   createRepresentante,
   deleteRepresentante,
+  editRepresentante,
 } from "../api/RepresentanteService";
 import { getCargos } from "../api/CargoService";
 import { getCompanies } from "../api/EmpresaService";
@@ -92,6 +102,16 @@ export default function Representantes() {
   const [deleting, setDeleting] = useState(false);
   const [searchName, setSearchName] = useState("");
   const [selectedCargos, setSelectedCargos] = useState<number[]>([]);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [repToEdit, setRepToEdit] = useState<RepresentanteResponse | null>(
+    null,
+  );
+  const [editForm, setEditForm] =
+    useState<Partial<RepresentanteWrite>>(EMPTY_FORM);
+  const [editFormErrors, setEditFormErrors] = useState<
+    Partial<RepresentanteWrite>
+  >({});
+  const [editSubmitting, setEditSubmitting] = useState(false);
 
   const fetchRepresentantes = useCallback(async () => {
     try {
@@ -164,7 +184,9 @@ export default function Representantes() {
       // Asegurar que el cargo sea un objeto completo {id, nombre}
       if (nuevo.cargo && typeof nuevo.cargo === "number") {
         const cargoCompleto = cargos.find((c) => c.id === nuevo.cargo);
-        nuevo = { ...nuevo, cargo: cargoCompleto as any };
+        if (cargoCompleto) {
+          nuevo = { ...nuevo, cargo: cargoCompleto };
+        }
       } else if (
         !nuevo.cargo ||
         (typeof nuevo.cargo === "object" && !nuevo.cargo.nombre)
@@ -173,7 +195,9 @@ export default function Representantes() {
         const cargoId =
           typeof nuevo.cargo === "number" ? nuevo.cargo : form.cargo;
         const cargoCompleto = cargos.find((c) => c.id === cargoId);
-        nuevo = { ...nuevo, cargo: cargoCompleto as any };
+        if (cargoCompleto) {
+          nuevo = { ...nuevo, cargo: cargoCompleto };
+        }
       }
 
       // Mapear empresa_nombre
@@ -212,6 +236,75 @@ export default function Representantes() {
   const handleDelete = async (rep: RepresentanteResponse) => {
     setRepToDelete(rep);
     setDeleteDialogOpen(true);
+  };
+
+  const handleEdit = (rep: RepresentanteResponse) => {
+    setRepToEdit(rep);
+    setEditForm({
+      nombre: rep.nombre,
+      apellido: rep.apellido,
+      email: rep.email,
+      cargo: typeof rep.cargo === "number" ? rep.cargo : rep.cargo?.id || 0,
+    });
+    setEditFormErrors({});
+    setEditDialogOpen(true);
+  };
+
+  const handleEditChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
+  ) => {
+    const { name, value } = e.target;
+    setEditForm((prev) => ({
+      ...prev,
+      [name]: name === "cargo" ? Number(value) : value,
+    }));
+    setEditFormErrors((prev) => ({ ...prev, [name]: undefined }));
+  };
+
+  const validateEditForm = (): boolean => {
+    const errors: Partial<RepresentanteWrite> = {};
+    if (!editForm.nombre?.trim()) errors.nombre = "El nombre es requerido";
+    if (!editForm.cargo) errors.cargo = 0;
+    setEditFormErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
+  const handleEditSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!repToEdit || !validateEditForm()) return;
+    setEditSubmitting(true);
+    try {
+      const payloadToSend = {
+        nombre: editForm.nombre,
+        cargo: editForm.cargo,
+      };
+      await editRepresentante(repToEdit.id, payloadToSend);
+
+      // Refrescar la lista desde el servidor para asegurar sincronización completa
+      const params = user?.is_superuser ? { all: true } : {};
+      const repsData = await getRepresentantes(params);
+      const repsWithEmpresa = repsData.map((rep) => {
+        const empresa = empresas.find(
+          (e: EmpresaResponse) => e.id === (rep.empresa || rep.empresa_id),
+        );
+        return {
+          ...rep,
+          empresa_id: rep.empresa || rep.empresa_id,
+          empresa_nombre: rep.empresa_nombre || empresa?.razon_social,
+        };
+      });
+      setRepresentantes(repsWithEmpresa);
+
+      toast.success("Representante actualizado correctamente.");
+      setEditDialogOpen(false);
+      setRepToEdit(null);
+      setEditForm(EMPTY_FORM);
+      setEditFormErrors({});
+    } catch {
+      toast.error("No se pudo actualizar el representante. Intentá de nuevo.");
+    } finally {
+      setEditSubmitting(false);
+    }
   };
 
   const filterRepresentantes = (reps: RepresentanteResponse[]) => {
@@ -506,16 +599,28 @@ export default function Representantes() {
                   key={i}
                   className="relative group hover:shadow-md transition-shadow border-2 hover:border-[#68A243]/30 dark:bg-[#143E29]/40 dark:border-gray-700/50 dark:hover:border-[#68A243]/30 dark:hover:shadow-lg dark:hover:shadow-[#68A243]/10"
                 >
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => handleDelete(rep)}
-                    className="absolute top-3 right-3 opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity h-8 w-8 lg:w-auto p-0 lg:px-2 text-red-500 hover:text-red-700 hover:bg-red-50 dark:text-red-400 dark:hover:text-red-300 dark:hover:bg-red-950/30 gap-1"
-                    title="Eliminar representante"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                    <span className="hidden lg:inline text-xs">Eliminar</span>
-                  </Button>
+                  <div className="absolute top-3 right-3 flex gap-2 opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleEdit(rep)}
+                      className="h-8 w-8 lg:w-auto p-0 lg:px-2 text-[#68A243] hover:text-[#5a9038] hover:bg-[#68A243]/10 dark:text-[#9FD27B] dark:hover:text-[#68A243] dark:hover:bg-[#68A243]/20 gap-1 transition-colors"
+                      title="Editar representante"
+                    >
+                      <Pencil className="h-4 w-4" />
+                      <span className="hidden lg:inline text-xs">Editar</span>
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleDelete(rep)}
+                      className="h-8 w-8 lg:w-auto p-0 lg:px-2 text-red-500 hover:text-red-700 hover:bg-red-50 dark:text-red-400 dark:hover:text-red-300 dark:hover:bg-red-950/30 gap-1"
+                      title="Eliminar representante"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                      <span className="hidden lg:inline text-xs">Eliminar</span>
+                    </Button>
+                  </div>
                   <CardHeader className="pb-3">
                     <div className="flex items-start gap-3">
                       <div className="bg-[#143E29]/10 dark:bg-[#68A243]/20 rounded-full p-2 shrink-0">
@@ -612,6 +717,149 @@ export default function Representantes() {
           </div>
         </AlertDialogContent>
       </AlertDialog>
+
+      <Dialog
+        open={editDialogOpen}
+        onOpenChange={(open) => {
+          setEditDialogOpen(open);
+          if (!open) {
+            setRepToEdit(null);
+            setEditForm(EMPTY_FORM);
+            setEditFormErrors({});
+          }
+        }}
+      >
+        <DialogContent className="sm:max-w-md bg-white dark:bg-[#0F141A] text-foreground dark:text-white border-[#669649] dark:border-[#1a5032]">
+          <DialogHeader>
+            <DialogTitle className="text-[#143E29] dark:text-white transition-colors duration-300">
+              Editar representante
+            </DialogTitle>
+            <DialogDescription className="dark:text-gray-300 transition-colors duration-300">
+              Solo se puede editar el nombre y cargo.
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleEditSubmit} className="space-y-4">
+            {/* Información de solo lectura */}
+            <div className="space-y-3 rounded-lg bg-gray-100 dark:bg-[#143E29]/60 p-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <p className="text-xs font-medium uppercase tracking-wide text-gray-600 dark:text-gray-400 mb-1">
+                    Apellido
+                  </p>
+                  <p className="text-sm font-medium text-gray-900 dark:text-white">
+                    {repToEdit?.apellido}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-xs font-medium uppercase tracking-wide text-gray-600 dark:text-gray-400 mb-1">
+                    Email
+                  </p>
+                  <p className="text-sm font-medium text-gray-900 dark:text-white break-all">
+                    {repToEdit?.email}
+                  </p>
+                </div>
+              </div>
+              {user?.is_superuser && repToEdit?.empresa_nombre && (
+                <div>
+                  <p className="text-xs font-medium uppercase tracking-wide text-gray-600 dark:text-gray-400 mb-1">
+                    Empresa
+                  </p>
+                  <p className="text-sm font-medium text-gray-900 dark:text-white">
+                    {repToEdit.empresa_nombre}
+                  </p>
+                </div>
+              )}
+            </div>
+
+            {/* Campos editables */}
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-1">
+                <Label
+                  htmlFor="edit-nombre"
+                  className="text-[#143E29] dark:text-white transition-colors duration-300"
+                >
+                  Nombre
+                </Label>
+                <Input
+                  id="edit-nombre"
+                  name="nombre"
+                  value={editForm.nombre}
+                  onChange={handleEditChange}
+                  placeholder="Juan"
+                  className={`${
+                    editFormErrors.nombre ? "border-red-500" : ""
+                  } dark:bg-[#0f2f25] dark:border-[#68A243]/20 dark:text-white dark:placeholder-gray-500 dark:focus:!border-[#68A243] transition-colors duration-300`}
+                  aria-invalid={!!editFormErrors.nombre}
+                />
+                {editFormErrors.nombre && (
+                  <p className="text-red-600 text-xs">
+                    {editFormErrors.nombre}
+                  </p>
+                )}
+              </div>
+              <div className="space-y-1">
+                <Label
+                  htmlFor="edit-cargo"
+                  className="text-[#143E29] dark:text-white transition-colors duration-300"
+                >
+                  Cargo
+                </Label>
+                <Select
+                  value={editForm.cargo?.toString() || "0"}
+                  onValueChange={(value) => {
+                    setEditForm((prev) => ({
+                      ...prev,
+                      cargo: Number(value),
+                    }));
+                    setEditFormErrors((prev) => ({
+                      ...prev,
+                      cargo: undefined,
+                    }));
+                  }}
+                >
+                  <SelectTrigger
+                    className={`${
+                      editFormErrors.cargo ? "border-red-500" : ""
+                    } dark:bg-[#0f2f25] dark:border-[#68A243]/20 dark:text-white dark:focus:!border-[#68A243] transition-colors duration-300`}
+                    aria-invalid={!!editFormErrors.cargo}
+                  >
+                    <SelectValue placeholder="Seleccionar cargo" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {cargos.map((cargo) => (
+                      <SelectItem key={cargo.id} value={String(cargo.id)}>
+                        {cargo.nombre}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {editFormErrors.cargo ? (
+                  <p className="text-red-600 text-xs">El cargo es requerido</p>
+                ) : null}
+              </div>
+            </div>
+
+            <div className="flex gap-2 justify-end pt-4">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setEditDialogOpen(false)}
+              >
+                Cancelar
+              </Button>
+              <Button
+                type="submit"
+                disabled={editSubmitting}
+                className="bg-[#68A243] hover:bg-[#68A243]/90 text-white"
+              >
+                {editSubmitting ? "Guardando..." : "Guardar cambios"}
+              </Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Modal anterior a eliminar */}
 
       <Footer />
     </>

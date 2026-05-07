@@ -51,6 +51,17 @@ export async function verificarEmailRepresentante(
   return data;
 }
 
+export async function editRepresentante(
+  id: number,
+  payload: Partial<RepresentanteWrite>,
+): Promise<RepresentanteResponse> {
+  const { data } = await api.patch<RepresentanteResponse>(
+    `/representantes/editar/${id}/`,
+    payload,
+  );
+  return data;
+}
+
 export async function deleteRepresentante(id: number): Promise<void> {
   await api.delete(`/representantes/${id}/`);
 }
