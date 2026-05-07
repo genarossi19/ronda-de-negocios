@@ -35,6 +35,7 @@ const VerificarEmailRepresentante = lazy(
 const ForgotPassword = lazy(() => import("./pages/ForgotPassword"));
 const ResetPassword = lazy(() => import("./pages/ResetPassword"));
 const Settings = lazy(() => import("./pages/Settings"));
+const RegisterSuccess = lazy(() => import("./pages/RegisterSuccess"));
 import {
   AUTH_SESSION_EXPIRED_EVENT,
   SESSION_EXPIRED_MESSAGE,
@@ -103,6 +104,7 @@ function AppRoutes() {
           <Route path="/empresas" element={<Empresas />} />
           <Route path="/empresas/:id" element={<EmpresasDetail />} />
           <Route path="/register" element={<Register />} />
+          <Route path="/register-success" element={<RegisterSuccess />} />
           <Route
             path="/verificar-email/:uidb64/:token"
             element={<ValidarEmail />}

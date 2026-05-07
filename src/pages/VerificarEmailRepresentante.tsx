@@ -7,6 +7,7 @@ import {
   XCircle,
   Loader2,
   ArrowLeft,
+  LogIn,
 } from "lucide-react";
 import { toast } from "sonner";
 import axios from "axios";
@@ -24,6 +25,14 @@ export default function VerificarEmailRepresentante() {
   const [message, setMessage] = useState("Estamos validando tu correo...");
   const [countdown, setCountdown] = useState<number | null>(null);
   const hasRun = useRef(false);
+
+  const COUNTDOWN_TOTAL = 10;
+  const circumference = 2 * Math.PI * 20;
+  const countdownProgress =
+    countdown !== null
+      ? ((COUNTDOWN_TOTAL - countdown) / COUNTDOWN_TOTAL) * 100
+      : 0;
+  const dashOffset = circumference - (countdownProgress / 100) * circumference;
 
   useEffect(() => {
     const runValidation = async () => {
@@ -163,27 +172,64 @@ export default function VerificarEmailRepresentante() {
                 </div>
               )}
 
-              <div className="flex flex-col sm:flex-row gap-3">
-                <Button
-                  asChild
-                  className="bg-[#68A243] hover:bg-[#5a9038] text-white"
-                >
-                  <Link to="/login">
-                    {status === "success" && countdown !== null
-                      ? `Ir a iniciar sesion (${countdown}s)`
-                      : "Ir a iniciar sesion"}
-                  </Link>
-                </Button>
-                <Button
-                  asChild
-                  variant="outline"
-                  className="border-gray-300 text-gray-700 hover:bg-gray-50 dark:border-[#68A243]/40 dark:text-[#68A243] dark:hover:bg-[#68A243]/10"
-                >
-                  <Link to="/">
-                    <ArrowLeft className="h-4 w-4 mr-2" />
-                    Volver al inicio
-                  </Link>
-                </Button>
+              <div className="space-y-3">
+                <div className="flex flex-col sm:flex-row gap-3">
+                  <Button
+                    asChild
+                    variant="outline"
+                    className="flex-1 border-gray-300 text-gray-700 hover:bg-gray-50 dark:border-[#68A243]/40 dark:text-[#68A243] dark:hover:bg-[#68A243]/10 h-11"
+                  >
+                    <Link to="/">
+                      <ArrowLeft className="h-4 w-4 mr-2" />
+                      Volver al inicio
+                    </Link>
+                  </Button>
+                  <Button
+                    onClick={() => navigate("/login")}
+                    className="flex-1 bg-[#143E29] hover:bg-[#1a5c3a] dark:bg-[#68A243] dark:hover:bg-[#5a8f37] text-white font-semibold h-11 gap-2 transition-colors duration-200"
+                  >
+                    <LogIn className="h-4 w-4" />
+                    Iniciar sesión
+                  </Button>
+                </div>
+
+                {status === "success" && countdown !== null && (
+                  <div className="flex items-center justify-center gap-2.5 pt-1">
+                    <div className="relative h-9 w-9 flex-shrink-0">
+                      <svg className="h-9 w-9 -rotate-90" viewBox="0 0 48 48">
+                        <circle
+                          cx="24"
+                          cy="24"
+                          r="20"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="3"
+                          className="text-gray-200 dark:text-white/10"
+                        />
+                        <circle
+                          cx="24"
+                          cy="24"
+                          r="20"
+                          fill="none"
+                          stroke="#68A243"
+                          strokeWidth="3"
+                          strokeLinecap="round"
+                          strokeDasharray={circumference}
+                          strokeDashoffset={dashOffset}
+                          style={{
+                            transition: "stroke-dashoffset 0.9s linear",
+                          }}
+                        />
+                      </svg>
+                      <span className="absolute inset-0 flex items-center justify-center text-xs font-bold text-[#143E29] dark:text-[#9FD27B]">
+                        {countdown}
+                      </span>
+                    </div>
+                    <span className="text-xs text-gray-500 dark:text-gray-400">
+                      Redirigiendo al login…
+                    </span>
+                  </div>
+                )}
               </div>
             </div>
           </m.div>

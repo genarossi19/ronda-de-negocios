@@ -310,10 +310,7 @@ export default function Shifts() {
                 </div>
 
                 <Link to="/representantes">
-                  <Button
-                    variant="outline"
-                    className="border-amber-300 text-amber-800 hover:bg-amber-100 dark:border-amber-500/30 dark:text-amber-200 dark:hover:bg-amber-500/10"
-                  >
+                  <Button className="bg-amber-700 hover:bg-amber-800 dark:bg-amber-500 dark:hover:bg-amber-400 text-white font-semibold shadow-sm transition-colors duration-200">
                     Revisar representantes
                   </Button>
                 </Link>
@@ -343,16 +340,22 @@ export default function Shifts() {
               </CardContent>
             </Card>
           ) : filteredShifts.length === 0 ? (
-            <Card className="dark:bg-[#143E29] dark:border-[#68A243]/20 transition-colors duration-300">
-              <CardHeader>
-                <CardTitle className="dark:text-white transition-colors duration-300">
-                  No hay turnos disponibles
-                </CardTitle>
-                <CardDescription className="dark:text-gray-300 transition-colors duration-300">
-                  No se encontraron turnos para este evento
-                </CardDescription>
-              </CardHeader>
-            </Card>
+            <div className="flex flex-col items-center text-center py-20 px-4">
+              <div className="h-20 w-20 rounded-2xl bg-[#68A243]/10 dark:bg-[#68A243]/15 flex items-center justify-center mb-6">
+                <Calendar className="h-10 w-10 text-[#68A243]" />
+              </div>
+              <h3 className="text-2xl font-bold text-[#143E29] dark:text-white mb-2 transition-colors">
+                ¡Los turnos están por llegar!
+              </h3>
+              <p className="text-gray-500 dark:text-gray-300 max-w-md leading-relaxed transition-colors">
+                Estamos preparando todo para que puedas inscribirte.
+                Habilitaremos los turnos próximamente y nos entusiasma mucho que
+                seas parte de esta ronda de negocios.
+              </p>
+              <p className="mt-3 text-sm text-[#68A243] dark:text-[#9FD27B] font-medium">
+                Volvé pronto
+              </p>
+            </div>
           ) : (
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-2">
               {filteredShifts.map((shift, index) => (

@@ -681,8 +681,10 @@ export default function CompaniesManagement() {
   const [selectedCompanies, setSelectedCompanies] = useState<Set<number>>(
     new Set(),
   );
-  const [isProcessing, setIsProcessing] = useState(false);
-  const [processProgress, setProcessProgress] = useState(0);
+  const [isBulkApproving, setIsBulkApproving] = useState(false);
+  const [isBulkDeleting, setIsBulkDeleting] = useState(false);
+  const [approveProgress, setApproveProgress] = useState(0);
+  const [deleteProgress, setDeleteProgress] = useState(0);
   const [bulkResults, setBulkResults] = useState<{
     success: { name: string }[];
     failed: { name: string; error: string }[];
@@ -957,7 +959,12 @@ export default function CompaniesManagement() {
     action: "approve" | "delete",
     state: boolean,
   ) => {
-    setIsProcessing(true);
+    const setLoading =
+      action === "approve" ? setIsBulkApproving : setIsBulkDeleting;
+    const setProgress =
+      action === "approve" ? setApproveProgress : setDeleteProgress;
+
+    setLoading(true);
     const selectedCompanyList = companies.filter((c) =>
       selectedCompanies.has(c.id),
     );
@@ -998,13 +1005,11 @@ export default function CompaniesManagement() {
       }
 
       processed++;
-      setProcessProgress(
-        Math.round((processed / selectedCompanyList.length) * 100),
-      );
+      setProgress(Math.round((processed / selectedCompanyList.length) * 100));
     }
 
-    setIsProcessing(false);
-    setProcessProgress(0);
+    setLoading(false);
+    setProgress(0);
     setSelectedCompanies(new Set());
 
     if (results.failed.length === 0) {
@@ -1308,16 +1313,29 @@ export default function CompaniesManagement() {
                     {selectedCompanies.size} seleccionada
                     {selectedCompanies.size !== 1 ? "s" : ""}
                   </span>
-                  {isProcessing && (
+                  {isBulkApproving && (
                     <div className="flex items-center gap-2">
                       <div className="w-32 h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
                         <div
                           className="h-full bg-[#68A243] transition-all duration-300"
-                          style={{ width: `${processProgress}%` }}
+                          style={{ width: `${approveProgress}%` }}
                         />
                       </div>
                       <span className="text-xs text-gray-600 dark:text-gray-400">
-                        {processProgress}%
+                        {approveProgress}%
+                      </span>
+                    </div>
+                  )}
+                  {isBulkDeleting && (
+                    <div className="flex items-center gap-2">
+                      <div className="w-32 h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+                        <div
+                          className="h-full bg-red-500 transition-all duration-300"
+                          style={{ width: `${deleteProgress}%` }}
+                        />
+                      </div>
+                      <span className="text-xs text-gray-600 dark:text-gray-400">
+                        {deleteProgress}%
                       </span>
                     </div>
                   )}
@@ -1326,7 +1344,7 @@ export default function CompaniesManagement() {
                 <div className="flex gap-2">
                   <Button
                     onClick={handleCancelSelection}
-                    disabled={isProcessing}
+                    disabled={isBulkApproving || isBulkDeleting}
                     variant="ghost"
                     className="border-gray-300 text-gray-700 hover:bg-gray-100 dark:border-[#68A243]/40 dark:text-[#68A243] dark:hover:bg-[#68A243]/10"
                   >
@@ -1335,10 +1353,10 @@ export default function CompaniesManagement() {
 
                   <Button
                     onClick={() => processBulkAction("approve", true)}
-                    disabled={isProcessing || !canApprove}
+                    disabled={isBulkApproving || isBulkDeleting || !canApprove}
                     className="gap-2 bg-[#68A243] hover:bg-[#5a9038] text-white disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    {isProcessing ? (
+                    {isBulkApproving ? (
                       <>
                         <motion.div
                           animate={{ rotate: 360 }}
@@ -1362,10 +1380,10 @@ export default function CompaniesManagement() {
 
                   <Button
                     onClick={() => processBulkAction("delete", false)}
-                    disabled={isProcessing}
+                    disabled={isBulkApproving || isBulkDeleting}
                     className="gap-2 bg-red-600 hover:bg-red-700 text-white disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    {isProcessing ? (
+                    {isBulkDeleting ? (
                       <>
                         <motion.div
                           animate={{ rotate: 360 }}

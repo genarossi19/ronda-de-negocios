@@ -55,6 +55,7 @@ import { getSectors } from "../api/SectorService";
 import { getLocalidades } from "../api/LocalidadesService";
 import { createCompany } from "../api/EmpresaService";
 import { toast } from "sonner";
+import { useMotionContext } from "../context/MotionPreferencesContext";
 
 const STEPS = [
   { id: 1, title: "Empresa", icon: Building2 },
@@ -64,6 +65,7 @@ const STEPS = [
 ];
 
 const REGISTER_SUCCESS_EMAIL_STORAGE_KEY = "registerSuccessEmail";
+const REGISTER_SUCCESS_NAME_STORAGE_KEY = "registerSuccessName";
 
 const stepTransitionVariants = {
   enter: (direction: number) => ({
@@ -129,6 +131,7 @@ export default function RegistrationForm() {
   const [logoFile, setLogoFile] = useState<File | null>(null);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string[]>>({});
   const navigate = useNavigate();
+  const { shouldReduceMotion } = useMotionContext();
 
   const [formData, setFormData] = useState({
     razon_social: "",
@@ -306,24 +309,13 @@ export default function RegistrationForm() {
 
       await createCompany(companyData);
       localStorage.setItem(REGISTER_SUCCESS_EMAIL_STORAGE_KEY, formData.email);
-
-      const registeredEmail = localStorage.getItem(
-        REGISTER_SUCCESS_EMAIL_STORAGE_KEY,
+      localStorage.setItem(
+        REGISTER_SUCCESS_NAME_STORAGE_KEY,
+        formData.razon_social,
       );
 
-      toast.success("¡Empresa registrada exitosamente!", {
-        description: registeredEmail
-          ? `Se envio un mail a ${registeredEmail}. Verifica el correo antes de iniciar sesion.`
-          : "Verifica el correo antes de iniciar sesion.",
-        duration: 6000,
-      });
-
-      window.setTimeout(() => {
-        localStorage.removeItem(REGISTER_SUCCESS_EMAIL_STORAGE_KEY);
-      }, 6500);
-
       setFieldErrors({});
-      navigate("/login");
+      navigate("/register-success");
     } catch (error: unknown) {
       let errorMessage = "Error al registrar la empresa";
       const newFieldErrors: Record<string, string[]> = {};
@@ -1199,12 +1191,25 @@ export default function RegistrationForm() {
                       disabled={!isStepComplete() || isLoading}
                       className={`${
                         currentStep === 1 ? "w-full" : "flex-1"
-                      } bg-primary dark:bg-[#68A243] hover:bg-primary-strong dark:hover:bg-[#5a8f38] h-11 font-semibold disabled:opacity-50 disabled:cursor-not-allowed text-white`}
+                      } relative overflow-hidden bg-primary dark:bg-[#68A243] hover:bg-primary-strong dark:hover:bg-[#5a8f38] h-11 font-semibold disabled:opacity-100 disabled:cursor-not-allowed text-white transition-colors duration-200`}
                     >
-                      {isLoading ? (
-                        <span className="flex items-center gap-2">
-                          <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                          Registrando...
+                      {/* Relleno animado de izquierda a derecha mientras carga */}
+                      {isLoading &&
+                        currentStep === STEPS.length &&
+                        !shouldReduceMotion && (
+                          <m.span
+                            className="absolute inset-0 bg-white/20 origin-left"
+                            initial={{ scaleX: 0 }}
+                            animate={{ scaleX: 1 }}
+                            transition={{ duration: 2.5, ease: "easeInOut" }}
+                            style={{ transformOrigin: "left" }}
+                          />
+                        )}
+
+                      {isLoading && currentStep === STEPS.length ? (
+                        <span className="relative z-10 flex items-center gap-2">
+                          <div className="w-4 h-4 border-2 border-white/60 border-t-white rounded-full animate-spin" />
+                          Enviando...
                         </span>
                       ) : (
                         <span className="flex items-center gap-2">

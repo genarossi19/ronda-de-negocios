@@ -17,6 +17,7 @@ import {
   AlertCircle,
   RefreshCw,
   Settings,
+  Clock,
 } from "lucide-react";
 import { getCompanies } from "../api/EmpresaService";
 import type { EmpresaResponse } from "../types/Empresa";
@@ -39,7 +40,7 @@ function CompanyCardSkeleton() {
 }
 
 export default function Companies() {
-  const { isAuthenticated, isAdmin } = useCurrentUser();
+  const { isAuthenticated, isAdmin, isPendingApproval } = useCurrentUser();
   const { user } = useUserStore();
   const navigate = useNavigate();
   const [companies, setCompanies] = useState<EmpresaResponse[]>([]);
@@ -145,6 +146,12 @@ export default function Companies() {
               {filteredCompanies.length} resultado
               {filteredCompanies.length !== 1 ? "s" : ""} encontrado
               {filteredCompanies.length !== 1 ? "s" : ""}
+            </p>
+          )}
+          {isPendingApproval && (
+            <p className="mt-2 flex items-center gap-1.5 text-xs text-amber-600 dark:text-amber-400/80">
+              <Clock className="h-3.5 w-3.5 flex-shrink-0" />
+              Una vez que tu empresa sea aprobada, aparecerá en esta lista.
             </p>
           )}
         </div>

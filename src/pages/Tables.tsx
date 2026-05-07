@@ -1562,16 +1562,6 @@ export default function Tables() {
                   );
                 })}
 
-                <Button
-                  variant="outline"
-                  onClick={() => setShowFullTableInfoDialog(false)}
-                  className={cn(
-                    "dark:bg-[#0f2f25] dark:border-[#68A243]/20 dark:text-white dark:hover:bg-[#1a3f30] transition-colors duration-300",
-                    ownSeatInSelectedTable ? "flex-1" : "w-full",
-                  )}
-                >
-                  Cerrar
-                </Button>
                 {ownSeatInSelectedTable && (
                   <div className="rounded-xl border border-[#ffb900]/30 bg-[#ffb900]/8 p-4">
                     <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
