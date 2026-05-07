@@ -273,6 +273,13 @@ export default function GestionarTurnos() {
 
   const turnoNumberMap = useMemo(() => createTurnoNumberMap(turnos), [turnos]);
 
+  const lastTurno = useMemo(() => {
+    if (turnos.length === 0) return null;
+    return turnos.reduce((latest, current) =>
+      current.hora_fin > latest.hora_fin ? current : latest,
+    );
+  }, [turnos]);
+
   const stats = useMemo(
     () => ({
       total: turnos.length,
@@ -364,6 +371,7 @@ export default function GestionarTurnos() {
               <div className="flex flex-col sm:flex-row gap-3">
                 <CreateTurnoButton
                   evento={evento}
+                  lastTurno={lastTurno}
                   onTurnoCreated={() => evento && loadTurnos(evento.id)}
                 />
               </div>
@@ -639,6 +647,7 @@ export default function GestionarTurnos() {
                     </p>
                     <CreateTurnoButton
                       evento={evento}
+                      lastTurno={lastTurno}
                       onTurnoCreated={() => evento && loadTurnos(evento.id)}
                       variant="empty-state"
                     />
@@ -657,6 +666,7 @@ export default function GestionarTurnos() {
         onOpenChange={setIsFormOpen}
         evento={evento}
         turnoEnEdicion={turnoEnEdicion}
+        lastTurno={null}
         onSubmitSuccess={handleFormSubmitSuccess}
         isSaving={isSaving}
         onSavingChange={setIsSaving}

@@ -37,6 +37,7 @@ interface TurnoFormModalProps {
   onOpenChange: (open: boolean) => void;
   evento: EventoResponse | null;
   turnoEnEdicion: TurnoResponse | null;
+  lastTurno?: TurnoResponse | null;
   onSubmitSuccess: () => void;
   isSaving: boolean;
   onSavingChange: (saving: boolean) => void;
@@ -115,6 +116,7 @@ export default function TurnoFormModal({
   onOpenChange,
   evento,
   turnoEnEdicion,
+  lastTurno,
   onSubmitSuccess,
   isSaving,
   onSavingChange,
@@ -131,11 +133,22 @@ export default function TurnoFormModal({
         estado: turnoEnEdicion.estado === "cerrado" ? "cerrado" : "abierto",
       });
       setIsEndTimeManuallyEdited(true);
+    } else if (lastTurno) {
+      const suggestedStart = addMinutesToTime(lastTurno.hora_fin, 5);
+      const suggestedEnd = suggestedStart
+        ? addMinutesToTime(suggestedStart, 15)
+        : "";
+      setFormData({
+        ...initialFormState,
+        hora_inicio: suggestedStart,
+        hora_fin: suggestedEnd,
+      });
+      setIsEndTimeManuallyEdited(false);
     } else {
       setFormData(initialFormState);
       setIsEndTimeManuallyEdited(false);
     }
-  }, [turnoEnEdicion, isOpen]);
+  }, [turnoEnEdicion, lastTurno, isOpen]);
 
   const resetForm = () => {
     setFormData(initialFormState);

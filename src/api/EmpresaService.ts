@@ -29,6 +29,23 @@ export const validarEmail = async (uidb64: string, token: string) => {
   return data;
 };
 
+export type EmpresaUpdatePayload = {
+  razon_social?: string;
+  descripcion?: string;
+  telefono_contacto?: string;
+  direccion?: string;
+  sector?: number;
+  localidad?: number;
+};
+
+export const updateCompany = async (
+  id: number,
+  payload: EmpresaUpdatePayload,
+): Promise<EmpresaResponse> => {
+  const { data } = await api.patch(`/empresas/${id}/`, payload);
+  return data;
+};
+
 export const createCompany = async (company: EmpresaWrite) => {
   const formData = new FormData();
 

@@ -3,16 +3,19 @@ import { Plus } from "lucide-react";
 import { Button } from "./ui/button";
 import TurnoFormModal from "./TurnoFormModal";
 import type { EventoResponse } from "../types/Evento";
+import type { TurnoResponse } from "../types/Turno";
 
 interface CreateTurnoButtonProps {
   evento: EventoResponse | null;
   onTurnoCreated: () => void;
+  lastTurno?: TurnoResponse | null;
   variant?: "default" | "empty-state";
 }
 
 export default function CreateTurnoButton({
   evento,
   onTurnoCreated,
+  lastTurno,
   variant = "default",
 }: CreateTurnoButtonProps) {
   const [isFormOpen, setIsFormOpen] = useState(false);
@@ -48,6 +51,7 @@ export default function CreateTurnoButton({
         onOpenChange={setIsFormOpen}
         evento={evento}
         turnoEnEdicion={null}
+        lastTurno={lastTurno}
         onSubmitSuccess={handleFormSubmitSuccess}
         isSaving={isSaving}
         onSavingChange={setIsSaving}

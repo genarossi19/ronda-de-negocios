@@ -20,6 +20,7 @@ import {
   Settings,
   Mail,
   ShieldAlert,
+  Bell,
 } from "lucide-react";
 import { useCurrentUser } from "../hooks/useCurrentUser";
 import { HelpTutorial } from "../components/HelpTutorial";
@@ -49,6 +50,7 @@ export default function Shifts() {
   const [activeEvent, setActiveEvent] = useState<EventoResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [noActiveEvent, setNoActiveEvent] = useState(false);
   const [approvalNotice, setApprovalNotice] = useState<string | null>(null);
   const { isAuthenticated, isAdmin, isPendingApproval } = useCurrentUser();
 
@@ -68,6 +70,7 @@ export default function Shifts() {
       try {
         setLoading(true);
         setError(null);
+        setNoActiveEvent(false);
         setApprovalNotice(null);
         const eventos = await getEventos();
         const eventoActivo = getActiveEvent(eventos);
@@ -75,7 +78,7 @@ export default function Shifts() {
         if (!eventoActivo) {
           setActiveEvent(null);
           setShifts([]);
-          setError("No hay una ronda activa disponible en este momento.");
+          setNoActiveEvent(true);
           return;
         }
 
@@ -316,6 +319,27 @@ export default function Shifts() {
                 </Link>
               </CardContent>
             </Card>
+          ) : noActiveEvent ? (
+            <div className="flex flex-col items-center text-center py-20 px-4">
+              <div className="h-20 w-20 rounded-2xl bg-[#143E29]/8 dark:bg-[#143E29]/40 flex items-center justify-center mb-6 ring-1 ring-[#143E29]/15 dark:ring-[#68A243]/20">
+                <Calendar className="h-10 w-10 text-[#143E29] dark:text-[#9FD27B]" />
+              </div>
+              <h3 className="text-2xl font-bold text-[#143E29] dark:text-white mb-2 transition-colors">
+                No hay una ronda activa por el momento
+              </h3>
+              <p className="text-gray-500 dark:text-gray-300 max-w-md leading-relaxed transition-colors">
+                Próximamente se realizará una nueva ronda de negocios en Trenque
+                Lauquen. Cuando esté disponible, vas a poder inscribirte a los
+                turnos y elegir tus mesas.
+              </p>
+              <div className="mt-6 flex items-center gap-2 rounded-2xl border border-[#68A243]/25 bg-[#68A243]/5 dark:bg-[#68A243]/10 dark:border-[#68A243]/20 px-5 py-3">
+                <Bell className="h-4 w-4 text-[#68A243] flex-shrink-0" />
+                <p className="text-sm text-[#3F6E20] dark:text-[#9FD27B] font-medium">
+                  Te notificaremos por correo cuando la próxima ronda sea
+                  habilitada.
+                </p>
+              </div>
+            </div>
           ) : error ? (
             <Card className="border-destructive/50 bg-destructive/5 dark:bg-destructive/10 dark:border-destructive/30 dark:text-white transition-colors duration-300">
               <CardHeader>
