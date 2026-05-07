@@ -87,6 +87,14 @@ function CompanyRow({
     onSelect?.(company);
   };
 
+  const handleEmailClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    e.stopPropagation();
+    if (company.email) {
+      navigator.clipboard.writeText(company.email);
+      toast.success("Email copiado al portapapeles");
+    }
+  };
+
   return (
     <motion.div
       onClick={handleCardClick}
@@ -182,7 +190,11 @@ function CompanyRow({
                 {company.razon_social}
               </h3>
               {company.email && (
-                <div className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300 truncate">
+                <div
+                  onClick={handleEmailClick}
+                  className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300 truncate cursor-pointer hover:text-[#68A243] dark:hover:text-[#9FD27B] transition-colors"
+                  title="Haz clic para copiar el email"
+                >
                   <Mail className="h-3 w-3 flex-shrink-0" />
                   <span className="truncate">{company.email}</span>
                 </div>
