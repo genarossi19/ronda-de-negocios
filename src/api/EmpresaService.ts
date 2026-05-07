@@ -20,9 +20,8 @@ export const approveCompany = async (id: number, aprobada: boolean) => {
   return data;
 };
 
-export const deleteCompany = async (id: number) => {
-  const { data } = await api.patch(`/empresas/${id}/`, { eliminado: true });
-  return data;
+export const deleteCompany = async (id: number): Promise<void> => {
+  await api.delete(`/empresas/${id}/`);
 };
 
 export const validarEmail = async (uidb64: string, token: string) => {
