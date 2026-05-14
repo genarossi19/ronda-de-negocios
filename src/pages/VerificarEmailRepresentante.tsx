@@ -7,7 +7,7 @@ import {
   XCircle,
   Loader2,
   ArrowLeft,
-  LogIn,
+  ArrowRight,
 } from "lucide-react";
 import { toast } from "sonner";
 import axios from "axios";
@@ -89,7 +89,7 @@ export default function VerificarEmailRepresentante() {
 
         if (prev <= 1) {
           clearInterval(intervalId);
-          navigate("/login");
+          navigate("/representantes");
           return 0;
         }
 
@@ -185,11 +185,11 @@ export default function VerificarEmailRepresentante() {
                     </Link>
                   </Button>
                   <Button
-                    onClick={() => navigate("/login")}
+                    onClick={() => navigate("/representantes")}
                     className="flex-1 bg-[#143E29] hover:bg-[#1a5c3a] dark:bg-[#68A243] dark:hover:bg-[#5a8f37] text-white font-semibold h-11 gap-2 transition-colors duration-200"
                   >
-                    <LogIn className="h-4 w-4" />
-                    Iniciar sesión
+                    <ArrowRight className="h-4 w-4" />
+                    Volver a representantes
                   </Button>
                 </div>
 
@@ -226,7 +226,7 @@ export default function VerificarEmailRepresentante() {
                       </span>
                     </div>
                     <span className="text-xs text-gray-500 dark:text-gray-400">
-                      Redirigiendo al login…
+                      Redirigiendo a representantes…
                     </span>
                   </div>
                 )}
