@@ -9,7 +9,14 @@ import {
 import { Badge } from "../components/ui/badge";
 import { Button } from "../components/ui/button";
 import type { EmpresaResponse } from "../types/Empresa";
-import { Building2, MapPin, FileText, Mail, Phone } from "lucide-react";
+import {
+  Building2,
+  MapPin,
+  FileText,
+  Mail,
+  Phone,
+  Contact,
+} from "lucide-react";
 
 interface CompanyModalProps {
   company: EmpresaResponse | null;
@@ -141,12 +148,12 @@ export default function CompanyModal({
             <>
               <div className="space-y-2">
                 <div className="flex items-center gap-2 text-[#143E29] dark:text-white transition-colors">
-                  <Mail className="h-4 w-4 text-[#68A243]" />
+                  <Contact className="h-4 w-4 text-[#68A243]" />
                   <h3 className="font-semibold">Información de contacto</h3>
                 </div>
-                <div className="pl-6 space-y-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pl-6">
                   <div className="flex items-start gap-3 p-3 rounded-lg bg-muted/30 !dark:bg-[#1a1f2e] transition-colors">
-                    <Mail className="h-4 w-4 text-[#68A243] mt-0.5" />
+                    <Mail className="h-4 w-4 text-[#68A243] mt-0.5 flex-shrink-0" />
                     <div className="flex-1 min-w-0">
                       <p className="text-xs text-muted-foreground dark:text-gray-400 mb-1 transition-colors">
                         Email
@@ -172,7 +179,7 @@ export default function CompanyModal({
                   </div>
 
                   <div className="flex items-start gap-3 p-3 rounded-lg bg-muted/30 !dark:bg-[#1a1f2e] transition-colors">
-                    <Phone className="h-4 w-4 text-[#68A243] mt-0.5" />
+                    <Phone className="h-4 w-4 text-[#68A243] mt-0.5 flex-shrink-0" />
                     <div className="flex-1">
                       <p className="text-xs text-muted-foreground dark:text-gray-400 mb-1 transition-colors">
                         Teléfono
