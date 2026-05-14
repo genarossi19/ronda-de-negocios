@@ -19,6 +19,7 @@ import type { EventoResponse } from "../types/Evento";
 
 import { TextAnimate } from "../components/ui/text-animate";
 import { Link, useNavigate } from "react-router";
+import { useAuth } from "../hooks/useAuth";
 
 function getClosestActiveEvent(eventos: EventoResponse[]) {
   const today = new Date();
@@ -79,6 +80,7 @@ function EventInfoSkeleton({ icon: Icon }: { icon: typeof Calendar }) {
 
 export default function Landing() {
   const navigate = useNavigate();
+  const { isAuthenticated } = useAuth();
   const [companyCount, setCompanyCount] = useState(0);
   const [eventos, setEventos] = useState<EventoResponse[]>([]);
   const [isLoadingEventInfo, setIsLoadingEventInfo] = useState(true);
@@ -225,15 +227,26 @@ export default function Landing() {
             </p>
 
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-              <Link to="/register" rel="noopener noreferrer">
+              {!isAuthenticated ? (
+                <Link to="/register" rel="noopener noreferrer">
+                  <Button
+                    size="lg"
+                    className="bg-secondary hover:bg-secondary/90 text-white text-lg px-8 py-6 group"
+                  >
+                    Inscribir mi empresa
+                    <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
+                  </Button>
+                </Link>
+              ) : (
                 <Button
                   size="lg"
                   className="bg-secondary hover:bg-secondary/90 text-white text-lg px-8 py-6 group"
+                  onClick={() => navigate("/turnos")}
                 >
-                  Inscribir mi empresa
+                  Anotarse a un turno
                   <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
                 </Button>
-              </Link>
+              )}
 
               <Button
                 size="lg"
@@ -339,14 +352,25 @@ export default function Landing() {
             No te pierdas la oportunidad de conectar con las empresas más
             importantes de la región. Inscribite ahora y asegurá tu lugar.
           </p>
-          <Button
-            size="lg"
-            className="bg-secondary hover:bg-accent text-white text-lg px-8 py-6 group"
-          >
-            <Link to="/register">Inscribir mi empresa ahora</Link>
+          {!isAuthenticated ? (
+            <Button
+              size="lg"
+              className="bg-secondary hover:bg-accent text-white text-lg px-8 py-6 group"
+            >
+              <Link to="/register">Inscribir mi empresa ahora</Link>
 
-            <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
-          </Button>
+              <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
+            </Button>
+          ) : (
+            <Button
+              size="lg"
+              className="bg-secondary hover:bg-accent text-white text-lg px-8 py-6 group"
+              onClick={() => navigate("/turnos")}
+            >
+              Anotarse a un turno
+              <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
+            </Button>
+          )}
         </div>
       </section>
 
