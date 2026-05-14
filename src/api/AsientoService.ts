@@ -39,3 +39,14 @@ export async function cancelAsiento(id: number): Promise<void> {
 export async function deleteAsiento(id: number): Promise<void> {
   await api.delete(`/asientos/${id}/`);
 }
+
+export async function updateAsientoEstado(
+  id: number,
+  estado: "asistio" | "ausente",
+): Promise<AsientoResponse> {
+  const { data } = await api.patch<AsientoResponse>(
+    `/asientos/asistencia/${id}/`,
+    { estado },
+  );
+  return data;
+}

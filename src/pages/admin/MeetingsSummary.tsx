@@ -2,8 +2,10 @@ import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router";
 import {
   ArrowLeft,
+  Check,
   Clock3,
   Download,
+  Edit2,
   Printer,
   RotateCcw,
   Handshake,
@@ -13,6 +15,7 @@ import {
   TableProperties,
   UserRound,
   Users,
+  X,
 } from "lucide-react";
 import Navbar from "../../components/Navbar";
 import Footer from "../../layout/Footer";
@@ -61,6 +64,7 @@ import { toast } from "sonner";
 import { getEventos } from "../../api/EventoService";
 import { getMesasByTurnoId } from "../../api/MesaService";
 import { getTurnoByEventoId } from "../../api/TurnoService";
+import { updateAsientoEstado } from "../../api/AsientoService";
 import { getApiErrorMessage, isSessionExpiredError } from "../../lib/axios";
 import type { EventoResponse } from "../../types/Evento";
 import type { MesaResponse } from "../../types/Mesa";
@@ -68,6 +72,7 @@ import type { TurnoResponse } from "../../types/Turno";
 
 type SummarySeatRow = {
   key: string;
+  asientoId?: number;
   eventoId: number;
   eventoNombre: string;
   eventoFecha: string;
@@ -194,6 +199,7 @@ function printSummary(
   rows: TableSummary[],
   eventName: string,
   eventDate?: string,
+  asientoEstados: Record<number, "asistio" | "ausente"> = {},
 ) {
   const headers = [
     "Turno",
@@ -219,15 +225,19 @@ function printSummary(
       .map((row) => {
         const anfitriona = row.participantes.find((p) => p.anfitriona) ?? null;
         const invitada = row.participantes.find((p) => !p.anfitriona) ?? null;
+        const asistenciaAnfitriona =
+          (anfitriona && asientoEstados[anfitriona.asientoId]) || "";
+        const asistenciaInvitada =
+          (invitada && asientoEstados[invitada.asientoId]) || "";
         const cells = [
           row.turnoHorario,
           `Mesa ${row.mesaNumero}`,
           anfitriona?.empresaNombre || "Sin anfitriona",
           anfitriona?.representanteNombre || "Sin representante",
-          "",
+          asistenciaAnfitriona,
           invitada?.empresaNombre || "Sin invitada",
           invitada?.representanteNombre || "Sin representante",
-          "",
+          asistenciaInvitada,
         ];
         const dataRow = `<tr>${cells.map((c) => `<td>${c}</td>`).join("")}</tr>`;
         if (row.turnoId !== lastTurnoId) {
@@ -280,7 +290,11 @@ function printSummary(
   }
 }
 
-function downloadCsv(rows: TableSummary[], eventName: string) {
+function downloadCsv(
+  rows: TableSummary[],
+  eventName: string,
+  asientoEstados: Record<number, "asistio" | "ausente"> = {},
+) {
   const headers = [
     "Turno",
     "Mesa",
@@ -301,6 +315,10 @@ function downloadCsv(rows: TableSummary[], eventName: string) {
     const invitada =
       row.participantes.find((participante) => !participante.anfitriona) ??
       null;
+    const asistenciaAnfitriona =
+      (anfitriona && asientoEstados[anfitriona.asientoId]) || "";
+    const asistenciaInvitada =
+      (invitada && asientoEstados[invitada.asientoId]) || "";
 
     if (row.turnoId !== lastTurnoId) {
       lastTurnoId = row.turnoId;
@@ -324,10 +342,10 @@ function downloadCsv(rows: TableSummary[], eventName: string) {
         `Mesa ${row.mesaNumero}`,
         anfitriona?.empresaNombre || "Sin anfitriona asignada",
         anfitriona?.representanteNombre || "Sin representante",
-        "",
+        asistenciaAnfitriona,
         invitada?.empresaNombre || "Sin invitada asignada",
         invitada?.representanteNombre || "Sin representante",
-        "",
+        asistenciaInvitada,
       ]
         .map(escapeCsvValue)
         .join(","),
@@ -448,6 +466,22 @@ export default function MeetingsSummary() {
   const [turnoGestionado, setTurnoGestionado] = useState<TurnoResponse | null>(
     null,
   );
+  const [asientoEstados, setAsientoEstados] = useState<
+    Record<number, "asistio" | "ausente">
+  >({});
+  const [updatingAsientos, setUpdatingAsientos] = useState<Set<number>>(
+    new Set(),
+  );
+  const [mesaEdicion, setMesaEdicion] = useState<{
+    mesaNumero: number;
+    turnoHorario: string;
+    participantes: Array<{
+      asientoId: number;
+      empresaNombre: string;
+      representanteNombre: string;
+      anfitriona: boolean;
+    }>;
+  } | null>(null);
 
   useEffect(() => {
     const fetchEventos = async () => {
@@ -582,6 +616,7 @@ export default function MeetingsSummary() {
               if (mesa.asientos.length === 0) {
                 nextRows.push({
                   key: `${turno.id}-${mesa.id}-empty`,
+                  asientoId: undefined,
                   eventoId: selectedEvent.id,
                   eventoNombre: selectedEvent.nombre,
                   eventoFecha: selectedEvent.fecha,
@@ -603,6 +638,7 @@ export default function MeetingsSummary() {
               mesa.asientos.forEach((asiento) => {
                 nextRows.push({
                   key: `${turno.id}-${mesa.id}-${asiento.id}`,
+                  asientoId: asiento.id,
                   eventoId: selectedEvent.id,
                   eventoNombre: selectedEvent.nombre,
                   eventoFecha: selectedEvent.fecha,
@@ -668,6 +704,41 @@ export default function MeetingsSummary() {
         return true;
       }
 
+      // Búsqueda de dos empresas separadas por "y"
+      if (normalizedSearch.includes(" y ")) {
+        const [empresa1, empresa2] = normalizedSearch
+          .split(" y ")
+          .map((s) => s.trim())
+          .filter(Boolean);
+
+        if (!empresa1 || !empresa2) {
+          return false;
+        }
+
+        // Encontrar la mesa correspondiente en tableSummaries
+        const tableSummary = tableSummaries.find(
+          (ts) => ts.turnoId === row.turnoId && ts.mesaId === row.mesaId,
+        );
+
+        if (!tableSummary || tableSummary.participantes.length < 2) {
+          return false;
+        }
+
+        // Verificar que ambas empresas estén en la mesa (búsqueda parcial)
+        const empresasEnMesa = tableSummary.participantes.map((p) =>
+          p.empresaNombre.toLowerCase(),
+        );
+
+        const empresa1Lower = empresa1.toLowerCase();
+        const empresa2Lower = empresa2.toLowerCase();
+
+        const match1 = empresasEnMesa.some((e) => e.includes(empresa1Lower));
+        const match2 = empresasEnMesa.some((e) => e.includes(empresa2Lower));
+
+        return match1 && match2;
+      }
+
+      // Búsqueda estándar
       return [
         row.empresaNombre,
         row.representanteNombre,
@@ -680,7 +751,7 @@ export default function MeetingsSummary() {
         .toLowerCase()
         .includes(normalizedSearch);
     });
-  }, [searchTerm, summaryRows, turnoFilter]);
+  }, [searchTerm, summaryRows, turnoFilter, tableSummaries]);
 
   const filteredTableSummaries = useMemo(() => {
     const allowedKeys = new Set(
@@ -752,6 +823,37 @@ export default function MeetingsSummary() {
     });
     return map;
   }, [availableTurnos]);
+
+  const handleAsistenciaChange = async (
+    asientoId: number,
+    nuevoEstado: "asistio" | "ausente",
+  ) => {
+    try {
+      setUpdatingAsientos((prev) => new Set(prev).add(asientoId));
+      await updateAsientoEstado(asientoId, nuevoEstado);
+      setAsientoEstados((prev) => ({
+        ...prev,
+        [asientoId]: nuevoEstado,
+      }));
+      toast.success(`Asistencia marcada como "${nuevoEstado}"`);
+    } catch (error) {
+      const errMsg = getApiErrorMessage(
+        error,
+        "No se pudo actualizar la asistencia",
+      );
+      const translatedMsg =
+        errMsg && errMsg.includes("is not a valid choice")
+          ? `"${nuevoEstado}" no es una opción válida`
+          : errMsg || "No se pudo actualizar la asistencia";
+      toast.error(translatedMsg);
+    } finally {
+      setUpdatingAsientos((prev) => {
+        const next = new Set(prev);
+        next.delete(asientoId);
+        return next;
+      });
+    }
+  };
 
   const handleCloseTurnoModal = () => {
     setTurnoGestionado(null);
@@ -834,6 +936,7 @@ export default function MeetingsSummary() {
                           filteredTableSummaries,
                           selectedEvent.nombre,
                           selectedEvent.fecha,
+                          asientoEstados,
                         );
                       }}
                       className="flex-1 lg:flex-none bg-transparent border-white/40 text-white hover:bg-white/15 hover:text-white hover:border-white/60"
@@ -857,6 +960,7 @@ export default function MeetingsSummary() {
                         downloadCsv(
                           filteredTableSummaries,
                           selectedEvent.nombre,
+                          asientoEstados,
                         );
                       }}
                       className="flex-1 lg:flex-none bg-white text-[#143E29] hover:bg-white/90"
@@ -994,7 +1098,7 @@ export default function MeetingsSummary() {
                       aria-label="Buscar reuniones"
                       value={searchTerm}
                       onChange={(event) => setSearchTerm(event.target.value)}
-                      placeholder="Empresa, representante, email o mesa"
+                      placeholder="Empresa, representante, email, mesa o 'Empresa1 y Empresa2'"
                       className="h-10 w-full pl-9 border-[#68A243]/20 focus-visible:border-[#68A243] focus-visible:ring-[#68A243]/20 bg-white dark:bg-[#143E29] dark:border-[#68A243]/20 dark:text-white dark:placeholder-gray-400 transition-colors"
                     />
                   </div>
@@ -1238,6 +1342,9 @@ export default function MeetingsSummary() {
                             <TableHead>Rep. Anfitriona</TableHead>
                             <TableHead>Invitada</TableHead>
                             <TableHead>Rep. Invitada</TableHead>
+                            <TableHead className="text-right">
+                              Asistencia
+                            </TableHead>
                           </TableRow>
                         </TableHeader>
                         <TableBody>
@@ -1281,19 +1388,74 @@ export default function MeetingsSummary() {
                                     </Badge>
                                   </TableCell>
                                   <TableCell className="min-w-[200px] align-top font-semibold text-[#143E29] dark:text-white">
-                                    {anfitriona?.empresaNombre ||
-                                      "Sin anfitriona"}
+                                    <div className="flex items-center gap-2">
+                                      <span>
+                                        {anfitriona?.empresaNombre ||
+                                          "Sin anfitriona"}
+                                      </span>
+                                      {anfitriona?.asientoId &&
+                                        asientoEstados[anfitriona.asientoId] ===
+                                          "asistio" && (
+                                          <Check className="h-4 w-4 text-green-500" />
+                                        )}
+                                      {anfitriona?.asientoId &&
+                                        asientoEstados[anfitriona.asientoId] ===
+                                          "ausente" && (
+                                          <X className="h-4 w-4 text-red-500" />
+                                        )}
+                                    </div>
                                   </TableCell>
                                   <TableCell className="min-w-[200px] align-top text-sm text-muted-foreground dark:text-gray-300">
                                     {anfitriona?.representanteNombre ||
                                       "Sin representante"}
                                   </TableCell>
                                   <TableCell className="min-w-[200px] align-top font-semibold text-[#143E29] dark:text-white">
-                                    {invitada?.empresaNombre || "Sin invitada"}
+                                    <div className="flex items-center gap-2">
+                                      <span>
+                                        {invitada?.empresaNombre ||
+                                          "Sin invitada"}
+                                      </span>
+                                      {invitada?.asientoId &&
+                                        asientoEstados[invitada.asientoId] ===
+                                          "asistio" && (
+                                          <Check className="h-4 w-4 text-green-500" />
+                                        )}
+                                      {invitada?.asientoId &&
+                                        asientoEstados[invitada.asientoId] ===
+                                          "ausente" && (
+                                          <X className="h-4 w-4 text-red-500" />
+                                        )}
+                                    </div>
                                   </TableCell>
                                   <TableCell className="min-w-[200px] align-top text-sm text-muted-foreground dark:text-gray-300">
                                     {invitada?.representanteNombre ||
                                       "Sin representante"}
+                                  </TableCell>
+                                  <TableCell className="text-right">
+                                    <Button
+                                      size="sm"
+                                      variant="ghost"
+                                      onClick={() =>
+                                        setMesaEdicion({
+                                          mesaNumero: tableSummary.mesaNumero,
+                                          turnoHorario:
+                                            tableSummary.turnoHorario,
+                                          participantes:
+                                            tableSummary.participantes.map(
+                                              (p) => ({
+                                                asientoId: p.asientoId,
+                                                empresaNombre: p.empresaNombre,
+                                                representanteNombre:
+                                                  p.representanteNombre,
+                                                anfitriona: p.anfitriona,
+                                              }),
+                                            ),
+                                        })
+                                      }
+                                      className="text-[#68A243] hover:text-[#5a9038] hover:bg-[#68A243]/10"
+                                    >
+                                      <Edit2 className="h-4 w-4" />
+                                    </Button>
                                   </TableCell>
                                 </TableRow>
                               );
@@ -1301,7 +1463,7 @@ export default function MeetingsSummary() {
                           ) : (
                             <TableRow className="hover:bg-transparent dark:border-[#68A243]/15">
                               <TableCell
-                                colSpan={7}
+                                colSpan={8}
                                 className="py-10 text-center text-muted-foreground dark:text-gray-300"
                               >
                                 No hay registros para el filtro actual.
@@ -1442,6 +1604,82 @@ export default function MeetingsSummary() {
           handleTurnoUpdated();
         }}
       />
+
+      <Dialog
+        open={Boolean(mesaEdicion)}
+        onOpenChange={(open) => {
+          if (!open) {
+            setMesaEdicion(null);
+          }
+        }}
+      >
+        <DialogContent className="sm:max-w-lg border-[#68A243]/20 dark:border-[#68A243]/25 bg-white dark:bg-[#11161d]">
+          <DialogHeader>
+            <DialogTitle className="text-[#143E29] dark:text-white">
+              Marcar asistencia
+            </DialogTitle>
+            <DialogDescription className="dark:text-gray-300">
+              Mesa {mesaEdicion?.mesaNumero} • Turno {mesaEdicion?.turnoHorario}
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-3">
+            {mesaEdicion?.participantes.map((participante) => (
+              <div
+                key={participante.asientoId}
+                className="rounded-2xl border border-[#68A243]/15 bg-[#68A243]/5 dark:bg-[#0f2f25] dark:border-[#68A243]/20 p-4 space-y-3"
+              >
+                <div>
+                  <p className="text-sm font-semibold text-[#143E29] dark:text-white">
+                    {participante.empresaNombre}
+                  </p>
+                  <p className="text-xs text-gray-600 dark:text-gray-400">
+                    {participante.representanteNombre}{" "}
+                    {participante.anfitriona && "(Anfitriona)"}
+                  </p>
+                </div>
+                <div className="flex gap-2">
+                  <Button
+                    size="sm"
+                    variant={
+                      asientoEstados[participante.asientoId] === "asistio"
+                        ? "default"
+                        : "outline"
+                    }
+                    onClick={() =>
+                      handleAsistenciaChange(participante.asientoId, "asistio")
+                    }
+                    disabled={updatingAsientos.has(participante.asientoId)}
+                    className={
+                      asientoEstados[participante.asientoId] === "asistio"
+                        ? "bg-[#68A243] text-white hover:bg-[#5a9038]"
+                        : ""
+                    }
+                  >
+                    <Check className="h-4 w-4 mr-1" />
+                    Asistió
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant={
+                      asientoEstados[participante.asientoId] === "ausente"
+                        ? "destructive"
+                        : "outline"
+                    }
+                    onClick={() =>
+                      handleAsistenciaChange(participante.asientoId, "ausente")
+                    }
+                    disabled={updatingAsientos.has(participante.asientoId)}
+                  >
+                    <X className="h-4 w-4 mr-1" />
+                    No asistió
+                  </Button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </DialogContent>
+      </Dialog>
 
       <Footer />
     </div>
