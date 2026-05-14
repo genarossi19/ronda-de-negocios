@@ -179,38 +179,23 @@ export default function Representantes() {
     if (!validate()) return;
     setSubmitting(true);
     try {
-      let nuevo = await createRepresentante(form);
+      await createRepresentante(form);
 
-      // Asegurar que el cargo sea un objeto completo {id, nombre}
-      if (nuevo.cargo && typeof nuevo.cargo === "number") {
-        const cargoCompleto = cargos.find((c) => c.id === nuevo.cargo);
-        if (cargoCompleto) {
-          nuevo = { ...nuevo, cargo: cargoCompleto };
-        }
-      } else if (
-        !nuevo.cargo ||
-        (typeof nuevo.cargo === "object" && !nuevo.cargo.nombre)
-      ) {
-        // Si cargo no tiene nombre, buscar en la lista de cargos por ID
-        const cargoId =
-          typeof nuevo.cargo === "number" ? nuevo.cargo : form.cargo;
-        const cargoCompleto = cargos.find((c) => c.id === cargoId);
-        if (cargoCompleto) {
-          nuevo = { ...nuevo, cargo: cargoCompleto };
-        }
-      }
+      // Refrescar la lista desde el servidor para asegurar sincronización correcta
+      const params = user?.is_superuser ? { all: true } : {};
+      const repsData = await getRepresentantes(params);
+      const repsWithEmpresa = repsData.map((rep) => {
+        const empresa = empresas.find(
+          (e: EmpresaResponse) => e.id === (rep.empresa || rep.empresa_id),
+        );
+        return {
+          ...rep,
+          empresa_id: rep.empresa || rep.empresa_id,
+          empresa_nombre: rep.empresa_nombre || empresa?.razon_social,
+        };
+      });
 
-      // Mapear empresa_nombre
-      const empresaId = nuevo.empresa || nuevo.empresa_id;
-      const empresa = empresas.find((e) => e.id === empresaId);
-      nuevo = {
-        ...nuevo,
-        empresa_id: empresaId,
-        empresa_nombre: nuevo.empresa_nombre || empresa?.razon_social,
-      };
-
-      // Actualizar la lista
-      setRepresentantes((prev) => [...prev, nuevo]);
+      setRepresentantes(repsWithEmpresa);
       toast.success("Representante agregado correctamente.");
       setDialogOpen(false);
       setForm(EMPTY_FORM);
@@ -234,6 +219,10 @@ export default function Representantes() {
   };
 
   const handleDelete = async (rep: RepresentanteResponse) => {
+    if (!rep.id) {
+      toast.error("Error: El representante no tiene un ID válido.");
+      return;
+    }
     setRepToDelete(rep);
     setDeleteDialogOpen(true);
   };
@@ -341,14 +330,31 @@ export default function Representantes() {
   const filteredRepresentantes = filterRepresentantes(representantes);
 
   const confirmDelete = async () => {
-    if (!repToDelete) return;
+    if (!repToDelete || !repToDelete.id) {
+      toast.error("Error: No se pudo identificar el representante a eliminar.");
+      setDeleteDialogOpen(false);
+      return;
+    }
+
     setDeleting(true);
     try {
       await deleteRepresentante(repToDelete.id);
 
-      // Actualizar la lista
-      setRepresentantes((prev) => prev.filter((r) => r.id !== repToDelete.id));
+      // Refrescar la lista desde el servidor para asegurar sincronización correcta
+      const params = user?.is_superuser ? { all: true } : {};
+      const repsData = await getRepresentantes(params);
+      const repsWithEmpresa = repsData.map((rep) => {
+        const empresa = empresas.find(
+          (e: EmpresaResponse) => e.id === (rep.empresa || rep.empresa_id),
+        );
+        return {
+          ...rep,
+          empresa_id: rep.empresa || rep.empresa_id,
+          empresa_nombre: rep.empresa_nombre || empresa?.razon_social,
+        };
+      });
 
+      setRepresentantes(repsWithEmpresa);
       toast.success("Representante eliminado correctamente.");
       setDeleteDialogOpen(false);
       setRepToDelete(null);
@@ -673,14 +679,6 @@ export default function Representantes() {
                         <span>{rep.telefono}</span>
                       </div>
                     )}
-                    <div className="flex items-center gap-2">
-                      <Briefcase className="h-4 w-4 text-[#68A243] shrink-0" />
-                      <span>
-                        {typeof rep.cargo === "number"
-                          ? "Sin cargo"
-                          : rep.cargo?.nombre || "Sin cargo"}
-                      </span>
-                    </div>
                   </CardContent>
                 </Card>
               ))}

@@ -20,6 +20,7 @@ import {
   Loader2,
   Download,
   Users,
+  // RotateCcw,
 } from "lucide-react";
 import { Button } from "../../components/ui/button";
 import { Badge } from "../../components/ui/badge";
@@ -46,6 +47,7 @@ import {
   getCompanies,
   approveCompany,
   deleteCompany,
+  // recoverCompany,
 } from "../../api/EmpresaService";
 import type { EmpresaResponse } from "../../types/Empresa";
 import { useCurrentUser } from "../../hooks/useCurrentUser";
@@ -56,6 +58,7 @@ function CompanyRow({
   company,
   onApprove,
   onDelete,
+  // onRecover,
   onView,
   isSelected,
   onSelect,
@@ -65,6 +68,7 @@ function CompanyRow({
   company: EmpresaResponse;
   onApprove: (c: EmpresaResponse) => void;
   onDelete: (c: EmpresaResponse) => void;
+  // onRecover: (c: EmpresaResponse) => void;
   onView: (c: EmpresaResponse) => void;
   isSelected?: boolean;
   onSelect?: (c: EmpresaResponse) => void;
@@ -296,6 +300,35 @@ function CompanyRow({
               className="text-red-600 hover:bg-red-50 hover:text-red-600 dark:text-red-400 dark:hover:bg-red-950/30"
             >
               <Trash2 className="h-4 w-4" />
+            </Button>
+          </div>
+        )}
+
+        {/* Actions for deleted companies */}
+        {!isSelectionMode && company.eliminado && (
+          <div
+            className="flex gap-2 sm:justify-end"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* <Button
+              size="sm"
+              onClick={() => onRecover(company)}
+              className="gap-2 bg-orange-500 hover:bg-orange-600 text-white dark:bg-orange-600 dark:hover:bg-orange-700"
+            >
+              <RotateCcw className="h-4 w-4" />
+              Recuperar
+            </Button> */}
+
+            <Button
+              size="sm"
+              variant="ghost"
+              onClick={(e) => {
+                e.stopPropagation();
+                onView(company);
+              }}
+              className="border-gray-300 text-gray-700 hover:bg-gray-100 hover:text-gray-700 dark:border-[#68A243]/40 dark:text-[#68A243] dark:hover:bg-[#68A243]/10"
+            >
+              <Eye className="h-4 w-4" />
             </Button>
           </div>
         )}
@@ -674,6 +707,9 @@ export default function CompaniesManagement() {
   const [isApproveOpen, setIsApproveOpen] = useState(false);
   const [companyToApprove, setCompanyToApprove] =
     useState<EmpresaResponse | null>(null);
+  // const [isRecoverOpen, setIsRecoverOpen] = useState(false);
+  // const [companyToRecover, setCompanyToRecover] =
+  //   useState<EmpresaResponse | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [filterStatus, setFilterStatus] = useState<
     "all" | "pending" | "approved" | "deleted"
@@ -697,6 +733,7 @@ export default function CompaniesManagement() {
   >(new Map());
   const [isApproving, setIsApproving] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  // const [isRecovering, setIsRecovering] = useState(false);
 
   // isSelectionMode is computed based on selectedCompanies
   const isSelectionMode = selectedCompanies.size > 0;
@@ -860,6 +897,11 @@ export default function CompaniesManagement() {
     setIsDeleteOpen(true);
   };
 
+  // const handleRecoverClick = (company: EmpresaResponse) => {
+  //   setCompanyToRecover(company);
+  //   setIsRecoverOpen(true);
+  // };
+
   const handleConfirmDelete = async () => {
     if (companyToDelete) {
       setIsDeleting(true);
@@ -916,6 +958,62 @@ export default function CompaniesManagement() {
       }
     }
   };
+
+  // const handleConfirmRecover = async () => {
+  //   if (companyToRecover) {
+  //     setIsRecovering(true);
+  //     try {
+  //       await recoverCompany(companyToRecover.id);
+  //
+  //       // Agregar animación de recuperación (reutilizamos "approved" para el efecto visual)
+  //       setAnimatingCompanies((prev) =>
+  //         new Map(prev).set(companyToRecover.id, "approved"),
+  //       );
+  //
+  //       // Esperar a que la animación termine completamente
+  //       const animationDuration = shouldReduceMotion ? 0 : 1300;
+  //       const exitDuration = shouldReduceMotion ? 0 : 350;
+  //
+  //       setTimeout(() => {
+  //         // Limpiar animación primero para que desaparezca
+  //         setAnimatingCompanies((prev) => {
+  //           const newMap = new Map(prev);
+  //           newMap.delete(companyToRecover.id);
+  //           return newMap;
+  //         });
+  //
+  //         // Esperar a que la animación de salida (exit) termine
+  //         setTimeout(() => {
+  //           // Actualizar UI después de que la animación haya desaparecido
+  //           setCompanies(
+  //             companies.map((c) =>
+  //               c.id === companyToRecover.id ? { ...c, eliminado: false } : c,
+  //             ),
+  //           );
+  //         }, exitDuration);
+  //       }, animationDuration);
+  //
+  //       toast.success(
+  //         `${companyToRecover.razon_social} ha sido recuperada correctamente`,
+  //       );
+  //
+  //       setIsRecoverOpen(false);
+  //       setCompanyToRecover(null);
+  //     } catch (err) {
+  //       const errorMessage = getApiErrorMessage(
+  //         err,
+  //         "Ha ocurrido un error. Intenta de nuevo más tarde",
+  //       );
+  //       if (errorMessage) {
+  //         toast.error(errorMessage);
+  //       }
+  //
+  //       console.error("Error recovering company:", err);
+  //     } finally {
+  //       setIsRecovering(false);
+  //     }
+  //   }
+  // };
 
   const handleViewDetail = (company: EmpresaResponse) => {
     setSelectedCompany(company);
@@ -1276,6 +1374,7 @@ export default function CompaniesManagement() {
                   company={company}
                   onApprove={handleApproveClick}
                   onDelete={handleDeleteClick}
+                  // onRecover={handleRecoverClick}
                   onView={handleViewDetail}
                   isSelected={selectedCompanies.has(company.id)}
                   onSelect={handleSelectCompany}
@@ -1750,6 +1849,64 @@ export default function CompaniesManagement() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Recover Confirmation Modal - DESACTIVADO: Pendiente de implementación */}
+      {/*
+      <Dialog
+        open={isRecoverOpen}
+        onOpenChange={(open) => !isRecovering && setIsRecoverOpen(open)}
+      >
+        <DialogContent className="border-gray-200 dark:border-[#68A243]/20 bg-white dark:bg-[#143E29] max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-gray-900 dark:text-white">
+              Confirmar recuperación
+            </DialogTitle>
+            <DialogDescription className="text-gray-600 dark:text-gray-400">
+              ¿Estás seguro de que deseas recuperar{" "}
+              <span className="font-bold text-gray-900 dark:text-white">
+                {companyToRecover?.razon_social}
+              </span>
+              ? La empresa volverá a estar disponible en el sistema.
+            </DialogDescription>
+          </DialogHeader>
+
+          <DialogFooter className="gap-3">
+            <Button
+              variant="outline"
+              onClick={() => setIsRecoverOpen(false)}
+              disabled={isRecovering}
+              className="border-gray-300 text-gray-700 hover:bg-gray-100 disabled:opacity-50 dark:border-[#68A243]/40 dark:text-[#68A243] dark:hover:bg-[#68A243]/10"
+            >
+              Cancelar
+            </Button>
+            <Button
+              onClick={handleConfirmRecover}
+              disabled={isRecovering}
+              className="bg-orange-500 hover:bg-orange-600 text-white disabled:bg-orange-500 disabled:opacity-75 dark:bg-orange-600 dark:hover:bg-orange-700"
+            >
+              {isRecovering ? (
+                <>
+                  <motion.div
+                    animate={{ rotate: 360 }}
+                    transition={{
+                      duration: 1,
+                      repeat: Infinity,
+                      ease: "linear",
+                    }}
+                    className="inline-block mr-2"
+                  >
+                    <Loader2 className="h-4 w-4" />
+                  </motion.div>
+                  Recuperando...
+                </>
+              ) : (
+                <>Recuperar</>
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      */}
 
       {/* Bulk Results Modal */}
       <Dialog open={isResultsOpen} onOpenChange={setIsResultsOpen}>

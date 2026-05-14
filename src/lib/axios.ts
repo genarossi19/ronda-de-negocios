@@ -78,6 +78,14 @@ export function triggerSessionExpired(
   message = SESSION_EXPIRED_MESSAGE,
   reason = SESSION_EXPIRED_REASON,
 ) {
+  // Si el usuario ya cerró sesión manualmente, no tratar como expiración automática
+  const alreadyLoggedOut =
+    !Cookies.get(TOKEN_COOKIE_NAME) && !useUserStore.getState().isAuthenticated;
+
+  if (alreadyLoggedOut) {
+    return;
+  }
+
   localStorage.setItem(SESSION_EXPIRED_STORAGE_KEY, "true");
   Cookies.remove(TOKEN_COOKIE_NAME);
   useUserStore.getState().clearUser();
@@ -194,7 +202,10 @@ api.interceptors.request.use(
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (isAuthenticationFailure(error)) {
+    if (
+      isAuthenticationFailure(error) &&
+      useUserStore.getState().isAuthenticated
+    ) {
       markAuthRedirectHandled(error);
       triggerSessionExpired();
     }

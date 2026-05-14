@@ -24,6 +24,11 @@ export const deleteCompany = async (id: number): Promise<void> => {
   await api.delete(`/empresas/${id}/`);
 };
 
+export const recoverCompany = async (id: number): Promise<EmpresaResponse> => {
+  const { data } = await api.patch(`/empresas/${id}/`, { eliminado: false });
+  return data;
+};
+
 export const validarEmail = async (uidb64: string, token: string) => {
   const { data } = await api.get(`/acceso/verificar-email/${uidb64}/${token}/`);
   return data;

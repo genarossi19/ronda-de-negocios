@@ -4,6 +4,7 @@ import {
   ArrowLeft,
   Clock3,
   Download,
+  Printer,
   RotateCcw,
   Handshake,
   LayoutGrid,
@@ -189,54 +190,153 @@ function escapeCsvValue(value: string | number | boolean) {
   return `"${String(value).replace(/"/g, '""')}"`;
 }
 
-function downloadCsv(
+function printSummary(
   rows: TableSummary[],
   eventName: string,
   eventDate?: string,
 ) {
   const headers = [
-    "Evento",
-    "Fecha",
     "Turno",
     "Mesa",
-    "Estado de la mesa",
-    "Ocupacion actual",
     "Anfitriona",
-    "Representante anfitriona",
-    "Email anfitriona",
+    "Rep. Anfitriona",
+    "Asistencia",
     "Invitada",
-    "Representante invitada",
-    "Email invitada",
+    "Rep. Invitada",
+    "Asistencia",
   ];
 
-  const content = [
-    headers.map(escapeCsvValue).join(","),
-    ...rows.map((row) => {
-      const anfitriona =
-        row.participantes.find((participante) => participante.anfitriona) ??
-        null;
-      const invitada =
-        row.participantes.find((participante) => !participante.anfitriona) ??
-        null;
+  const subtitle = eventDate
+    ? `${eventName} \u2014 ${new Intl.DateTimeFormat("es-AR", { day: "2-digit", month: "long", year: "numeric" }).format(new Date(`${eventDate}T00:00:00`))}`
+    : eventName;
 
-      return [
-        eventName,
-        eventDate ?? "",
+  const headerHtml = headers.map((h) => `<th>${h}</th>`).join("");
+
+  // Agrupar por turno e insertar filas separadoras
+  const bodyHtml = (() => {
+    let lastTurnoId: number | null = null;
+    return rows
+      .map((row) => {
+        const anfitriona = row.participantes.find((p) => p.anfitriona) ?? null;
+        const invitada = row.participantes.find((p) => !p.anfitriona) ?? null;
+        const cells = [
+          row.turnoHorario,
+          `Mesa ${row.mesaNumero}`,
+          anfitriona?.empresaNombre || "Sin anfitriona",
+          anfitriona?.representanteNombre || "Sin representante",
+          "",
+          invitada?.empresaNombre || "Sin invitada",
+          invitada?.representanteNombre || "Sin representante",
+          "",
+        ];
+        const dataRow = `<tr>${cells.map((c) => `<td>${c}</td>`).join("")}</tr>`;
+        if (row.turnoId !== lastTurnoId) {
+          lastTurnoId = row.turnoId;
+          const separator = `<tr class='turno-sep'><td colspan='8'>Turno: ${row.turnoHorario}</td></tr>`;
+          return separator + dataRow;
+        }
+        return dataRow;
+      })
+      .join("");
+  })();
+
+  const scriptTag =
+    "<scr" +
+    "ipt>window.onload=()=>{window.print();window.onafterprint=()=>window.close();}</scr" +
+    "ipt>";
+
+  const html = [
+    "<!DOCTYPE html><html lang='es'><head><meta charset='UTF-8'/>",
+    `<title>Resumen de reuniones \u2013 ${eventName}</title>`,
+    "<style>",
+    "* { box-sizing: border-box; margin: 0; padding: 0; }",
+    // @page margin: 0 elimina el encabezado (about:blank) y pie (fecha) que agrega el navegador
+    "@page { margin: 0; size: landscape; }",
+    "body { font-family: Arial, sans-serif; font-size: 11px; color: #111; padding: 15mm; print-color-adjust: exact; -webkit-print-color-adjust: exact; }",
+    "h1 { font-size: 15px; font-weight: bold; margin-bottom: 3px; }",
+    "p.subtitle { font-size: 11px; color: #444; margin-bottom: 14px; }",
+    "table { width: 100%; border-collapse: collapse; }",
+    "th, td { border: 1px solid #999; padding: 5px 7px; text-align: left; vertical-align: middle; }",
+    // Header de tabla: negro puro → imprime como negro sólido en B&N
+    "th { background: #111; color: #fff; font-size: 10px; text-transform: uppercase; letter-spacing: 0.05em; }",
+    // Filas pares: gris muy claro → se distingue en B&N
+    "tr:nth-child(even) td { background: #f0f0f0; }",
+    // Columnas de asistencia: blanco con borde punteado para marcar a mano
+    "td:nth-child(5), td:nth-child(8) { min-width: 70px; background: #fff; border-style: dashed; }",
+    // Separador de turno: gris medio + borde superior grueso → claro en B&N
+    ".turno-sep td { background: #ddd; color: #000; font-weight: bold; font-size: 10px; text-transform: uppercase; letter-spacing: 0.08em; padding: 5px 7px; border: 1px solid #999; border-top: 2.5px solid #333; }",
+    "</style></head><body>",
+    "<h1>Resumen de reuniones</h1>",
+    `<p class='subtitle'>${subtitle}</p>`,
+    `<table><thead><tr>${headerHtml}</tr></thead><tbody>${bodyHtml}</tbody></table>`,
+    scriptTag,
+    "</body></html>",
+  ].join("");
+
+  const win = window.open("", "_blank", "width=1100,height=700");
+  if (win) {
+    win.document.write(html);
+    win.document.close();
+  }
+}
+
+function downloadCsv(rows: TableSummary[], eventName: string) {
+  const headers = [
+    "Turno",
+    "Mesa",
+    "Anfitriona",
+    "Rep. Anfitriona",
+    "Asistencia anfitriona",
+    "Invitada",
+    "Rep. Invitada",
+    "Asistencia invitada",
+  ];
+
+  // Agrupar por turno e insertar filas separadoras
+  const dataLines: string[] = [];
+  let lastTurnoId: number | null = null;
+  rows.forEach((row) => {
+    const anfitriona =
+      row.participantes.find((participante) => participante.anfitriona) ?? null;
+    const invitada =
+      row.participantes.find((participante) => !participante.anfitriona) ??
+      null;
+
+    if (row.turnoId !== lastTurnoId) {
+      lastTurnoId = row.turnoId;
+      // Fila separadora de turno: ocupa la primera columna
+      const separator = [
+        escapeCsvValue(`TURNO: ${row.turnoHorario}`),
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+      ].join(",");
+      dataLines.push(separator);
+    }
+
+    dataLines.push(
+      [
         row.turnoHorario,
         `Mesa ${row.mesaNumero}`,
-        row.estadoMesa,
-        `${row.ocupacionActual}/2`,
         anfitriona?.empresaNombre || "Sin anfitriona asignada",
         anfitriona?.representanteNombre || "Sin representante",
-        anfitriona?.representanteEmail || "Sin email",
+        "",
         invitada?.empresaNombre || "Sin invitada asignada",
         invitada?.representanteNombre || "Sin representante",
-        invitada?.representanteEmail || "Sin email",
+        "",
       ]
         .map(escapeCsvValue)
-        .join(",");
-    }),
-  ].join("\n");
+        .join(","),
+    );
+  });
+
+  const content = [headers.map(escapeCsvValue).join(","), ...dataLines].join(
+    "\n",
+  );
 
   const blob = new Blob([`\uFEFF${content}`], {
     type: "text/csv;charset=utf-8;",
@@ -717,29 +817,54 @@ export default function MeetingsSummary() {
                     </p>
                   </div>
 
-                  <Button
-                    onClick={() => {
-                      if (
-                        !selectedEvent ||
-                        filteredTableSummaries.length === 0
-                      ) {
-                        toast.info(
-                          "No hay datos para exportar en el filtro actual",
+                  <div className="flex items-center gap-2 w-full lg:w-auto">
+                    <Button
+                      variant="outline"
+                      onClick={() => {
+                        if (
+                          !selectedEvent ||
+                          filteredTableSummaries.length === 0
+                        ) {
+                          toast.info(
+                            "No hay datos para imprimir en el filtro actual",
+                          );
+                          return;
+                        }
+                        printSummary(
+                          filteredTableSummaries,
+                          selectedEvent.nombre,
+                          selectedEvent.fecha,
                         );
-                        return;
-                      }
+                      }}
+                      className="flex-1 lg:flex-none bg-transparent border-white/40 text-white hover:bg-white/15 hover:text-white hover:border-white/60"
+                    >
+                      <Printer className="h-4 w-4" />
+                      Imprimir
+                    </Button>
 
-                      downloadCsv(
-                        filteredTableSummaries,
-                        selectedEvent.nombre,
-                        selectedEvent.fecha,
-                      );
-                    }}
-                    className="bg-white text-[#143E29] hover:bg-white/90"
-                  >
-                    <Download className="h-4 w-4" />
-                    Descargar CSV
-                  </Button>
+                    <Button
+                      onClick={() => {
+                        if (
+                          !selectedEvent ||
+                          filteredTableSummaries.length === 0
+                        ) {
+                          toast.info(
+                            "No hay datos para exportar en el filtro actual",
+                          );
+                          return;
+                        }
+
+                        downloadCsv(
+                          filteredTableSummaries,
+                          selectedEvent.nombre,
+                        );
+                      }}
+                      className="flex-1 lg:flex-none bg-white text-[#143E29] hover:bg-white/90"
+                    >
+                      <Download className="h-4 w-4" />
+                      Descargar CSV
+                    </Button>
+                  </div>
                 </div>
               </div>
             </section>
