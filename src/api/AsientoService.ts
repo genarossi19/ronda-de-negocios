@@ -1,5 +1,18 @@
-import type { AsientoResponse, AsientoWrite } from "../types/Asiento";
+import type {
+  AsientoResponse,
+  AsientoWrite,
+  AsientoHistorialItem,
+} from "../types/Asiento";
 import api from "../lib/axios";
+
+export async function getAsientoHistorial(
+  empresaId: number,
+): Promise<AsientoHistorialItem[]> {
+  const { data } = await api.get<AsientoHistorialItem[]>(
+    `/asientos/historial/${empresaId}/`,
+  );
+  return data;
+}
 
 export async function createAsiento(
   payload: AsientoWrite,

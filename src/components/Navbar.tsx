@@ -297,6 +297,12 @@ export default function Navbar() {
             Turnos
           </Link>
           <Link
+            to="/reuniones"
+            className={getDesktopNavLinkClassName("/reuniones")}
+          >
+            Reuniones
+          </Link>
+          <Link
             to="/representantes"
             className={getDesktopNavLinkClassName("/representantes")}
           >
@@ -746,6 +752,16 @@ export default function Navbar() {
                                 )}
                               >
                                 Mis Turnos
+                              </button>
+                            </Link>
+                            <Link to="/reuniones">
+                              <button
+                                onClick={() => setIsOpen(false)}
+                                className={getMobileNavButtonClassName(
+                                  "/reuniones",
+                                )}
+                              >
+                                Reuniones
                               </button>
                             </Link>
                             <Link to="/representantes">

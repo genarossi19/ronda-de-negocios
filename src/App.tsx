@@ -36,6 +36,7 @@ const ForgotPassword = lazy(() => import("./pages/ForgotPassword"));
 const ResetPassword = lazy(() => import("./pages/ResetPassword"));
 const Settings = lazy(() => import("./pages/Settings"));
 const RegisterSuccess = lazy(() => import("./pages/RegisterSuccess"));
+const Reuniones = lazy(() => import("./pages/Reuniones"));
 import {
   AUTH_SESSION_EXPIRED_EVENT,
   SESSION_EXPIRED_MESSAGE,
@@ -191,6 +192,14 @@ function AppRoutes() {
             element={
               <ProtectedRoute>
                 <Settings />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/reuniones"
+            element={
+              <ProtectedRoute>
+                <Reuniones />
               </ProtectedRoute>
             }
           />
