@@ -12,7 +12,16 @@ import {
 import { Badge } from "../components/ui/badge";
 import { Skeleton } from "../components/ui/skeleton";
 import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "../components/ui/dialog";
+import {
   Calendar,
+  CalendarDays,
   Clock,
   Users,
   ArrowRight,
@@ -21,14 +30,20 @@ import {
   Mail,
   ShieldAlert,
   Bell,
+  Sparkles,
+  CheckCircle2,
+  MapPin,
+  Loader2,
 } from "lucide-react";
 import { useCurrentUser } from "../hooks/useCurrentUser";
 import { HelpTutorial } from "../components/HelpTutorial";
 import { Link, useNavigate } from "react-router";
 import { getTurnoByEventoId } from "../api/TurnoService";
 import { getEventos } from "../api/EventoService";
+import { confirmarParticipacion } from "../api/EmpresaService";
 import { getApiErrorMessage } from "../lib/axios";
 import { createTurnoNumberMap } from "../lib/utils";
+import { toast } from "sonner";
 import type { EventoResponse } from "../types/Evento";
 import type { TurnoResponse } from "../types/Turno";
 
@@ -52,6 +67,10 @@ export default function Shifts() {
   const [error, setError] = useState<string | null>(null);
   const [noActiveEvent, setNoActiveEvent] = useState(false);
   const [approvalNotice, setApprovalNotice] = useState<string | null>(null);
+  const [noParticipation, setNoParticipation] = useState(false);
+  const [isConfirmOpen, setIsConfirmOpen] = useState(false);
+  const [isConfirming, setIsConfirming] = useState(false);
+  const [fetchKey, setFetchKey] = useState(0);
   const { isAuthenticated, isAdmin, isPendingApproval } = useCurrentUser();
 
   useEffect(() => {
@@ -72,6 +91,7 @@ export default function Shifts() {
         setError(null);
         setNoActiveEvent(false);
         setApprovalNotice(null);
+        setNoParticipation(false);
         const eventos = await getEventos();
         const eventoActivo = getActiveEvent(eventos);
 
@@ -105,6 +125,12 @@ export default function Shifts() {
           return;
         }
 
+        if (apiMessage?.includes("permiso para ver los turnos")) {
+          setNoParticipation(true);
+          setError(null);
+          return;
+        }
+
         setError(
           apiMessage ??
             "No se pudieron cargar los turnos. Intentá de nuevo más tarde.",
@@ -114,9 +140,28 @@ export default function Shifts() {
       }
     };
     fetchTurno();
-  }, [isPendingApproval]);
+  }, [isPendingApproval, fetchKey]);
 
   const filteredShifts = shifts;
+
+  const handleConfirmarParticipacion = async () => {
+    setIsConfirming(true);
+    try {
+      await confirmarParticipacion();
+      setIsConfirmOpen(false);
+      setNoParticipation(false);
+      setFetchKey((k) => k + 1);
+      toast.success("¡Participación confirmada! Ya podés ver los turnos.");
+    } catch (err) {
+      const msg = getApiErrorMessage(
+        err,
+        "Error al confirmar participación. Intentá de nuevo.",
+      );
+      toast.error(msg ?? "Error al confirmar participación.");
+    } finally {
+      setIsConfirming(false);
+    }
+  };
 
   const turnoNumberMap = useMemo(
     () => createTurnoNumberMap(filteredShifts),
@@ -340,6 +385,138 @@ export default function Shifts() {
                 </p>
               </div>
             </div>
+          ) : noParticipation ? (
+            <>
+              <div className="flex flex-col items-center text-center gap-8 py-8">
+                {/* Header llamativo */}
+                <div className="flex flex-col items-center gap-4">
+                  <div className="relative">
+                    <div className="h-24 w-24 rounded-2xl bg-gradient-to-br from-[#68A243] to-[#143E29] flex items-center justify-center shadow-lg shadow-[#68A243]/30">
+                      <Sparkles className="h-12 w-12 text-white" />
+                    </div>
+                  </div>
+                  <div>
+                    <h2 className="text-3xl font-bold text-[#143E29] dark:text-white mb-2">
+                      ¡Hay una nueva ronda de negocios!
+                    </h2>
+                    <p className="text-gray-500 dark:text-gray-300 text-lg max-w-lg">
+                      Nos encantaría que tu empresa sea parte de este evento.
+                      Confirmá tu participación y empezá a reservar tus turnos.
+                    </p>
+                  </div>
+                </div>
+
+                {/* Info del evento */}
+                {activeEvent && (
+                  <div className="flex flex-wrap items-center justify-center gap-3">
+                    <div className="flex items-center gap-2 rounded-xl border border-[#68A243]/30 bg-[#68A243]/8 dark:bg-[#68A243]/10 dark:border-[#68A243]/25 px-4 py-2.5">
+                      <CalendarDays className="h-4 w-4 text-[#68A243]" />
+                      <span className="text-sm font-semibold text-[#3F6E20] dark:text-[#9FD27B]">
+                        {formatDate(activeEvent.fecha)}
+                      </span>
+                    </div>
+                    {activeEvent.hora_inicio && (
+                      <div className="flex items-center gap-2 rounded-xl border border-[#68A243]/30 bg-[#68A243]/8 dark:bg-[#68A243]/10 dark:border-[#68A243]/25 px-4 py-2.5">
+                        <Clock className="h-4 w-4 text-[#68A243]" />
+                        <span className="text-sm font-semibold text-[#3F6E20] dark:text-[#9FD27B]">
+                          {activeEvent.hora_inicio} hs
+                        </span>
+                      </div>
+                    )}
+                    {activeEvent.ubicacion && (
+                      <div className="flex items-center gap-2 rounded-xl border border-[#68A243]/30 bg-[#68A243]/8 dark:bg-[#68A243]/10 dark:border-[#68A243]/25 px-4 py-2.5">
+                        <MapPin className="h-4 w-4 text-[#68A243]" />
+                        <span className="text-sm font-semibold text-[#3F6E20] dark:text-[#9FD27B]">
+                          {activeEvent.ubicacion}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Beneficios */}
+                <Card className="w-full max-w-lg text-left dark:bg-[#143E29] dark:border-[#68A243]/20 transition-colors duration-300">
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-lg text-[#143E29] dark:text-white">
+                      ¿Qué implica participar?
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    {[
+                      {
+                        text: "Confirmás tu asistencia al evento presencial",
+                      },
+                      {
+                        text: "Tu empresa aparece en la lista de participantes del evento",
+                      },
+                      {
+                        text: "Podés anotarte en los turnos y elegir tus mesas de reunión",
+                      },
+                    ].map((benefit, i) => (
+                      <div key={i} className="flex items-start gap-3">
+                        <CheckCircle2 className="h-5 w-5 text-[#68A243] mt-0.5 flex-shrink-0" />
+                        <p className="text-gray-700 dark:text-gray-200 text-sm leading-relaxed">
+                          {benefit.text}
+                        </p>
+                      </div>
+                    ))}
+                  </CardContent>
+                </Card>
+
+                {/* CTA */}
+                <Button
+                  size="lg"
+                  onClick={() => setIsConfirmOpen(true)}
+                  className="h-13 px-8 text-base font-semibold bg-[#68A243] hover:bg-[#5a9038] text-white shadow-lg shadow-[#68A243]/25 hover:shadow-[#68A243]/40 transition-all duration-200"
+                >
+                  <Sparkles className="h-5 w-5 mr-2" />
+                  Quiero participar
+                </Button>
+              </div>
+
+              {/* Dialog de confirmación */}
+              <Dialog open={isConfirmOpen} onOpenChange={setIsConfirmOpen}>
+                <DialogContent className="dark:bg-[#143E29] dark:border-[#68A243]/20">
+                  <DialogHeader>
+                    <DialogTitle className="text-[#143E29] dark:text-white text-xl">
+                      ¿Confirmás tu participación?
+                    </DialogTitle>
+                    <DialogDescription className="dark:text-gray-300 text-base">
+                      Al confirmar, tu empresa quedará registrada como
+                      participante del evento y podrás reservar turnos para
+                      reunirte con otras empresas.
+                    </DialogDescription>
+                  </DialogHeader>
+                  <DialogFooter className="gap-2 sm:gap-0">
+                    <Button
+                      variant="ghost"
+                      onClick={() => setIsConfirmOpen(false)}
+                      disabled={isConfirming}
+                      className="dark:text-gray-300 dark:hover:bg-[#0f2f25]"
+                    >
+                      Cancelar
+                    </Button>
+                    <Button
+                      onClick={handleConfirmarParticipacion}
+                      disabled={isConfirming}
+                      className="bg-[#68A243] hover:bg-[#5a9038] text-white font-semibold"
+                    >
+                      {isConfirming ? (
+                        <>
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                          Confirmando...
+                        </>
+                      ) : (
+                        <>
+                          <CheckCircle2 className="h-4 w-4 mr-1" />
+                          ¡Quiero participar!
+                        </>
+                      )}
+                    </Button>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
+            </>
           ) : error ? (
             <Card className="border-destructive/50 bg-destructive/5 dark:bg-destructive/10 dark:border-destructive/30 dark:text-white transition-colors duration-300">
               <CardHeader>

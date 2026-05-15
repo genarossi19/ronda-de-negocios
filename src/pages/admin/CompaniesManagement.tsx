@@ -20,6 +20,8 @@ import {
   Loader2,
   Download,
   Users,
+  CalendarCheck2,
+  CalendarX,
   // RotateCcw,
 } from "lucide-react";
 import { Button } from "../../components/ui/button";
@@ -252,6 +254,22 @@ function CompanyRow({
                 ? "Aprobada"
                 : "Pendiente"}
           </Badge>
+          {!company.eliminado && (
+            <Badge
+              className={
+                company.participa_evento
+                  ? "bg-blue-100 text-blue-800 dark:bg-blue-950/30 dark:text-blue-400"
+                  : "bg-gray-100 text-gray-500 dark:bg-gray-800/50 dark:text-gray-400"
+              }
+            >
+              {company.participa_evento ? (
+                <CalendarCheck2 className="mr-1 h-3 w-3" />
+              ) : (
+                <CalendarX className="mr-1 h-3 w-3" />
+              )}
+              {company.participa_evento ? "Participa" : "No participa"}
+            </Badge>
+          )}
         </div>
 
         {/* Actions */}
@@ -712,7 +730,12 @@ export default function CompaniesManagement() {
   //   useState<EmpresaResponse | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [filterStatus, setFilterStatus] = useState<
-    "all" | "pending" | "approved" | "deleted"
+    | "all"
+    | "pending"
+    | "approved"
+    | "deleted"
+    | "participating"
+    | "not-participating"
   >("all");
   const [selectedCompanies, setSelectedCompanies] = useState<Set<number>>(
     new Set(),
@@ -800,6 +823,14 @@ export default function CompaniesManagement() {
           return !company.eliminado && !company.aprobada && matchesSearch;
         if (filterStatus === "approved")
           return !company.eliminado && !!company.aprobada && matchesSearch;
+        if (filterStatus === "participating")
+          return (
+            !company.eliminado && !!company.participa_evento && matchesSearch
+          );
+        if (filterStatus === "not-participating")
+          return (
+            !company.eliminado && !company.participa_evento && matchesSearch
+          );
         // "all": excluir eliminadas
         return !company.eliminado && matchesSearch;
       })
@@ -1213,7 +1244,7 @@ export default function CompaniesManagement() {
             </div>
           </section>
 
-          <section className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <Card className="!gap-2 !py-3 border-[#68A243]/20">
               <CardHeader className="!px-5 !pb-0">
                 <CardTitle className="text-sm text-muted-foreground dark:text-gray-300">
@@ -1267,6 +1298,28 @@ export default function CompaniesManagement() {
                 </div>
               </CardContent>
             </Card>
+
+            <Card className="!gap-2 !py-3 border-[#68A243]/20">
+              <CardHeader className="!px-5 !pb-0">
+                <CardTitle className="text-sm text-muted-foreground dark:text-gray-300">
+                  Participan
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="!px-5 !pt-0">
+                <div className="flex items-center justify-between gap-3">
+                  <div className="text-3xl font-bold leading-none text-blue-600 dark:text-blue-400">
+                    {
+                      companies.filter(
+                        (c) => !c.eliminado && c.participa_evento,
+                      ).length
+                    }
+                  </div>
+                  <div className="rounded-full bg-blue-100 p-2 dark:bg-blue-950/30">
+                    <CalendarCheck2 className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
           </section>
 
           {/* Filters & Search */}
@@ -1287,26 +1340,34 @@ export default function CompaniesManagement() {
 
               {/* Filter Buttons */}
               <div className="flex gap-2 flex-wrap">
-                {(["all", "pending", "approved", "deleted"] as const).map(
-                  (status) => (
-                    <button
-                      key={status}
-                      onClick={() => setFilterStatus(status)}
-                      className={`px-4 py-2 rounded-lg font-medium transition-colors text-sm ${
-                        filterStatus === status
-                          ? status === "deleted"
-                            ? "bg-red-600 text-white"
-                            : "bg-[#68A243] text-white"
-                          : "bg-white dark:bg-[#143E29] text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-[#68A243]/20 hover:border-[#68A243]/50"
-                      }`}
-                    >
-                      {status === "all" && "Todos"}
-                      {status === "pending" && "Pendientes"}
-                      {status === "approved" && "Aprobadas"}
-                      {status === "deleted" && "Eliminadas"}
-                    </button>
-                  ),
-                )}
+                {(
+                  [
+                    { value: "all", label: "Todos" },
+                    { value: "pending", label: "Pendientes" },
+                    { value: "approved", label: "Aprobadas" },
+                    { value: "participating", label: "Participan" },
+                    { value: "not-participating", label: "No participan" },
+                    { value: "deleted", label: "Eliminadas" },
+                  ] as const
+                ).map(({ value, label }) => (
+                  <button
+                    key={value}
+                    onClick={() => setFilterStatus(value)}
+                    className={`px-4 py-2 rounded-lg font-medium transition-colors text-sm ${
+                      filterStatus === value
+                        ? value === "deleted"
+                          ? "bg-red-600 text-white"
+                          : value === "participating"
+                            ? "bg-blue-600 text-white"
+                            : value === "not-participating"
+                              ? "bg-gray-500 text-white"
+                              : "bg-[#68A243] text-white"
+                        : "bg-white dark:bg-[#143E29] text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-[#68A243]/20 hover:border-[#68A243]/50"
+                    }`}
+                  >
+                    {label}
+                  </button>
+                ))}
               </div>
             </div>
           </div>

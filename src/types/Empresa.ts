@@ -20,6 +20,7 @@ export interface EmpresaResponse {
   telefono_contacto?: string;
   direccion?: string;
   user?: number;
+  participa_evento?: boolean;
 }
 
 export interface EmpresaWrite {

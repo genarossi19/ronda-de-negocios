@@ -29,6 +29,10 @@ export const recoverCompany = async (id: number): Promise<EmpresaResponse> => {
   return data;
 };
 
+export const confirmarParticipacion = async (): Promise<void> => {
+  await api.patch("/empresas/participar-evento/");
+};
+
 export const validarEmail = async (uidb64: string, token: string) => {
   const { data } = await api.get(`/acceso/verificar-email/${uidb64}/${token}/`);
   return data;
