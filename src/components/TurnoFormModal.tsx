@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { Loader2 } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -426,11 +427,16 @@ export default function TurnoFormModal({
             disabled={isSaving}
             className="bg-[#68A243] hover:bg-[#5a9038] text-white"
           >
-            {isSaving
-              ? "Guardando..."
-              : turnoEnEdicion
-                ? "Actualizar turno"
-                : "Crear turno"}
+            {isSaving ? (
+              <>
+                <Loader2 className="h-4 w-4 animate-spin" />
+                Guardando...
+              </>
+            ) : turnoEnEdicion ? (
+              "Actualizar turno"
+            ) : (
+              "Crear turno"
+            )}
           </Button>
         </DialogFooter>
       </DialogContent>

@@ -11,6 +11,7 @@ import {
   Plus,
   Sparkles,
   XCircle,
+  Loader2,
 } from "lucide-react";
 import Navbar from "../../components/Navbar";
 import Footer from "../../layout/Footer";
@@ -1134,11 +1135,16 @@ export default function GestionarRondas() {
               disabled={isSaving}
               className="bg-[#68A243] hover:bg-[#5a9038] text-white"
             >
-              {isSaving
-                ? "Guardando..."
-                : eventoEnEdicion
-                  ? "Actualizar estado"
-                  : "Crear ronda"}
+              {isSaving ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Guardando...
+                </>
+              ) : eventoEnEdicion ? (
+                "Actualizar estado"
+              ) : (
+                "Crear ronda"
+              )}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -1171,7 +1177,14 @@ export default function GestionarRondas() {
               disabled={isNotifying}
               className="bg-[#68A243] hover:bg-[#5a9038] text-white"
             >
-              {isNotifying ? "Enviando..." : "Confirmar envío"}
+              {isNotifying ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Enviando...
+                </>
+              ) : (
+                "Confirmar envío"
+              )}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

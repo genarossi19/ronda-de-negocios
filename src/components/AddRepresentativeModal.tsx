@@ -1,4 +1,5 @@
 import { Button } from "./ui/button";
+import { Loader2 } from "lucide-react";
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
 import {
@@ -177,7 +178,14 @@ export function AddRepresentativeModal({
               disabled={submitting}
               className="flex-1 bg-[#68A243] hover:bg-[#68A243]/90 text-white"
             >
-              {submitting ? "Guardando..." : "Guardar"}
+              {submitting ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Guardando...
+                </>
+              ) : (
+                "Guardar"
+              )}
             </Button>
           </div>
         </form>

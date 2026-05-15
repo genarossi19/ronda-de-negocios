@@ -32,6 +32,7 @@ import {
   Trash2,
   LogOut,
   X,
+  Loader2,
 } from "lucide-react";
 import { Avatar, AvatarFallback } from "../components/ui/avatar";
 import {
@@ -1471,7 +1472,14 @@ export default function Tables() {
                 className="flex-1 bg-[#68A243] hover:bg-[#68A243]/90 text-white"
                 disabled={!selectedRepresentative || submittingBooking}
               >
-                {submittingBooking ? "Confirmando..." : "Confirmar Reserva"}
+                {submittingBooking ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Confirmando...
+                  </>
+                ) : (
+                  "Confirmar Reserva"
+                )}
               </Button>
             </div>
           </DialogContent>
@@ -1881,7 +1889,14 @@ export default function Tables() {
                 className="flex-1 bg-[#ffb900] hover:bg-[#ffb900]/90 text-white"
                 disabled={!selectedRepresentative || submittingBooking}
               >
-                {submittingBooking ? "Cambiando..." : "Cambiar Representante"}
+                {submittingBooking ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Cambiando...
+                  </>
+                ) : (
+                  "Cambiar Representante"
+                )}
               </Button>
             </div>
           </DialogContent>
@@ -1939,11 +1954,16 @@ export default function Tables() {
                 onClick={handleConfirmSeatAction}
                 disabled={submittingBooking}
               >
-                {submittingBooking
-                  ? "Procesando..."
-                  : pendingSeatAction?.action === "delete"
-                    ? "Eliminar asiento"
-                    : "Confirmar salida"}
+                {submittingBooking ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Procesando...
+                  </>
+                ) : pendingSeatAction?.action === "delete" ? (
+                  "Eliminar asiento"
+                ) : (
+                  "Confirmar salida"
+                )}
               </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>

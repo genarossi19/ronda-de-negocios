@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState, useMemo, useRef } from "react";
 import {
   Check,
   LayoutGrid,
+  Loader2,
   RefreshCw,
   Search,
   Shield,
@@ -704,10 +705,17 @@ export default function GestionarAsientosModal({
                             disabled={isDeletingSeat}
                             className="!h-10 !px-4 !bg-[#F05826] hover:!bg-[#d84f21] !text-white"
                           >
-                            <Trash2 className="h-4 w-4" />
-                            {isDeletingSeat
-                              ? "Eliminando..."
-                              : "Eliminar asientos"}
+                            {isDeletingSeat ? (
+                              <>
+                                <Loader2 className="h-4 w-4 animate-spin" />
+                                Eliminando...
+                              </>
+                            ) : (
+                              <>
+                                <Trash2 className="h-4 w-4" />
+                                Eliminar asientos
+                              </>
+                            )}
                           </Button>
                         </div>
                       </div>
@@ -952,11 +960,16 @@ export default function GestionarAsientosModal({
                                   }
                                   className="!w-full !h-11 !bg-[#68A243] hover:!bg-[#5a9038] !text-white disabled:!opacity-50 disabled:!cursor-not-allowed"
                                 >
-                                  {isCreatingSeat
-                                    ? "Asignando..."
-                                    : loadingRepresentantes
-                                      ? "Cargando..."
-                                      : "Agregar representante al asiento"}
+                                  {isCreatingSeat ? (
+                                    <>
+                                      <Loader2 className="h-4 w-4 animate-spin" />
+                                      Asignando...
+                                    </>
+                                  ) : loadingRepresentantes ? (
+                                    "Cargando..."
+                                  ) : (
+                                    "Agregar representante al asiento"
+                                  )}
                                 </Button>
                               </>
                             ) : (

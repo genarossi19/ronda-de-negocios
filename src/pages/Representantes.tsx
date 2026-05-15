@@ -57,6 +57,7 @@ import {
   X,
   Search,
   Pencil,
+  Loader2,
 } from "lucide-react";
 import {
   getRepresentantes,
@@ -708,9 +709,16 @@ export default function Representantes() {
             <AlertDialogAction
               onClick={confirmDelete}
               disabled={deleting}
-              className="bg-red-600 hover:bg-red-700 dark:bg-red-600 dark:hover:bg-red-700 disabled:opacity-50"
+              className="bg-red-600 hover:bg-red-700 dark:bg-red-600 dark:hover:bg-red-700 disabled:opacity-50 flex items-center gap-2"
             >
-              {deleting ? "Eliminando..." : "Eliminar"}
+              {deleting ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Eliminando...
+                </>
+              ) : (
+                "Eliminar"
+              )}
             </AlertDialogAction>
           </div>
         </AlertDialogContent>
@@ -850,7 +858,14 @@ export default function Representantes() {
                 disabled={editSubmitting}
                 className="bg-[#68A243] hover:bg-[#68A243]/90 text-white"
               >
-                {editSubmitting ? "Guardando..." : "Guardar cambios"}
+                {editSubmitting ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Guardando...
+                  </>
+                ) : (
+                  "Guardar cambios"
+                )}
               </Button>
             </div>
           </form>
