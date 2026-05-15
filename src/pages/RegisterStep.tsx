@@ -51,6 +51,9 @@ import type { LocalidadResponse } from "../types/Localidad";
 import type { EmpresaWrite } from "../types/Empresa";
 import Navbar from "../components/Navbar";
 import ImageCropperNew from "../components/ImageCropperNew";
+import { TermsAndConditionsModal } from "../components/TermsAndConditionsModal";
+import { PrivacyPolicyModal } from "../components/PrivacyPolicyModal";
+import { Checkbox } from "../components/ui/checkbox";
 import { getSectors } from "../api/SectorService";
 import { getLocalidades } from "../api/LocalidadesService";
 import { createCompany } from "../api/EmpresaService";
@@ -130,6 +133,9 @@ export default function RegistrationForm() {
   const [loadingData, setLoadingData] = useState(true);
   const [logoFile, setLogoFile] = useState<File | null>(null);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string[]>>({});
+  const [termsAccepted, setTermsAccepted] = useState(false);
+  const [termsModalOpen, setTermsModalOpen] = useState(false);
+  const [privacyModalOpen, setPrivacyModalOpen] = useState(false);
   const navigate = useNavigate();
   const { shouldReduceMotion } = useMotionContext();
 
@@ -1167,6 +1173,40 @@ export default function RegistrationForm() {
                             </div>
                           </div>
                         </div>
+
+                        {/* Checkbox de términos */}
+                        <div className="mt-6 flex items-start gap-3 rounded-lg border border-slate-200 dark:border-[#68A243]/20 bg-slate-50 dark:bg-[#143E29]/30 px-4 py-3">
+                          <Checkbox
+                            id="terms"
+                            checked={termsAccepted}
+                            onCheckedChange={(checked) =>
+                              setTermsAccepted(checked === true)
+                            }
+                            className="mt-0.5 border-[#68A243] data-[state=checked]:!bg-[#68A243] data-[state=checked]:!border-[#68A243]"
+                          />
+                          <label
+                            htmlFor="terms"
+                            className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed cursor-pointer select-none"
+                          >
+                            He leído y acepto los{" "}
+                            <button
+                              type="button"
+                              onClick={() => setTermsModalOpen(true)}
+                              className="font-semibold text-[#68A243] hover:text-[#5a9038] dark:text-[#9FD27B] dark:hover:text-[#68A243] underline underline-offset-2 transition-colors"
+                            >
+                              Términos y Condiciones de Uso
+                            </button>{" "}
+                            y la{" "}
+                            <button
+                              type="button"
+                              onClick={() => setPrivacyModalOpen(true)}
+                              className="font-semibold text-[#68A243] hover:text-[#5a9038] dark:text-[#9FD27B] dark:hover:text-[#68A243] underline underline-offset-2 transition-colors"
+                            >
+                              Política de Privacidad
+                            </button>{" "}
+                            de la plataforma.
+                          </label>
+                        </div>
                       </div>
                     )}
                   </m.div>
@@ -1188,7 +1228,11 @@ export default function RegistrationForm() {
                     <Button
                       type="button"
                       onClick={nextStep}
-                      disabled={!isStepComplete() || isLoading}
+                      disabled={
+                        !isStepComplete() ||
+                        isLoading ||
+                        (currentStep === STEPS.length && !termsAccepted)
+                      }
                       className={`${
                         currentStep === 1 ? "w-full" : "flex-1"
                       } relative overflow-hidden bg-primary dark:bg-[#68A243] hover:bg-primary-strong dark:hover:bg-[#5a8f38] h-11 font-semibold disabled:opacity-100 disabled:cursor-not-allowed text-white transition-colors duration-200`}
@@ -1229,6 +1273,17 @@ export default function RegistrationForm() {
           </div>
         </div>
       </div>
+
+      <TermsAndConditionsModal
+        open={termsModalOpen}
+        onOpenChange={setTermsModalOpen}
+        onAccept={() => setTermsAccepted(true)}
+      />
+      <PrivacyPolicyModal
+        open={privacyModalOpen}
+        onOpenChange={setPrivacyModalOpen}
+        onAccept={() => setTermsAccepted(true)}
+      />
     </div>
   );
 }
