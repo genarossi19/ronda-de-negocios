@@ -49,7 +49,6 @@ import {
   Plus,
   Mail,
   Phone,
-  Briefcase,
   AlertCircle,
   User,
   Building2,
@@ -59,6 +58,7 @@ import {
   Pencil,
   Loader2,
 } from "lucide-react";
+
 import {
   getRepresentantes,
   createRepresentante,
