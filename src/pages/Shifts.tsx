@@ -419,7 +419,7 @@ export default function Shifts() {
                       <div className="flex items-center gap-2 rounded-xl border border-[#68A243]/30 bg-[#68A243]/8 dark:bg-[#68A243]/10 dark:border-[#68A243]/25 px-4 py-2.5">
                         <Clock className="h-4 w-4 text-[#68A243]" />
                         <span className="text-sm font-semibold text-[#3F6E20] dark:text-[#9FD27B]">
-                          {activeEvent.hora_inicio} hs
+                          {activeEvent.hora_inicio.slice(0, 5)} hs
                         </span>
                       </div>
                     )}
@@ -433,6 +433,16 @@ export default function Shifts() {
                     )}
                   </div>
                 )}
+
+                {/* CTA */}
+                <Button
+                  size="lg"
+                  onClick={() => setIsConfirmOpen(true)}
+                  className="h-13 px-8 text-base font-semibold bg-[#68A243] hover:bg-[#5a9038] text-white shadow-lg shadow-[#68A243]/25 hover:shadow-[#68A243]/40 transition-all duration-200"
+                >
+                  <Sparkles className="h-5 w-5 mr-2" />
+                  Quiero participar
+                </Button>
 
                 {/* Beneficios */}
                 <Card className="w-full max-w-lg text-left dark:bg-[#143E29] dark:border-[#68A243]/20 transition-colors duration-300">
@@ -462,16 +472,6 @@ export default function Shifts() {
                     ))}
                   </CardContent>
                 </Card>
-
-                {/* CTA */}
-                <Button
-                  size="lg"
-                  onClick={() => setIsConfirmOpen(true)}
-                  className="h-13 px-8 text-base font-semibold bg-[#68A243] hover:bg-[#5a9038] text-white shadow-lg shadow-[#68A243]/25 hover:shadow-[#68A243]/40 transition-all duration-200"
-                >
-                  <Sparkles className="h-5 w-5 mr-2" />
-                  Quiero participar
-                </Button>
               </div>
 
               {/* Dialog de confirmación */}

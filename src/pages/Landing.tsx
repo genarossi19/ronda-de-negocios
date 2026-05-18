@@ -114,6 +114,8 @@ export default function Landing() {
 
   const headlineLocation = activeEvent?.ubicacion ?? "Ubicación a confirmar";
 
+  const headlineDireccion = activeEvent?.direccion ?? null;
+
   const headlineHora = activeEvent
     ? formatEventTime(activeEvent.hora_inicio)
     : "Hora a confirmar";
@@ -178,9 +180,11 @@ export default function Landing() {
                   </div>
                   <div className="font-semibold flex flex-col">
                     {headlineLocation}
-                    <span className="text-gray-300 dark:text-gray-400 transition-colors duration-300">
-                      Hernández 816
-                    </span>
+                    {headlineDireccion ? (
+                      <span className="text-gray-300 dark:text-gray-400 transition-colors duration-300">
+                        {headlineDireccion}
+                      </span>
+                    ) : null}
                   </div>
                 </div>
               </div>

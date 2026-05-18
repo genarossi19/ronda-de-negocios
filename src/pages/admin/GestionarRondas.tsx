@@ -65,7 +65,7 @@ import { getApiErrorMessage, isSessionExpiredError } from "../../lib/axios";
 type EstadoEvento = EventoWrite["estado"];
 type FiltroEstado = "todos" | EstadoEvento;
 type CreateFormErrors = Partial<
-  Record<"nombre" | "fecha" | "hora_inicio" | "ubicacion", string>
+  Record<"nombre" | "fecha" | "hora_inicio" | "ubicacion" | "direccion", string>
 >;
 
 function isCreateField(
@@ -75,7 +75,8 @@ function isCreateField(
     field === "nombre" ||
     field === "fecha" ||
     field === "hora_inicio" ||
-    field === "ubicacion"
+    field === "ubicacion" ||
+    field === "direccion"
   );
 }
 
@@ -84,6 +85,7 @@ const initialFormState: EventoWrite = {
   fecha: new Date().toISOString().split("T")[0],
   hora_inicio: "08:00",
   ubicacion: "",
+  direccion: "",
   estado: "activo",
 };
 
@@ -447,6 +449,7 @@ export default function GestionarRondas() {
       fecha: evento.fecha,
       hora_inicio: evento.hora_inicio,
       ubicacion: evento.ubicacion,
+      direccion: evento.direccion ?? "",
       estado: evento.estado ?? "activo",
     });
     setIsFormOpen(true);
@@ -488,6 +491,10 @@ export default function GestionarRondas() {
 
     if (!formData.ubicacion.trim()) {
       nextErrors.ubicacion = "Ingresá una ubicación";
+    }
+
+    if (!formData.direccion.trim()) {
+      nextErrors.direccion = "Ingresá una dirección";
     }
 
     setFormErrors(nextErrors);
@@ -743,10 +750,24 @@ export default function GestionarRondas() {
                       <div className="flex items-center gap-2">
                         <CalendarDays className="h-4 w-4 text-[#68A243]" />
                         <span>{formatDate(eventoSeleccionado.fecha)}</span>
+                        <span className="text-gray-400 dark:text-gray-500">
+                          ·
+                        </span>
+                        <span>
+                          {eventoSeleccionado.hora_inicio.slice(0, 5)} hs
+                        </span>
                       </div>
                       <div className="flex items-center gap-2">
                         <MapPin className="h-4 w-4 text-[#68A243]" />
-                        <span>{eventoSeleccionado.ubicacion}</span>
+                        <span>
+                          {eventoSeleccionado.ubicacion}
+                          {eventoSeleccionado.direccion ? (
+                            <span className="text-gray-500 dark:text-gray-400">
+                              {" — "}
+                              {eventoSeleccionado.direccion}
+                            </span>
+                          ) : null}
+                        </span>
                       </div>
                     </div>
 
@@ -875,11 +896,21 @@ export default function GestionarRondas() {
                                   </div>
                                   <div className="flex items-center gap-2">
                                     <Clock3 className="h-4 w-4 text-[#68A243]" />
-                                    <span>{evento.hora_inicio}</span>
+                                    <span>
+                                      {evento.hora_inicio.slice(0, 5)} hs
+                                    </span>
                                   </div>
                                   <div className="flex items-center gap-2">
                                     <MapPin className="h-4 w-4 text-[#68A243]" />
-                                    <span>{evento.ubicacion}</span>
+                                    <span>
+                                      {evento.ubicacion}
+                                      {evento.direccion ? (
+                                        <span className="text-gray-500 dark:text-gray-400">
+                                          {" — "}
+                                          {evento.direccion}
+                                        </span>
+                                      ) : null}
+                                    </span>
                                   </div>
                                 </div>
                               </div>
@@ -979,6 +1010,16 @@ export default function GestionarRondas() {
                         {eventoEnEdicion.ubicacion}
                       </p>
                     </div>
+                    {eventoEnEdicion.direccion ? (
+                      <div className="md:col-span-3">
+                        <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground dark:text-gray-300 mb-1">
+                          Dirección
+                        </p>
+                        <p className="text-[#143E29] dark:text-white">
+                          {eventoEnEdicion.direccion}
+                        </p>
+                      </div>
+                    ) : null}
                   </div>
                 </div>
 
@@ -1082,27 +1123,6 @@ export default function GestionarRondas() {
                 </div>
 
                 <div className="grid gap-2">
-                  <Label className="dark:text-white">Estado</Label>
-                  <Select
-                    value={formData.estado}
-                    onValueChange={(value) =>
-                      handleFormChange("estado", value as EstadoEvento)
-                    }
-                  >
-                    <SelectTrigger className="w-full border-[#68A243]/20 focus-visible:border-[#68A243] focus-visible:ring-[#68A243]/20 dark:bg-[#143E29] dark:border-[#68A243]/20 dark:text-white transition-colors">
-                      <SelectValue placeholder="Seleccionar estado" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {statusOptions.map((status) => (
-                        <SelectItem key={status.value} value={status.value}>
-                          {status.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="grid gap-2">
                   <Label htmlFor="ubicacion" className="dark:text-white">
                     Ubicación
                   </Label>
@@ -1119,6 +1139,27 @@ export default function GestionarRondas() {
                   {formErrors.ubicacion ? (
                     <p className="text-red-600 text-xs">
                       {formErrors.ubicacion}
+                    </p>
+                  ) : null}
+                </div>
+
+                <div className="grid gap-2">
+                  <Label htmlFor="direccion" className="dark:text-white">
+                    Dirección
+                  </Label>
+                  <Input
+                    id="direccion"
+                    value={formData.direccion}
+                    onChange={(event) =>
+                      handleFormChange("direccion", event.target.value)
+                    }
+                    placeholder="Ej: Hernández 816"
+                    aria-invalid={!!formErrors.direccion}
+                    className="border-[#68A243]/20 focus-visible:border-[#68A243] focus-visible:ring-[#68A243]/20 dark:bg-[#143E29] dark:border-[#68A243]/20 dark:text-white dark:placeholder-gray-400 transition-colors aria-invalid:border-red-500 aria-invalid:ring-red-500/20"
+                  />
+                  {formErrors.direccion ? (
+                    <p className="text-red-600 text-xs">
+                      {formErrors.direccion}
                     </p>
                   ) : null}
                 </div>
