@@ -1365,7 +1365,7 @@ export default function MeetingsSummary() {
                               return (
                                 <TableRow
                                   key={tableSummary.key}
-                                  className="dark:border-[#68A243]/15"
+                                  className="dark:border-[#68A243]/15 even:bg-gray-100/90 dark:even:bg-[#68A243]/[0.04]"
                                 >
                                   <TableCell className="min-w-[140px] font-medium text-[#143E29] dark:text-white">
                                     <button

@@ -24,7 +24,6 @@ import {
   TableHeader,
   TableRow,
 } from "../components/ui/table";
-import { ScrollArea } from "../components/ui/scroll-area";
 import { Input } from "../components/ui/input";
 import { Button } from "../components/ui/button";
 import {
@@ -72,6 +71,11 @@ function formatDate(dateStr: string) {
 
 function fmt(time: string) {
   return time.slice(0, 5);
+}
+
+function fmtShortDate(dateStr: string) {
+  const [y, m, d] = dateStr.split("-");
+  return `${d}/${m}/${y.slice(2)}`;
 }
 
 function turnoKey(item: AsientoHistorialItem) {
@@ -183,16 +187,19 @@ function MeetingTableRow({
   const { cls, label } = estadoBadge(item.estado);
 
   return (
-    <TableRow className="dark:border-[#68A243]/15">
+    <TableRow className="dark:border-[#68A243]/15 even:bg-gray-100/90 dark:even:bg-[#68A243]/[0.04]">
       {showRonda && (
         <TableCell className="min-w-[180px] text-sm font-medium text-[#143E29] dark:text-white">
           {item.evento}
         </TableCell>
       )}
+      <TableCell className="min-w-[90px] text-sm text-gray-500 dark:text-gray-400 whitespace-nowrap">
+        {fmtShortDate(item.fecha_evento)}
+      </TableCell>
       <TableCell className="min-w-[130px] text-sm font-medium text-[#143E29] dark:text-white">
         {turnoLabel(item)}
       </TableCell>
-      <TableCell className="min-w-[70px] text-sm text-gray-700 dark:text-gray-300">
+      <TableCell className="min-w-[90px] text-sm text-gray-700 dark:text-gray-300 whitespace-nowrap">
         Mesa {item.num_mesa}
       </TableCell>
       <TableCell className="min-w-[90px]">
@@ -216,6 +223,9 @@ function MeetingTableRow({
         {other
           ? `${other.representante_nombre} ${other.representante_apellido}`.trim()
           : "—"}
+      </TableCell>
+      <TableCell className="min-w-[200px] text-sm text-muted-foreground dark:text-gray-300">
+        {other?.representante_email ?? "—"}
       </TableCell>
       <TableCell className="min-w-[90px]">
         <Badge className={`text-xs ${cls}`}>{label}</Badge>
@@ -825,16 +835,18 @@ export default function Reuniones() {
                           </CardDescription>
                         </CardHeader>
                         <CardContent className="p-0">
-                          <ScrollArea className="w-full">
-                            <Table>
+                          <div className="w-full overflow-x-scroll [scrollbar-width:thin] [scrollbar-color:#d1d5db_transparent] dark:[scrollbar-color:#4a7c3f_transparent] [&::-webkit-scrollbar]:h-2.5 [&::-webkit-scrollbar-track]:rounded-b-lg [&::-webkit-scrollbar-track]:bg-gray-100 dark:[&::-webkit-scrollbar-track]:bg-[#0f2f25] [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-gray-300 hover:[&::-webkit-scrollbar-thumb]:bg-gray-400 dark:[&::-webkit-scrollbar-thumb]:bg-[#68A243]/60 dark:hover:[&::-webkit-scrollbar-thumb]:bg-[#68A243]/80">
+                            <Table className="min-w-[1050px]">
                               <TableHeader>
                                 <TableRow className="hover:bg-transparent dark:border-[#68A243]/20">
+                                  <TableHead>Fecha</TableHead>
                                   <TableHead>Turno</TableHead>
                                   <TableHead>Mesa</TableHead>
                                   <TableHead>Mi rol</TableHead>
                                   <TableHead>Mi representante</TableHead>
                                   <TableHead>Empresa</TableHead>
                                   <TableHead>Representante</TableHead>
+                                  <TableHead>Email representante</TableHead>
                                   <TableHead>Estado</TableHead>
                                 </TableRow>
                               </TableHeader>
@@ -850,7 +862,7 @@ export default function Reuniones() {
                                 ) : (
                                   <TableRow className="hover:bg-transparent dark:border-[#68A243]/15">
                                     <TableCell
-                                      colSpan={7}
+                                      colSpan={9}
                                       className="py-10 text-center text-muted-foreground dark:text-gray-300"
                                     >
                                       No hay reuniones para el filtro actual.
@@ -859,7 +871,7 @@ export default function Reuniones() {
                                 )}
                               </TableBody>
                             </Table>
-                          </ScrollArea>
+                          </div>
                         </CardContent>
                       </Card>
                     )}
@@ -1090,17 +1102,19 @@ export default function Reuniones() {
                       </CardDescription>
                     </CardHeader>
                     <CardContent className="p-0">
-                      <ScrollArea className="w-full">
-                        <Table>
+                      <div className="w-full overflow-x-scroll [scrollbar-width:thin] [scrollbar-color:#d1d5db_transparent] dark:[scrollbar-color:#4a7c3f_transparent] [&::-webkit-scrollbar]:h-2.5 [&::-webkit-scrollbar-track]:rounded-b-lg [&::-webkit-scrollbar-track]:bg-gray-100 dark:[&::-webkit-scrollbar-track]:bg-[#0f2f25] [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-gray-300 hover:[&::-webkit-scrollbar-thumb]:bg-gray-400 dark:[&::-webkit-scrollbar-thumb]:bg-[#68A243]/60 dark:hover:[&::-webkit-scrollbar-thumb]:bg-[#68A243]/80">
+                        <Table className="min-w-[1200px]">
                           <TableHeader>
                             <TableRow className="hover:bg-transparent dark:border-[#68A243]/20">
                               <TableHead>Ronda</TableHead>
+                              <TableHead>Fecha</TableHead>
                               <TableHead>Turno</TableHead>
                               <TableHead>Mesa</TableHead>
                               <TableHead>Mi rol</TableHead>
                               <TableHead>Mi representante</TableHead>
                               <TableHead>Empresa</TableHead>
                               <TableHead>Representante</TableHead>
+                              <TableHead>Email representante</TableHead>
                               <TableHead>Estado</TableHead>
                             </TableRow>
                           </TableHeader>
@@ -1117,7 +1131,7 @@ export default function Reuniones() {
                             ) : (
                               <TableRow className="hover:bg-transparent dark:border-[#68A243]/15">
                                 <TableCell
-                                  colSpan={8}
+                                  colSpan={10}
                                   className="py-10 text-center text-muted-foreground dark:text-gray-300"
                                 >
                                   No hay registros para el filtro actual.
@@ -1126,7 +1140,7 @@ export default function Reuniones() {
                             )}
                           </TableBody>
                         </Table>
-                      </ScrollArea>
+                      </div>
                     </CardContent>
                   </Card>
                 )}
