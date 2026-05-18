@@ -430,20 +430,38 @@ export default function RegistrationForm() {
   return (
     <div className="min-h-screen bg-background dark:bg-[#0a1a15]">
       <Navbar />
-      <div className="pt-12">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 mt-12">
-          <Button
-            variant="ghost"
-            onClick={() => navigate(-1)}
-            className="hover:bg-gray-100 dark:hover:bg-slate-800 hover:text-primary text-foreground"
-          >
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Volver
-          </Button>
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 pb-8">
+        {/* Fila superior: Volver (col1) + Logo/título (col2-4) alineados */}
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8 mb-4">
+          <div className="lg:col-span-1 flex items-center">
+            <Button
+              variant="ghost"
+              onClick={() => navigate(-1)}
+              className="hover:bg-gray-100 dark:hover:bg-slate-800 hover:text-primary text-foreground"
+            >
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              Volver
+            </Button>
+          </div>
+          <div className="lg:col-span-3 flex items-center gap-3">
+            <div className="w-10 h-10 bg-gradient-to-br from-[#68A243] to-[#5a9139] rounded-xl flex items-center justify-center shadow-lg flex-shrink-0">
+              <img
+                src="/simple_blanco_fondo_transparente_recortada.webp"
+                alt="Ronda de Negocios"
+                className="w-7 h-7 object-contain translate-y-0.5"
+              />
+            </div>
+            <div>
+              <h1 className="text-base font-bold text-[#143E29] dark:text-white leading-tight">
+                Inscribí tu empresa
+              </h1>
+              <p className="text-xs text-gray-500 dark:text-gray-400">
+                Completá los 4 pasos para participar en la Ronda de Negocios
+              </p>
+            </div>
+          </div>
         </div>
-      </div>
 
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
           {/* Sidebar with Steps */}
           <aside className="lg:col-span-1">

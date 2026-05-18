@@ -5,6 +5,14 @@ import Carousel from "../components/Carousel";
 import { Button } from "../components/ui/button";
 import { Skeleton } from "../components/ui/skeleton";
 import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "../components/ui/dialog";
+import {
   ArrowRight,
   Building2,
   Users,
@@ -13,13 +21,17 @@ import {
   Calendar,
   MapPin,
   Clock,
+  CheckCircle2,
+  Loader2,
 } from "lucide-react";
 import { getEventos } from "../api/EventoService";
+import { confirmarParticipacion } from "../api/EmpresaService";
 import type { EventoResponse } from "../types/Evento";
 
 import { TextAnimate } from "../components/ui/text-animate";
 import { Link, useNavigate } from "react-router";
 import { useAuth } from "../hooks/useAuth";
+import { toast } from "sonner";
 
 function getClosestActiveEvent(eventos: EventoResponse[]) {
   const today = new Date();
@@ -82,6 +94,12 @@ export default function Landing() {
   const navigate = useNavigate();
   const { isAuthenticated } = useAuth();
   const [companyCount, setCompanyCount] = useState(0);
+  const [isLoadingCompanies, setIsLoadingCompanies] = useState(true);
+
+  const handleCompaniesLoaded = (count: number) => {
+    setCompanyCount(count);
+    setIsLoadingCompanies(false);
+  };
   const [eventos, setEventos] = useState<EventoResponse[]>([]);
   const [isLoadingEventInfo, setIsLoadingEventInfo] = useState(true);
 
@@ -119,6 +137,22 @@ export default function Landing() {
   const headlineHora = activeEvent
     ? formatEventTime(activeEvent.hora_inicio)
     : "Hora a confirmar";
+
+  const [isConfirmOpen, setIsConfirmOpen] = useState(false);
+  const [isConfirming, setIsConfirming] = useState(false);
+
+  const handleConfirmarParticipacion = async () => {
+    try {
+      setIsConfirming(true);
+      await confirmarParticipacion();
+      setIsConfirmOpen(false);
+      toast.success("¡Participación confirmada! Ya podés ver los turnos.");
+    } catch {
+      toast.error("Error al confirmar participación. Intentá de nuevo.");
+    } finally {
+      setIsConfirming(false);
+    }
+  };
 
   const handleViewCompanies = () => {
     navigate("/empresas");
@@ -190,17 +224,21 @@ export default function Landing() {
               </div>
             )}
 
-            <div className="inline-flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-white/5 dark:hover:bg-white/5 hover:backdrop-blur-sm transition-all duration-150 ease-in-out">
-              <Clock className="h-6 w-6 text-secondary dark:text-[#68A243]" />
-              <div className="text-left text-white">
-                <div className="text-sm text-gray-300 dark:text-gray-400 transition-colors duration-300">
-                  Hora
-                </div>
-                <div className="font-semibold flex flex-col">
-                  {headlineHora}
+            {isLoadingEventInfo ? (
+              <EventInfoSkeleton icon={Clock} />
+            ) : (
+              <div className="inline-flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-white/5 dark:hover:bg-white/5 hover:backdrop-blur-sm transition-all duration-150 ease-in-out">
+                <Clock className="h-6 w-6 text-secondary dark:text-[#68A243]" />
+                <div className="text-left text-white">
+                  <div className="text-sm text-gray-300 dark:text-gray-400 transition-colors duration-300">
+                    Hora
+                  </div>
+                  <div className="font-semibold flex flex-col">
+                    {headlineHora}
+                  </div>
                 </div>
               </div>
-            </div>
+            )}
           </div>
 
           <div className="max-w-7xl mx-auto text-center">
@@ -209,20 +247,25 @@ export default function Landing() {
               by="character"
               once
               as="h1"
-              className="text-5xl sm:text-6xl lg:text-7xl font-bold text-white mb-6 text-balance"
+              className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white tracking-[0.2em] uppercase mb-1"
             >
               Ronda de Negocios
             </TextAnimate>
 
             <TextAnimate
               animation="blurInUp"
-              by="character"
+              by="text"
               once
-              as="h1"
-              className="text-5xl sm:text-6xl lg:text-7xl font-bold mb-6 text-balance block text-white mt-2"
+              as="h2"
+              className="text-6xl sm:text-7xl lg:text-8xl font-extrabold mb-3 text-balance block"
+              segmentClassName="bg-gradient-to-b from-white from-40% to-[#a0a0a0] bg-clip-text text-transparent"
             >
               Trenque Lauquen
             </TextAnimate>
+
+            <p className="text-base sm:text-lg font-medium text-white/60 tracking-widest uppercase mb-10">
+              2da edición
+            </p>
 
             <p className="text-xl text-white/90 max-w-3xl mx-auto mb-12 leading-relaxed">
               Conectá con empresas líderes, expandí tu red de contactos y
@@ -276,12 +319,18 @@ export default function Landing() {
               Empresas Participantes
             </h2>
             <p className="text-lg text-muted-foreground dark:text-gray-300 transition-colors duration-300">
-              {companyCount > 0
-                ? `${companyCount} empresa${companyCount !== 1 ? "s" : ""} ya confirm${companyCount !== 1 ? "aron" : "ó"} su participación`
-                : "Cargando empresas..."}
+              {isLoadingCompanies
+                ? "Cargando empresas..."
+                : companyCount > 0
+                  ? `${companyCount} empresa${companyCount !== 1 ? "s" : ""} ya confirm${companyCount !== 1 ? "aron" : "ó"} su participación`
+                  : null}
             </p>
           </div>
-          <Carousel onCompaniesLoaded={setCompanyCount} />
+          <Carousel
+            onCompaniesLoaded={handleCompaniesLoaded}
+            isAuthenticated={isAuthenticated}
+            onParticipate={() => setIsConfirmOpen(true)}
+          />
         </div>
       </section>
 
@@ -379,6 +428,48 @@ export default function Landing() {
       </section>
 
       <Footer />
+
+      {/* Dialog confirmación de participación */}
+      <Dialog open={isConfirmOpen} onOpenChange={setIsConfirmOpen}>
+        <DialogContent className="dark:bg-[#143E29] dark:border-[#68A243]/20">
+          <DialogHeader>
+            <DialogTitle className="text-[#143E29] dark:text-white text-xl">
+              ¿Confirmás tu participación?
+            </DialogTitle>
+            <DialogDescription className="dark:text-gray-300 text-base">
+              Al confirmar, tu empresa quedará registrada como participante del
+              evento y podrás reservar turnos para reunirte con otras empresas.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button
+              variant="ghost"
+              onClick={() => setIsConfirmOpen(false)}
+              disabled={isConfirming}
+              className="dark:text-gray-300 dark:hover:bg-[#0f2f25]"
+            >
+              Cancelar
+            </Button>
+            <Button
+              onClick={handleConfirmarParticipacion}
+              disabled={isConfirming}
+              className="bg-[#68A243] hover:bg-[#5a9038] text-white font-semibold"
+            >
+              {isConfirming ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Confirmando...
+                </>
+              ) : (
+                <>
+                  <CheckCircle2 className="h-4 w-4 mr-1" />
+                  ¡Quiero participar!
+                </>
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

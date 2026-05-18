@@ -6,7 +6,6 @@ import {
   Mail,
   Lock,
   LogIn,
-  Building2,
   Eye,
   EyeOff,
   Sparkles,
@@ -225,7 +224,11 @@ export default function Login() {
             <m.div variants={itemVariants} className="space-y-4">
               <div className="flex items-center gap-3">
                 <div className="w-12 h-12 bg-gradient-to-br from-[#68A243] to-[#5a9139] rounded-xl flex items-center justify-center shadow-lg">
-                  <Building2 className="w-6 h-6 text-white" />
+                  <img
+                    src="/simple_blanco_fondo_transparente_recortada.webp"
+                    alt="Ronda de Negocios"
+                    className="w-8 h-8 object-contain translate-y-0.5"
+                  />
                 </div>
                 <h1 className="text-3xl font-bold text-[#143E29] dark:text-white transition-colors">
                   Ronda de Negocios

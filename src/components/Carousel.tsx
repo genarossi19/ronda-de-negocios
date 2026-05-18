@@ -8,6 +8,8 @@ import { Link } from "react-router";
 
 interface CarouselProps {
   onCompaniesLoaded?: (count: number) => void;
+  isAuthenticated?: boolean;
+  onParticipate?: () => void;
 }
 
 interface ImageAspectRatio {
@@ -18,7 +20,11 @@ interface ImageErrors {
   [key: string]: boolean;
 }
 
-export default function Carousel({ onCompaniesLoaded }: CarouselProps) {
+export default function Carousel({
+  onCompaniesLoaded,
+  isAuthenticated,
+  onParticipate,
+}: CarouselProps) {
   const [companies, setCompanies] = useState<EmpresaResponse[]>([]);
   const [loading, isLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -40,7 +46,7 @@ export default function Carousel({ onCompaniesLoaded }: CarouselProps) {
         const data = await getCompanies();
         isLoading(false);
         const filtered = data.filter(
-          (e) => e.aprobada === true && e.participa_evento === true,
+          (e) => e.aprobada !== false && e.participa_evento !== false,
         );
         setCompanies(filtered);
         onCompaniesLoaded?.(filtered.length);
@@ -135,7 +141,7 @@ export default function Carousel({ onCompaniesLoaded }: CarouselProps) {
         const data = await getCompanies();
         isLoading(false);
         const filtered = data.filter(
-          (e) => e.aprobada === true && e.participa_evento === true,
+          (e) => e.aprobada !== false && e.participa_evento !== false,
         );
         setCompanies(filtered);
         onCompaniesLoaded?.(filtered.length);
@@ -199,14 +205,24 @@ export default function Carousel({ onCompaniesLoaded }: CarouselProps) {
               Aún no hay empresas registradas
             </h3>
             <p className="text-gray-600 dark:text-gray-400 mb-6 max-w-sm">
-              Sé la primera en inscribirte a la Ronda de Negocios y accede a
-              oportunidades exclusivas.
+              {isAuthenticated
+                ? "Confirmá tu participación en la Ronda de Negocios y sé parte del evento."
+                : "Sé la primera en inscribirte a la Ronda de Negocios y accede a oportunidades exclusivas."}
             </p>
-            <Link to="/register">
-              <Button className="bg-[#68A243] hover:bg-[#68A243]/90 text-white">
-                Inscribir mi empresa
+            {isAuthenticated ? (
+              <Button
+                className="bg-[#68A243] hover:bg-[#68A243]/90 text-white"
+                onClick={onParticipate}
+              >
+                Quiero participar
               </Button>
-            </Link>
+            ) : (
+              <Link to="/register">
+                <Button className="bg-[#68A243] hover:bg-[#68A243]/90 text-white">
+                  Inscribir mi empresa
+                </Button>
+              </Link>
+            )}
           </div>
         </div>
       ) : (

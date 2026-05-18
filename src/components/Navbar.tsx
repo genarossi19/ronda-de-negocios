@@ -1,6 +1,6 @@
 import { Button } from "../components/ui/button";
 import {
-  Building2,
+  Building,
   Menu,
   X,
   LogOut,
@@ -342,13 +342,17 @@ export default function Navbar() {
               className="flex items-center gap-3 group flex-shrink-0 relative z-10"
             >
               <div
-                className={`p-2 rounded-xl transition-all duration-300 group-hover:scale-110 ${
+                className={`p-1.5 rounded-xl transition-all duration-300 group-hover:scale-110 ${
                   isDarkTheme
                     ? "bg-[#68A243] shadow-lg shadow-[#68A243]/30"
                     : "bg-gradient-to-br from-[#68A243] to-[#5a9139]"
                 }`}
               >
-                <Building2 className="h-6 w-6 text-white" />
+                <img
+                  src="/simple_blanco_fondo_transparente_recortada.webp"
+                  alt="Ronda de Negocios"
+                  className="h-7 w-7 object-contain object-center translate-y-0.5"
+                />
               </div>
               <div className="flex flex-col leading-tight">
                 <span
@@ -503,7 +507,7 @@ export default function Navbar() {
                                   disabled
                                   className="opacity-50 cursor-not-allowed transition-colors duration-200"
                                 >
-                                  <Building2 className="mr-2 h-4 w-4" />
+                                  <Building className="mr-2 h-4 w-4" />
                                   <span className="text-sm">Mi empresa</span>
                                 </DropdownMenuItem>
                               </span>
@@ -598,7 +602,11 @@ export default function Navbar() {
                       <div className="flex justify-between items-center p-6 border-b border-gray-100 bg-gradient-to-r from-[#143E29] to-[#1a5032]">
                         <div className="flex items-center gap-2">
                           <div className="bg-[#68A243] p-1.5 rounded-lg">
-                            <Building2 className="h-5 w-5 text-white" />
+                            <img
+                              src="/simple_blanco_fondo_transparente_recortada.webp"
+                              alt="Ronda de Negocios"
+                              className="h-5 w-5 object-contain object-center translate-y-0.5"
+                            />
                           </div>
                           <span className="font-bold text-white text-sm">
                             Ronda de Negocios
