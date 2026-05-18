@@ -201,6 +201,13 @@ export default function TurnoFormModal({
         toast.error("La hora de fin debe ser posterior a la hora de inicio");
         return;
       }
+
+      if (formData.hora_inicio.slice(0, 5) < evento.hora_inicio.slice(0, 5)) {
+        toast.error(
+          `La hora del turno no puede ser anterior a la hora del evento (${evento.hora_inicio.slice(0, 5)} hs)`,
+        );
+        return;
+      }
     }
 
     if (cantMesas === null) {

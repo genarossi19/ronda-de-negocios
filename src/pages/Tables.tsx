@@ -742,6 +742,8 @@ export default function Tables() {
       if (errorMessage) {
         toast.error(errorMessage);
       }
+      closeSeatDialogs();
+      await refreshTables();
     } finally {
       setSubmittingBooking(false);
     }
@@ -770,6 +772,8 @@ export default function Tables() {
       if (errorMessage) {
         toast.error(errorMessage);
       }
+      closeSeatDialogs();
+      await refreshTables();
     } finally {
       setSubmittingBooking(false);
     }
@@ -932,6 +936,9 @@ export default function Tables() {
       if (errorMessage) {
         toast.error(errorMessage);
       }
+      setShowConfirmDialog(false);
+      setSelectedRepresentative("");
+      await refreshTables();
     } finally {
       setSubmittingBooking(false);
     }
@@ -979,6 +986,9 @@ export default function Tables() {
       if (errorMessage) {
         toast.error(errorMessage);
       }
+      setShowChangeRepDialog(false);
+      setSelectedRepresentative("");
+      await refreshTables();
     } finally {
       setSubmittingBooking(false);
     }
