@@ -46,7 +46,7 @@ export default function Carousel({
         const data = await getCompanies();
         isLoading(false);
         const filtered = data.filter(
-          (e) => e.aprobada !== false && e.participa_evento !== false,
+          (e: EmpresaResponse) => e.aprobada !== false && e.participa_evento !== false,
         );
         setCompanies(filtered);
         onCompaniesLoaded?.(filtered.length);
@@ -141,7 +141,7 @@ export default function Carousel({
         const data = await getCompanies();
         isLoading(false);
         const filtered = data.filter(
-          (e) => e.aprobada !== false && e.participa_evento !== false,
+          (e: EmpresaResponse) => e.aprobada !== false && e.participa_evento !== false,
         );
         setCompanies(filtered);
         onCompaniesLoaded?.(filtered.length);

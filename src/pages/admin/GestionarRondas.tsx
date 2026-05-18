@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router";
 import {
   ArrowLeft,
@@ -61,6 +61,7 @@ import {
 } from "../../api/EventoService";
 import type { EventoResponse, EventoWrite } from "../../types/Evento";
 import { getApiErrorMessage, isSessionExpiredError } from "../../lib/axios";
+import { SpotlightTour, type TourStep } from "../../components/SpotlightTour";
 
 type EstadoEvento = EventoWrite["estado"];
 type FiltroEstado = "todos" | EstadoEvento;
@@ -346,6 +347,43 @@ export default function GestionarRondas() {
   const [formErrors, setFormErrors] = useState<CreateFormErrors>({});
   const isEditingStateOnly = Boolean(eventoEnEdicion);
 
+  // Refs para el tour de onboarding
+  const newRoundBtnRef = useRef<HTMLButtonElement>(null);
+  const editBtnRef = useRef<HTMLDivElement>(null);
+  const manageTurnosBtnRef = useRef<HTMLButtonElement>(null);
+  const notifyBtnRef = useRef<HTMLButtonElement>(null);
+
+  const tourSteps: TourStep[] = [
+    {
+      ref: newRoundBtnRef,
+      title: "Crear una nueva ronda",
+      description:
+        "Desde este botón podés crear una nueva ronda de negocios. Ingresás el nombre, fecha, hora, ubicación y dirección del evento.",
+      side: "bottom",
+    },
+    {
+      ref: editBtnRef,
+      title: "Cambiar estado de una ronda",
+      description:
+        "Con este botón podés cambiar el estado de cualquier ronda entre Activa, Finalizada o Cancelada. Solo puede haber una ronda activa a la vez.",
+      side: "left",
+    },
+    {
+      ref: manageTurnosBtnRef,
+      title: "Gestionar turnos",
+      description:
+        "Accedé al gestor de turnos de la ronda activa. Desde ahí podés administrar mesas, asientos y las empresas participantes.",
+      side: "right",
+    },
+    {
+      ref: notifyBtnRef,
+      title: "Enviar aviso por mail",
+      description:
+        "Enviá un mail de notificación a todos los representantes de la ronda activa. Útil para avisar sobre el evento o recordarles su participación.",
+      side: "right",
+    },
+  ];
+
   useEffect(() => {
     const fetchEventos = async () => {
       try {
@@ -624,6 +662,7 @@ export default function GestionarRondas() {
 
               <div className="flex flex-col sm:flex-row gap-3">
                 <Button
+                  ref={newRoundBtnRef}
                   onClick={openCreateDialog}
                   className="h-11 px-5 bg-[#68A243] hover:bg-[#5a9038] text-white shadow-lg shadow-[#68A243]/20"
                 >
@@ -772,6 +811,7 @@ export default function GestionarRondas() {
                     </div>
 
                     <Button
+                      ref={manageTurnosBtnRef}
                       className="w-full bg-[#68A243] hover:bg-[#5a9038] text-white"
                       onClick={() =>
                         navigate(
@@ -784,6 +824,7 @@ export default function GestionarRondas() {
                     </Button>
 
                     <Button
+                      ref={notifyBtnRef}
                       variant="outline"
                       className="w-full border-[#68A243]/30 text-[#68A243] hover:bg-[#68A243]/10 hover:text-[#3F6E20] hover:border-[#68A243]/50 dark:border-[#68A243]/40 dark:text-[#9FD27B] dark:hover:bg-[#68A243]/20 dark:hover:text-[#9FD27B] dark:hover:border-[#68A243]/60"
                       onClick={() => setIsNotifyDialogOpen(true)}
@@ -857,7 +898,7 @@ export default function GestionarRondas() {
                 {eventosFiltrados.length > 0 ? (
                   <ScrollArea className="xl:h-[calc(100vh-23rem)] xl:min-h-[28rem] xl:pr-4">
                     <div className="space-y-4 pr-1">
-                      {eventosFiltrados.map((evento) => {
+                      {eventosFiltrados.map((evento, index) => {
                         const statusMeta = getStatusMeta(evento.estado);
                         const isCurrent =
                           rondaActual?.id === evento.id &&
@@ -915,7 +956,10 @@ export default function GestionarRondas() {
                                 </div>
                               </div>
 
-                              <div className="flex flex-col sm:flex-row gap-2 lg:min-w-max">
+                              <div
+                                className="flex flex-col sm:flex-row gap-2 lg:min-w-max"
+                                ref={index === 0 ? editBtnRef : undefined}
+                              >
                                 <Button
                                   variant="outline"
                                   onClick={() => openEditDialog(evento)}
@@ -949,6 +993,12 @@ export default function GestionarRondas() {
       </main>
 
       <Footer />
+
+      <SpotlightTour
+        steps={tourSteps}
+        storageKey="tour_gestionar_rondas_v1"
+        readyToStart={!isLoading}
+      />
 
       <Dialog
         open={isFormOpen}
