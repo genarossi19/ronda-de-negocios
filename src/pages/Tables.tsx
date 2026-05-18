@@ -15,6 +15,7 @@ import {
   Dialog,
   DialogContent,
   DialogDescription,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from "../components/ui/dialog";
@@ -33,6 +34,8 @@ import {
   LogOut,
   X,
   Loader2,
+  ShieldAlert,
+  ExternalLink,
 } from "lucide-react";
 import { Avatar, AvatarFallback } from "../components/ui/avatar";
 import {
@@ -215,6 +218,8 @@ export default function Tables() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [turnoNumber, setTurnoNumber] = useState<number | null>(null);
+  const [activeEventId, setActiveEventId] = useState<number | null>(null);
+  const [showAdminNoticeDialog, setShowAdminNoticeDialog] = useState(false);
   const [selectedTable, setSelectedTable] = useState<TableUIData | null>(null);
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
   const [showChangeRepDialog, setShowChangeRepDialog] = useState(false);
@@ -390,6 +395,7 @@ export default function Tables() {
           return;
         }
 
+        setActiveEventId(activeEvent.id);
         const turnos = await getTurnoByEventoId(activeEvent.id);
         const turnoNumberMap = createTurnoNumberMap(turnos);
         const number = turnoNumberMap.get(parseInt(turnoId));
@@ -681,6 +687,12 @@ export default function Tables() {
 
     if (table.status === "full" && (isMyCompanyAtFullTable || isAdmin)) {
       setShowFullTableInfoDialog(true);
+      return;
+    }
+
+    // El admin no puede reservar asientos desde esta vista
+    if (isAdmin) {
+      setShowAdminNoticeDialog(true);
       return;
     }
 
@@ -1978,6 +1990,46 @@ export default function Tables() {
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
+
+        {/* Dialog de aviso para administradores */}
+        <Dialog
+          open={showAdminNoticeDialog}
+          onOpenChange={setShowAdminNoticeDialog}
+        >
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <div className="flex items-center gap-3 mb-1">
+                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-amber-100 dark:bg-amber-900/30">
+                  <ShieldAlert className="h-5 w-5 text-amber-600 dark:text-amber-400" />
+                </div>
+                <DialogTitle>Acción no disponible</DialogTitle>
+              </div>
+              <DialogDescription className="text-sm text-slate-600 dark:text-slate-400 pt-1">
+                Como administrador, la gestión de asientos se realiza desde el
+                panel de administración para evitar conflictos. Desde allí podés
+                asignar y gestionar asientos de cualquier empresa.
+              </DialogDescription>
+            </DialogHeader>
+            <DialogFooter className="flex gap-2 pt-2">
+              <Button
+                variant="ghost"
+                onClick={() => setShowAdminNoticeDialog(false)}
+              >
+                Cerrar
+              </Button>
+              <Button
+                onClick={() => {
+                  setShowAdminNoticeDialog(false);
+                  navigate(`/panel-administrador/turnos/${activeEventId}`);
+                }}
+                className="gap-2"
+              >
+                <ExternalLink className="h-4 w-4" />
+                Gestionar turnos
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
 
       <HelpTutorial title="Guía de Selección de Mesas" steps={tutorialSteps} />
