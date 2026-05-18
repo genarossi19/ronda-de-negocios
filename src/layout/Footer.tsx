@@ -88,6 +88,13 @@ export default function Footer() {
             <div className="flex items-center gap-4 lg:gap-6">
               <div className="flex items-center gap-3">
                 <img
+                  src="/logo_muni_blanco.webp"
+                  alt="Municipio de Trenque Lauquen"
+                  height={60}
+                  className="h-10 w-auto opacity-90 hover:opacity-100 transition-opacity duration-300"
+                />
+                <div className="w-px h-8 bg-white/20 hidden sm:block"></div>
+                <img
                   src="/polo_logo.png"
                   alt="Polo Científico Tecnológico"
                   width={200}
@@ -98,7 +105,7 @@ export default function Footer() {
                 <div className="flex flex-col text-xs text-gray-300/80 tracking-wide">
                   <span>Municipio de Trenque Lauquen</span>
                   <span className="text-gray-400/60">
-                    Subsecretaria de Producción
+                    Subsecretaria de Desarrollo Económico y Productivo
                   </span>
                 </div>
               </div>
