@@ -39,8 +39,11 @@ export default function Carousel({ onCompaniesLoaded }: CarouselProps) {
         setError(null);
         const data = await getCompanies();
         isLoading(false);
-        setCompanies(data);
-        onCompaniesLoaded?.(data.length);
+        const filtered = data.filter(
+          (e) => e.aprobada === true && e.participa_evento === true,
+        );
+        setCompanies(filtered);
+        onCompaniesLoaded?.(filtered.length);
       } catch (error) {
         isLoading(false);
         console.error(error);
@@ -131,8 +134,11 @@ export default function Carousel({ onCompaniesLoaded }: CarouselProps) {
         setError(null);
         const data = await getCompanies();
         isLoading(false);
-        setCompanies(data);
-        onCompaniesLoaded?.(data.length);
+        const filtered = data.filter(
+          (e) => e.aprobada === true && e.participa_evento === true,
+        );
+        setCompanies(filtered);
+        onCompaniesLoaded?.(filtered.length);
       } catch (error) {
         isLoading(false);
         console.error(error);
