@@ -32,6 +32,12 @@ import {
   Home,
 } from "lucide-react";
 import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "./ui/tooltip";
+import {
   getCompanies,
   updateCompany,
   type EmpresaUpdatePayload,
@@ -539,13 +545,22 @@ export default function EmpresaProfileModal({
                 </Button>
               </>
             ) : (
-              <Button
-                onClick={() => setIsEditing(true)}
-                className="bg-[#68A243] hover:bg-[#5a9038] text-white"
-              >
-                <Pencil className="h-4 w-4" />
-                Editar información
-              </Button>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <span tabIndex={0}>
+                      <Button
+                        disabled
+                        className="bg-[#68A243] hover:bg-[#5a9038] text-white pointer-events-none"
+                      >
+                        <Pencil className="h-4 w-4" />
+                        Editar información
+                      </Button>
+                    </span>
+                  </TooltipTrigger>
+                  <TooltipContent>Próximamente</TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
             )}
           </DialogFooter>
         )}

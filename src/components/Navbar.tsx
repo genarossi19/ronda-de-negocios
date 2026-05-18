@@ -16,7 +16,15 @@ import {
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
+  DropdownMenuLabel,
+  DropdownMenuGroup,
 } from "../components/ui/dropdown-menu";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "../components/ui/tooltip";
 import { Avatar, AvatarFallback } from "../components/ui/avatar";
 import { Badge } from "../components/ui/badge";
 import { useState, useEffect, useRef } from "react";
@@ -482,35 +490,49 @@ export default function Navbar() {
                       )}
                     </div>
                     <DropdownMenuSeparator className="bg-[#669649]/30 dark:bg-[#1a5032]" />
-                    <Link to="/perfil">
-                      <DropdownMenuItem className="cursor-pointer transition-colors duration-200">
-                        <span className="text-sm">Mi Perfil</span>
-                      </DropdownMenuItem>
-                    </Link>
-                    {!user?.is_superuser && (
-                      <DropdownMenuItem
-                        className="cursor-pointer transition-colors duration-200"
-                        onClick={() => {
-                          setIsDropdownOpen(false);
-                          setIsEmpresaModalOpen(true);
-                        }}
-                      >
-                        <Building2 className="mr-2 h-4 w-4" />
-                        <span className="text-sm">Mi empresa</span>
-                      </DropdownMenuItem>
-                    )}
-                    <Link to="/representantes">
-                      <DropdownMenuItem className="cursor-pointer transition-colors duration-200">
-                        <User2Icon className="mr-2 h-4 w-4" />
-                        <span className="text-sm">Representantes</span>
-                      </DropdownMenuItem>
-                    </Link>
-                    <Link to="/settings">
-                      <DropdownMenuItem className="cursor-pointer transition-colors duration-200">
-                        <Settings className="mr-2 h-4 w-4" />
-                        <span className="text-sm">Configuración</span>
-                      </DropdownMenuItem>
-                    </Link>
+                    <DropdownMenuGroup>
+                      <DropdownMenuLabel className="text-xs font-semibold text-gray-500 dark:text-gray-400 px-2 py-1.5">
+                        Mi Perfil
+                      </DropdownMenuLabel>
+                      {!user?.is_superuser && (
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <span className="block">
+                                <DropdownMenuItem
+                                  disabled
+                                  className="opacity-50 cursor-not-allowed transition-colors duration-200"
+                                >
+                                  <Building2 className="mr-2 h-4 w-4" />
+                                  <span className="text-sm">Mi empresa</span>
+                                </DropdownMenuItem>
+                              </span>
+                            </TooltipTrigger>
+                            <TooltipContent side="left">
+                              Próximamente
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                      )}
+                      <Link to="/representantes">
+                        <DropdownMenuItem className="cursor-pointer transition-colors duration-200">
+                          <User2Icon className="mr-2 h-4 w-4" />
+                          <span className="text-sm">Representantes</span>
+                        </DropdownMenuItem>
+                      </Link>
+                    </DropdownMenuGroup>
+                    <DropdownMenuSeparator className="bg-[#669649]/30 dark:bg-[#1a5032]" />
+                    <DropdownMenuGroup>
+                      <DropdownMenuLabel className="text-xs font-semibold text-gray-500 dark:text-gray-400 px-2 py-1.5">
+                        Configuración
+                      </DropdownMenuLabel>
+                      <Link to="/settings">
+                        <DropdownMenuItem className="cursor-pointer transition-colors duration-200">
+                          <Settings className="mr-2 h-4 w-4" />
+                          <span className="text-sm">Rendimiento</span>
+                        </DropdownMenuItem>
+                      </Link>
+                    </DropdownMenuGroup>
                     <DropdownMenuSeparator className="bg-[#669649]/30 dark:bg-[#1a5032]" />
                     <DropdownMenuItem
                       onClick={() => {
