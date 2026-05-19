@@ -346,6 +346,7 @@ export default function GestionarRondas() {
   const [formData, setFormData] = useState<EventoWrite>(initialFormState);
   const [formErrors, setFormErrors] = useState<CreateFormErrors>({});
   const isEditingStateOnly = Boolean(eventoEnEdicion);
+  const [shouldShowTour, setShouldShowTour] = useState(false);
 
   // Refs para el tour de onboarding
   const newRoundBtnRef = useRef<HTMLButtonElement>(null);
@@ -389,7 +390,17 @@ export default function GestionarRondas() {
       try {
         setIsLoading(true);
         const data = await getEventos();
-        setEventos(data.filter(hasValidEventoId));
+        const validEventos = data.filter(hasValidEventoId);
+        setEventos(validEventos);
+
+        // Lógica para determinar si mostrar el tour
+        const tourCompletedKey = "tour_gestionar_rondas_v1_seen";
+        const alreadySeen = localStorage.getItem(tourCompletedKey) === "1";
+
+        // Mostrar tour si:
+        // 1. No hay rondas (primera vez absoluta)
+        // 2. Hay rondas pero nunca lo vio en este dispositivo (primera vez en este navegador)
+        setShouldShowTour(validEventos.length === 0 || !alreadySeen);
       } catch (error) {
         console.error("Error loading events:", error);
         if (!isSessionExpiredError(error)) {
@@ -996,8 +1007,9 @@ export default function GestionarRondas() {
 
       <SpotlightTour
         steps={tourSteps}
-        storageKey="tour_gestionar_rondas_v1"
+        storageKey="tour_gestionar_rondas_v1_seen"
         readyToStart={!isLoading}
+        shouldShowOnMount={shouldShowTour}
       />
 
       <Dialog
