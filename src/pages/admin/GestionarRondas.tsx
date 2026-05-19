@@ -347,6 +347,8 @@ export default function GestionarRondas() {
   const [formErrors, setFormErrors] = useState<CreateFormErrors>({});
   const isEditingStateOnly = Boolean(eventoEnEdicion);
   const [shouldShowTour, setShouldShowTour] = useState(false);
+  const [tourRestartKey, setTourRestartKey] = useState(0);
+  const TOUR_KEY = "tour_gestionar_rondas_v1_seen";
 
   // Refs para el tour de onboarding
   const newRoundBtnRef = useRef<HTMLButtonElement>(null);
@@ -394,7 +396,7 @@ export default function GestionarRondas() {
         setEventos(validEventos);
 
         // Lógica para determinar si mostrar el tour
-        const tourCompletedKey = "tour_gestionar_rondas_v1_seen";
+        const tourCompletedKey = TOUR_KEY;
         const alreadySeen = localStorage.getItem(tourCompletedKey) === "1";
 
         // Mostrar tour si:
@@ -567,10 +569,15 @@ export default function GestionarRondas() {
         setEventos(refreshedEventos.filter(hasValidEventoId));
         toast.success("El estado de la ronda fue actualizado correctamente");
       } else {
+        const wasEmpty = eventos.length === 0;
         await createEvento(formData);
         const refreshedEventos = await getEventos();
         setEventos(refreshedEventos.filter(hasValidEventoId));
         toast.success("La ronda fue creada correctamente");
+        if (wasEmpty) {
+          localStorage.removeItem(TOUR_KEY);
+          setTourRestartKey((k) => k + 1);
+        }
       }
 
       setIsFormOpen(false);
@@ -1006,10 +1013,12 @@ export default function GestionarRondas() {
       <Footer />
 
       <SpotlightTour
+        key={tourRestartKey}
         steps={tourSteps}
-        storageKey="tour_gestionar_rondas_v1_seen"
+        storageKey={TOUR_KEY}
         readyToStart={!isLoading}
         shouldShowOnMount={shouldShowTour}
+        startStep={tourRestartKey > 0 ? 1 : 0}
       />
 
       <Dialog

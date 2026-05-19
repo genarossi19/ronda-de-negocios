@@ -14,6 +14,7 @@ interface SpotlightTourProps {
   storageKey: string;
   readyToStart?: boolean;
   shouldShowOnMount?: boolean;
+  startStep?: number;
   onClose?: () => void;
   onStepChange?: (stepIdx: number) => void;
 }
@@ -58,6 +59,7 @@ export function SpotlightTour({
   storageKey,
   readyToStart = true,
   shouldShowOnMount = false,
+  startStep = 0,
   onClose,
   onStepChange,
 }: SpotlightTourProps) {
@@ -68,10 +70,10 @@ export function SpotlightTour({
 
   const startTour = () => {
     if (!readyToStart) return;
-    setStepIdx(0);
+    setStepIdx(startStep);
     setRect(null);
     setActive(true);
-    onStepChange?.(0);
+    onStepChange?.(startStep);
   };
 
   const close = () => {
@@ -98,12 +100,12 @@ export function SpotlightTour({
     if (!shouldShowOnMount && alreadyCompleted) return;
 
     const t = setTimeout(() => {
-      setStepIdx(0);
+      setStepIdx(startStep);
       setRect(null);
       setActive(true);
     }, 600);
     return () => clearTimeout(t);
-  }, [readyToStart, storageKey, shouldShowOnMount]);
+  }, [readyToStart, storageKey, shouldShowOnMount, startStep]);
 
   // Medición con reintentos: busca el primer step con ref válida desde stepIdx
   useEffect(() => {
