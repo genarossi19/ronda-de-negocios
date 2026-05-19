@@ -55,7 +55,8 @@ import { TermsAndConditionsModal } from "../components/TermsAndConditionsModal";
 import { PrivacyPolicyModal } from "../components/PrivacyPolicyModal";
 import { Checkbox } from "../components/ui/checkbox";
 import { getSectors } from "../api/SectorService";
-import { getLocalidades } from "../api/LocalidadesService";
+import { getLocalidadesByProvincia } from "../api/LocalidadesService";
+import { getProvincias } from "../api/ProvinciaService";
 import { createCompany } from "../api/EmpresaService";
 import { toast } from "sonner";
 import { useMotionContext } from "../context/MotionPreferencesContext";
@@ -120,9 +121,11 @@ function RequiredMark() {
 
 export default function RegistrationForm() {
   const [sectorList, setSectorList] = useState<GenericType[]>([]);
+  const [provinciasList, setProvinciasList] = useState<GenericType[]>([]);
   const [localidadesList, setLocalidadesList] = useState<LocalidadResponse[]>(
     [],
   );
+  const [loadingLocalidades, setLoadingLocalidades] = useState(false);
   const [currentStep, setCurrentStep] = useState(1);
   const [stepDirection, setStepDirection] = useState(0);
   const [provinceOpen, setProvinceOpen] = useState(false);
@@ -157,37 +160,23 @@ export default function RegistrationForm() {
   const cuitValidationError = getCuitValidationError(formData.cuit);
   const sortedSectors = sortByNombre(sectorList);
   const sortedLocalidades = sortByNombre(localidadesList);
-  const sortedProvincias = sortByNombre(
-    Array.from(
-      new Map(
-        localidadesList.map((localidad) => [
-          localidad.provincia.id,
-          localidad.provincia,
-        ]),
-      ).values(),
-    ),
-  );
-  const filteredLocalidades = sortedLocalidades.filter(
-    (localidad) =>
-      formData.provincia_id === 0 ||
-      localidad.provincia.id === formData.provincia_id,
-  );
+  const sortedProvincias = sortByNombre(provinciasList);
   const selectedProvincia = sortedProvincias.find(
     (provincia) => provincia.id === formData.provincia_id,
   );
-  const selectedLocalidad = filteredLocalidades.find(
+  const selectedLocalidad = sortedLocalidades.find(
     (localidad) => localidad.id === formData.localidad,
   );
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [sectors, localidades] = await Promise.all([
+        const [sectors, provincias] = await Promise.all([
           getSectors(),
-          getLocalidades(),
+          getProvincias(),
         ]);
         setSectorList(sectors);
-        setLocalidadesList(localidades);
+        setProvinciasList(provincias);
       } catch (error) {
         toast.error("Error al cargar datos del formulario");
         console.error(error);
@@ -197,6 +186,28 @@ export default function RegistrationForm() {
     };
     fetchData();
   }, []);
+
+  useEffect(() => {
+    if (formData.provincia_id === 0) {
+      setLocalidadesList([]);
+      return;
+    }
+    const fetchLocalidades = async () => {
+      setLoadingLocalidades(true);
+      try {
+        const localidades = await getLocalidadesByProvincia(
+          formData.provincia_id,
+        );
+        setLocalidadesList(localidades);
+      } catch (error) {
+        toast.error("Error al cargar localidades");
+        console.error(error);
+      } finally {
+        setLoadingLocalidades(false);
+      }
+    };
+    fetchLocalidades();
+  }, [formData.provincia_id]);
 
   const handleImageUpload = (croppedFile: File) => {
     setLogoFile(croppedFile);
@@ -798,10 +809,12 @@ export default function RegistrationForm() {
                                     <CommandInput placeholder="Buscar localidad..." />
                                     <CommandList>
                                       <CommandEmpty>
-                                        No se encontró ninguna localidad
+                                        {loadingLocalidades
+                                          ? "Cargando localidades..."
+                                          : "No se encontró ninguna localidad"}
                                       </CommandEmpty>
                                       <CommandGroup>
-                                        {filteredLocalidades.map((loc) => (
+                                        {sortedLocalidades.map((loc) => (
                                           <CommandItem
                                             key={loc.id}
                                             value={loc.nombre}

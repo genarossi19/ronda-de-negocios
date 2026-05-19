@@ -6,6 +6,13 @@ export const getLocalidades = async () => {
   return data;
 };
 
+export const getLocalidadesByProvincia = async (provinciaId: number) => {
+  const { data } = await api.get<LocalidadResponse[]>(
+    `/localidades/?provincia=${provinciaId}`,
+  );
+  return data;
+};
+
 export const getLocalidadById = async (id: number) => {
   const { data } = await api.get<LocalidadResponse>(`/localidades/${id}/`);
   return data;
