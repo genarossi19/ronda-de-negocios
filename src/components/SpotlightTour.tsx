@@ -14,6 +14,8 @@ interface SpotlightTourProps {
   storageKey: string;
   readyToStart?: boolean;
   shouldShowOnMount?: boolean;
+  onClose?: () => void;
+  onStepChange?: (stepIdx: number) => void;
 }
 
 const TOOLTIP_W = 312;
@@ -56,6 +58,8 @@ export function SpotlightTour({
   storageKey,
   readyToStart = true,
   shouldShowOnMount = false,
+  onClose,
+  onStepChange,
 }: SpotlightTourProps) {
   const [active, setActive] = useState(false);
   const [stepIdx, setStepIdx] = useState(0);
@@ -67,6 +71,7 @@ export function SpotlightTour({
     setStepIdx(0);
     setRect(null);
     setActive(true);
+    onStepChange?.(0);
   };
 
   const close = () => {
@@ -74,6 +79,7 @@ export function SpotlightTour({
     setActive(false);
     setStepIdx(0);
     setRect(null);
+    onClose?.();
   };
 
   const restartTour = () => {
@@ -163,6 +169,7 @@ export function SpotlightTour({
     if (next < steps.length) {
       setRect(null);
       setStepIdx(next);
+      onStepChange?.(next);
     } else {
       close();
     }
@@ -174,6 +181,7 @@ export function SpotlightTour({
     if (prev >= 0) {
       setRect(null);
       setStepIdx(prev);
+      onStepChange?.(prev);
     }
   };
 

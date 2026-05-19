@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useRef } from "react";
+import React, { useState, useEffect, useMemo, useRef } from "react";
 import { useNavigate } from "react-router";
 import { AnimatePresence, motion } from "motion/react";
 import {
@@ -54,7 +54,16 @@ import {
 import type { EmpresaResponse } from "../../types/Empresa";
 import { useCurrentUser } from "../../hooks/useCurrentUser";
 import { useMotionContext } from "../../context/MotionPreferencesContext";
+import { useTheme } from "../../context/ThemeContext";
 import { getApiErrorMessage, isSessionExpiredError } from "../../lib/axios";
+import { SpotlightTour, type TourStep } from "../../components/SpotlightTour";
+
+interface CompanyRowTourRefs {
+  approveRef?: React.RefObject<HTMLButtonElement | null>;
+  viewRef?: React.RefObject<HTMLButtonElement | null>;
+  deleteRef?: React.RefObject<HTMLButtonElement | null>;
+  cardRef?: React.RefObject<HTMLDivElement | null>;
+}
 
 function CompanyRow({
   company,
@@ -66,6 +75,7 @@ function CompanyRow({
   onSelect,
   isSelectionMode,
   animatingAction,
+  tourRefs,
 }: {
   company: EmpresaResponse;
   onApprove: (c: EmpresaResponse) => void;
@@ -76,9 +86,12 @@ function CompanyRow({
   onSelect?: (c: EmpresaResponse) => void;
   isSelectionMode?: boolean;
   animatingAction?: "approved" | "unapproved" | "deleted" | null;
+  tourRefs?: CompanyRowTourRefs;
 }) {
   const emailConfirmado = company.email_confirmardo ?? false;
   const { shouldReduceMotion } = useMotionContext();
+  const { resolvedTheme } = useTheme();
+  const isDark = resolvedTheme === "dark";
 
   // Helpers para transiciones que respeten shouldReduceMotion
   const getInstantTransition = () =>
@@ -105,6 +118,7 @@ function CompanyRow({
   return (
     <motion.div
       onClick={handleCardClick}
+      ref={tourRefs?.cardRef as React.Ref<HTMLDivElement>}
       initial={false}
       animate={{
         scale: animatingAction === "deleted" ? 0.95 : isSelected ? 0.98 : 1,
@@ -113,7 +127,9 @@ function CompanyRow({
             ? "#68A243"
             : isSelected
               ? "#68A243"
-              : "#e5e7eb",
+              : isDark
+                ? "#2a4a36"
+                : "#e5e7eb",
         backgroundColor:
           animatingAction === "approved"
             ? "rgba(104, 162, 67, 0.15)"
@@ -132,7 +148,7 @@ function CompanyRow({
       className={`relative bg-white dark:bg-[#143E29] rounded-lg border-2 p-4 transition-all cursor-pointer ${
         isSelected
           ? "border-[#68A243] bg-[#68A243]/5 dark:bg-[#68A243]/10"
-          : "border-gray-200 dark:border-[#68A243]/20 hover:border-[#68A243]/50"
+          : "border-gray-200 dark:border-gray-700 hover:border-[#68A243]/50"
       }`}
     >
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -280,6 +296,7 @@ function CompanyRow({
           >
             {company.aprobada ? (
               <Button
+                ref={tourRefs?.approveRef}
                 size="sm"
                 variant="ghost"
                 onClick={() => onApprove(company)}
@@ -290,6 +307,7 @@ function CompanyRow({
               </Button>
             ) : (
               <Button
+                ref={tourRefs?.approveRef}
                 size="sm"
                 onClick={() => onApprove(company)}
                 className="gap-2 bg-[#68A243] hover:bg-[#5a9038] text-white"
@@ -300,6 +318,7 @@ function CompanyRow({
             )}
 
             <Button
+              ref={tourRefs?.viewRef}
               size="sm"
               variant="ghost"
               onClick={(e) => {
@@ -312,6 +331,7 @@ function CompanyRow({
             </Button>
 
             <Button
+              ref={tourRefs?.deleteRef}
               size="sm"
               variant="ghost"
               onClick={() => onDelete(company)}
@@ -681,7 +701,7 @@ function downloadCsv(companies: EmpresaResponse[]) {
 
 function CompanyRowSkeleton() {
   return (
-    <div className="bg-white dark:bg-[#143E29] rounded-lg border border-gray-200 dark:border-[#68A243]/20 p-4">
+    <div className="bg-white dark:bg-[#143E29] rounded-lg border border-gray-200 dark:border-gray-700 p-4">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-4">
@@ -709,6 +729,29 @@ function CompanyRowSkeleton() {
     </div>
   );
 }
+
+const MOCK_COMPANY: EmpresaResponse = {
+  id: -1,
+  razon_social: "Empresa Demo S.A.",
+  email: "demo@empresademo.com",
+  email_confirmardo: true,
+  aprobada: false,
+  eliminado: false,
+  cuit: "30-12345678-9",
+  telefono_contacto: "(11) 4567-8901",
+  descripcion: "Empresa de ejemplo para mostrar el tour de onboarding.",
+  sector: { id: 1, nombre: "Tecnología / Software" },
+  localidad: {
+    id: 1,
+    nombre: "Buenos Aires",
+    provincia: { id: 1, nombre: "Buenos Aires" },
+  },
+  participa_evento: false,
+};
+
+const TOUR_STORAGE_KEY = "tour_companies_management_v1_seen";
+// Step index at which we auto-select a company to reveal the bulk bar
+const TOUR_CARD_STEP_IDX = 6;
 
 export default function CompaniesManagement() {
   const navigate = useNavigate();
@@ -758,6 +801,21 @@ export default function CompaniesManagement() {
   const [isDeleting, setIsDeleting] = useState(false);
   // const [isRecovering, setIsRecovering] = useState(false);
 
+  // Tour state
+  const [shouldShowTour, setShouldShowTour] = useState(false);
+  const [tourMockActive, setTourMockActive] = useState(false);
+  const [tourAutoSelected, setTourAutoSelected] = useState(false);
+
+  // Tour refs
+  const csvBtnRef = useRef<HTMLButtonElement>(null);
+  const searchInputRef = useRef<HTMLDivElement>(null);
+  const filtersRef = useRef<HTMLDivElement>(null);
+  const tourApproveRef = useRef<HTMLButtonElement>(null);
+  const tourViewRef = useRef<HTMLButtonElement>(null);
+  const tourDeleteRef = useRef<HTMLButtonElement>(null);
+  const tourCardRef = useRef<HTMLDivElement>(null);
+  const bulkBarRef = useRef<HTMLDivElement>(null);
+
   // isSelectionMode is computed based on selectedCompanies
   const isSelectionMode = selectedCompanies.size > 0;
 
@@ -775,6 +833,15 @@ export default function CompaniesManagement() {
         setIsLoading(true);
         const data = await getCompanies();
         setCompanies(data);
+
+        // Lógica para determinar si mostrar el tour
+        const alreadySeen = localStorage.getItem(TOUR_STORAGE_KEY) === "1";
+        const show = data.length === 0 || !alreadySeen;
+        setShouldShowTour(show);
+        // Si no hay empresas, activar el mock para que el tour tenga elementos reales
+        if (data.length === 0 && show) {
+          setTourMockActive(true);
+        }
       } catch (err) {
         console.error("Error loading companies:", err);
         if (!isSessionExpiredError(err)) {
@@ -840,9 +907,99 @@ export default function CompaniesManagement() {
       });
   }, [companies, filterStatus, searchTerm]);
 
+  // Lista a mostrar: si no hay empresas reales y el tour tiene mock activo, mostrar empresa ficticia
+  const displayedCompanies = useMemo(() => {
+    if (filteredCompanies.length > 0) return filteredCompanies;
+    if (tourMockActive && companies.length === 0) return [MOCK_COMPANY];
+    return [];
+  }, [filteredCompanies, tourMockActive, companies.length]);
+
+  // Tour: definición de steps
+  const tourSteps: TourStep[] = [
+    {
+      ref: csvBtnRef,
+      title: "Descargar CSV",
+      description:
+        "Exportá el listado completo de empresas con: razón social, CUIT, email, sector, teléfono, ubicación, estado de validación de email y estado de aprobación.",
+      side: "bottom",
+    },
+    {
+      ref: searchInputRef,
+      title: "Buscar empresas",
+      description:
+        "Buscá en tiempo real por razón social o número de CUIT. Los resultados se actualizan automáticamente mientras escribís.",
+      side: "bottom",
+    },
+    {
+      ref: filtersRef,
+      title: "Filtrar por estado",
+      description:
+        "Filtrá por: Todos (excluye eliminadas), Pendientes de aprobación, Aprobadas, Participan en la ronda activa, No participan, o Eliminadas.",
+      side: "bottom",
+    },
+    {
+      ref: tourViewRef,
+      title: "Ver detalle de empresa",
+      description:
+        "El ícono del ojo abre un panel con toda la información de la empresa: logo, datos de contacto, ubicación, sector, CUIT y más.",
+      side: "left",
+    },
+    {
+      ref: tourApproveRef,
+      title: "Aprobar / Desaprobar",
+      description:
+        "Aprobá empresas pendientes para que sean visibles públicamente, o desaprobá las que ya están activas. El botón alterna entre ambos estados.",
+      side: "left",
+    },
+    {
+      ref: tourDeleteRef,
+      title: "Eliminar empresa",
+      description:
+        "Eliminá una empresa del sistema. Las empresas eliminadas no desaparecen del todo: podés verlas usando el filtro 'Eliminadas'.",
+      side: "left",
+    },
+    {
+      ref: tourCardRef,
+      title: "Seleccionar empresas",
+      description:
+        "Hacé clic sobre cualquier empresa para seleccionarla. Podés seleccionar varias a la vez y aparecerá una barra de acciones en la parte inferior.",
+      side: "bottom",
+    },
+    {
+      ref: bulkBarRef,
+      title: "Acciones masivas",
+      description:
+        "Con empresas seleccionadas podés aprobarlas o eliminarlas todas de una vez. Un indicador de progreso muestra el avance mientras se procesan.",
+      side: "top",
+    },
+  ];
+
+  // Tour: paso a "seleccionar empresa" auto-activa la selección para mostrar la barra masiva
+  const handleTourStepChange = (stepIdx: number) => {
+    if (stepIdx === TOUR_CARD_STEP_IDX) {
+      const first = displayedCompanies[0];
+      if (first) {
+        setSelectedCompanies(new Set([first.id]));
+        setTourAutoSelected(true);
+      }
+    } else if (tourAutoSelected && stepIdx < TOUR_CARD_STEP_IDX) {
+      // Usuario retrocedió antes del paso de selección: limpiar
+      setSelectedCompanies(new Set());
+      setTourAutoSelected(false);
+    }
+  };
+
+  const handleTourClose = () => {
+    setTourMockActive(false);
+    if (tourAutoSelected) {
+      setSelectedCompanies(new Set());
+      setTourAutoSelected(false);
+    }
+  };
+
   // Deseleccionar empresas que ya no son visibles cuando cambia el filtro o búsqueda
   useEffect(() => {
-    const visibleIds = new Set(filteredCompanies.map((c) => c.id));
+    const visibleIds = new Set(displayedCompanies.map((c) => c.id));
     const newSelected = new Set(
       Array.from(selectedCompanies).filter((id) => visibleIds.has(id)),
     );
@@ -850,7 +1007,7 @@ export default function CompaniesManagement() {
       setSelectedCompanies(newSelected);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filteredCompanies]);
+  }, [displayedCompanies]);
 
   const handleApproveClick = (company: EmpresaResponse) => {
     setCompanyToApprove(company);
@@ -1066,12 +1223,12 @@ export default function CompaniesManagement() {
   };
 
   const handleSelectAll = () => {
-    if (selectedCompanies.size === filteredCompanies.length) {
+    if (selectedCompanies.size === displayedCompanies.length) {
       // Si todas están seleccionadas, deseleccionar todas
       setSelectedCompanies(new Set());
     } else {
       // Si no están todas seleccionadas, seleccionar todas
-      const allIds = new Set(filteredCompanies.map((c) => c.id));
+      const allIds = new Set(displayedCompanies.map((c) => c.id));
       setSelectedCompanies(allIds);
     }
   };
@@ -1223,6 +1380,7 @@ export default function CompaniesManagement() {
                   Ver Representantes
                 </Button>
                 <Button
+                  ref={csvBtnRef}
                   onClick={() => {
                     if (filteredCompanies.length === 0) {
                       toast.info(
@@ -1326,7 +1484,7 @@ export default function CompaniesManagement() {
           <div className="mb-6 space-y-4">
             <div className="flex flex-col sm:flex-row gap-4">
               {/* Search */}
-              <div className="flex-1 relative">
+              <div ref={searchInputRef} className="flex-1 relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
                 <Input
                   placeholder="Buscar por nombre o CUIT..."
@@ -1334,12 +1492,12 @@ export default function CompaniesManagement() {
                   onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                     setSearchTerm(e.target.value)
                   }
-                  className="pl-10 h-11 border-gray-200 dark:border-[#68A243]/20 dark:bg-[#143E29] dark:text-white dark:placeholder-gray-500"
+                  className="pl-10 h-11 border-gray-200 dark:border-gray-700 dark:bg-[#143E29] dark:text-white dark:placeholder-gray-500"
                 />
               </div>
 
               {/* Filter Buttons */}
-              <div className="flex gap-2 flex-wrap">
+              <div ref={filtersRef} className="flex gap-2 flex-wrap">
                 {(
                   [
                     { value: "all", label: "Todos" },
@@ -1362,7 +1520,7 @@ export default function CompaniesManagement() {
                             : value === "not-participating"
                               ? "bg-gray-500 text-white"
                               : "bg-[#68A243] text-white"
-                        : "bg-white dark:bg-[#143E29] text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-[#68A243]/20 hover:border-[#68A243]/50"
+                        : "bg-white dark:bg-[#143E29] text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700 hover:border-[#68A243]/50"
                     }`}
                   >
                     {label}
@@ -1376,7 +1534,7 @@ export default function CompaniesManagement() {
           <div className="space-y-3">
             {/* Select All Checkbox */}
             <AnimatePresence>
-              {isSelectionMode && filteredCompanies.length > 0 && (
+              {isSelectionMode && displayedCompanies.length > 0 && (
                 <motion.div
                   initial={
                     shouldReduceMotion
@@ -1388,7 +1546,7 @@ export default function CompaniesManagement() {
                   transition={
                     shouldReduceMotion ? { duration: 0 } : { duration: 0.15 }
                   }
-                  className="mb-4 flex items-center gap-3 p-4 bg-white dark:bg-[#143E29] rounded-lg border-2 border-gray-200 dark:border-[#68A243]/20"
+                  className="mb-4 flex items-center gap-3 p-4 bg-white dark:bg-[#143E29] rounded-lg border-2 border-gray-200 dark:border-gray-700"
                 >
                   <motion.div
                     onClick={handleSelectAll}
@@ -1396,7 +1554,7 @@ export default function CompaniesManagement() {
                     whileHover={{ scale: 1.1 }}
                     whileTap={{ scale: 0.95 }}
                   >
-                    {selectedCompanies.size === filteredCompanies.length ? (
+                    {selectedCompanies.size === displayedCompanies.length ? (
                       <motion.div
                         initial={{ scale: 0.8, rotate: -90 }}
                         animate={{ scale: 1, rotate: 0 }}
@@ -1414,13 +1572,13 @@ export default function CompaniesManagement() {
                     )}
                   </motion.div>
                   <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                    Seleccionar todo ({filteredCompanies.length})
+                    Seleccionar todo ({displayedCompanies.length})
                   </span>
                 </motion.div>
               )}
             </AnimatePresence>
-            {filteredCompanies.length === 0 ? (
-              <div className="text-center py-12 bg-white dark:bg-[#143E29] rounded-lg border border-dashed border-gray-300 dark:border-[#68A243]/20">
+            {displayedCompanies.length === 0 ? (
+              <div className="text-center py-12 bg-white dark:bg-[#143E29] rounded-lg border border-dashed border-gray-300 dark:border-gray-700">
                 <Building2 className="mx-auto h-12 w-12 text-gray-300 dark:text-gray-600 mb-4" />
                 <p className="text-gray-600 dark:text-gray-400 font-medium">
                   {searchTerm || filterStatus !== "all"
@@ -1429,7 +1587,7 @@ export default function CompaniesManagement() {
                 </p>
               </div>
             ) : (
-              filteredCompanies.map((company) => (
+              displayedCompanies.map((company, index) => (
                 <CompanyRow
                   key={company.id}
                   company={company}
@@ -1441,6 +1599,16 @@ export default function CompaniesManagement() {
                   onSelect={handleSelectCompany}
                   isSelectionMode={isSelectionMode}
                   animatingAction={animatingCompanies.get(company.id)}
+                  tourRefs={
+                    index === 0
+                      ? {
+                          approveRef: tourApproveRef,
+                          viewRef: tourViewRef,
+                          deleteRef: tourDeleteRef,
+                          cardRef: tourCardRef,
+                        }
+                      : undefined
+                  }
                 />
               ))
             )}
@@ -1454,6 +1622,7 @@ export default function CompaniesManagement() {
         <AnimatePresence>
           {isSelectionMode && (
             <motion.div
+              ref={bulkBarRef}
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
@@ -1577,11 +1746,11 @@ export default function CompaniesManagement() {
 
       {/* Detail Modal */}
       <Dialog open={isDetailOpen} onOpenChange={setIsDetailOpen}>
-        <DialogContent className="max-w-4xl! border-gray-200 dark:border-[#68A243]/20 bg-white dark:bg-[#143E29] p-0! max-h-[95vh]!">
+        <DialogContent className="max-w-4xl! border-gray-200 dark:border-gray-700 bg-white dark:bg-[#143E29] p-0! max-h-[95vh]!">
           {selectedCompany && (
             <>
               {/* Header con Logo y Status */}
-              <div className="bg-gradient-to-r from-[#68A243]/10 to-[#143E29]/10 dark:from-[#68A243]/20 dark:to-[#143E29]/30 p-8 border-b border-gray-200 dark:border-[#68A243]/20 flex items-start justify-between gap-8">
+              <div className="bg-gradient-to-r from-[#68A243]/10 to-[#143E29]/10 dark:from-[#68A243]/20 dark:to-[#143E29]/30 p-8 border-b border-gray-200 dark:border-gray-700 flex items-start justify-between gap-8">
                 <div className="flex items-start gap-6 flex-1">
                   {/* Logo */}
                   {selectedCompany.logo ? (
@@ -1783,7 +1952,7 @@ export default function CompaniesManagement() {
         open={isDeleteOpen}
         onOpenChange={(open) => !isDeleting && setIsDeleteOpen(open)}
       >
-        <DialogContent className="border-gray-200 dark:border-[#68A243]/20 bg-white dark:bg-[#143E29] max-w-md">
+        <DialogContent className="border-gray-200 dark:border-gray-700 bg-white dark:bg-[#143E29] max-w-md">
           <DialogHeader>
             <DialogTitle className="text-gray-900 dark:text-white">
               Confirmar eliminación
@@ -1840,7 +2009,7 @@ export default function CompaniesManagement() {
         open={isApproveOpen}
         onOpenChange={(open) => !isApproving && setIsApproveOpen(open)}
       >
-        <DialogContent className="border-gray-200 dark:border-[#68A243]/20 bg-white dark:bg-[#143E29] max-w-md">
+        <DialogContent className="border-gray-200 dark:border-gray-700 bg-white dark:bg-[#143E29] max-w-md">
           <DialogHeader>
             <DialogTitle className="text-gray-900 dark:text-white">
               {companyToApprove?.aprobada
@@ -1917,7 +2086,7 @@ export default function CompaniesManagement() {
         open={isRecoverOpen}
         onOpenChange={(open) => !isRecovering && setIsRecoverOpen(open)}
       >
-        <DialogContent className="border-gray-200 dark:border-[#68A243]/20 bg-white dark:bg-[#143E29] max-w-md">
+        <DialogContent className="border-gray-200 dark:border-gray-700 bg-white dark:bg-[#143E29] max-w-md">
           <DialogHeader>
             <DialogTitle className="text-gray-900 dark:text-white">
               Confirmar recuperación
@@ -1971,7 +2140,7 @@ export default function CompaniesManagement() {
 
       {/* Bulk Results Modal */}
       <Dialog open={isResultsOpen} onOpenChange={setIsResultsOpen}>
-        <DialogContent className="border-gray-200 dark:border-[#68A243]/20 bg-white dark:bg-[#143E29] max-w-2xl max-h-[80vh]">
+        <DialogContent className="border-gray-200 dark:border-gray-700 bg-white dark:bg-[#143E29] max-w-2xl max-h-[80vh]">
           <DialogHeader>
             <DialogTitle className="text-gray-900 dark:text-white">
               Resultados del procesamiento
@@ -2042,6 +2211,15 @@ export default function CompaniesManagement() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <SpotlightTour
+        steps={tourSteps}
+        storageKey={TOUR_STORAGE_KEY}
+        readyToStart={!isLoading}
+        shouldShowOnMount={shouldShowTour}
+        onClose={handleTourClose}
+        onStepChange={handleTourStepChange}
+      />
     </div>
   );
 }
