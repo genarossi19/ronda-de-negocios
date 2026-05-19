@@ -214,7 +214,7 @@ function MeetingTableRow({
       </TableCell>
       <TableCell className="min-w-[180px] font-semibold text-[#143E29] dark:text-white">
         {other?.empresa_nombre ?? (
-          <span className="text-gray-400 dark:text-gray-500 font-normal italic text-xs">
+          <span className="text-gray-400 dark:text-gray-400 font-normal italic text-xs">
             Sin empresa asignada
           </span>
         )}
@@ -642,7 +642,7 @@ export default function Reuniones() {
           <TabsList className="mb-2 bg-white dark:bg-[#143E29] border border-gray-200 dark:border-[#68A243]/20">
             <TabsTrigger
               value="actual"
-              className="gap-2 data-[state=active]:bg-[#143E29] data-[state=active]:text-white dark:data-[state=active]:bg-[#0f2f25]"
+              className="gap-2 data-[state=active]:bg-[#143E29] data-[state=active]:text-white dark:data-[state=active]:bg-white dark:data-[state=active]:text-[#143E29] dark:text-gray-300"
             >
               <CalendarCheck className="h-4 w-4" />
               Próximo evento
@@ -654,7 +654,7 @@ export default function Reuniones() {
             </TabsTrigger>
             <TabsTrigger
               value="historial"
-              className="gap-2 data-[state=active]:bg-[#143E29] data-[state=active]:text-white dark:data-[state=active]:bg-[#0f2f25]"
+              className="gap-2 data-[state=active]:bg-[#143E29] data-[state=active]:text-white dark:data-[state=active]:bg-white dark:data-[state=active]:text-[#143E29] dark:text-gray-300"
             >
               <History className="h-4 w-4" />
               Historial
@@ -674,10 +674,10 @@ export default function Reuniones() {
               <TableSkeleton />
             ) : !activeEvent ? (
               <div className="flex flex-col items-center justify-center py-16 text-center gap-3">
-                <div className="p-4 rounded-full bg-gray-100 dark:bg-[#143E29]">
-                  <Calendar className="h-8 w-8 text-gray-400 dark:text-gray-500" />
+                <div className="p-4 rounded-full bg-gray-100 dark:bg-[#1a5032]">
+                  <Calendar className="h-8 w-8 text-gray-400 dark:text-[#68A243]" />
                 </div>
-                <p className="font-medium text-gray-700 dark:text-gray-300">
+                <p className="font-medium text-gray-700 dark:text-gray-200">
                   No hay ningún evento activo en este momento
                 </p>
                 <p className="text-sm text-gray-500 dark:text-gray-400 max-w-sm">
@@ -689,10 +689,10 @@ export default function Reuniones() {
               <>
                 {currentMeetings.length === 0 ? (
                   <div className="flex flex-col items-center justify-center py-12 text-center gap-3">
-                    <div className="p-4 rounded-full bg-gray-100 dark:bg-[#143E29]">
-                      <Handshake className="h-8 w-8 text-gray-400 dark:text-gray-500" />
+                    <div className="p-4 rounded-full bg-gray-100 dark:bg-[#1a5032]">
+                      <Handshake className="h-8 w-8 text-gray-400 dark:text-[#68A243]" />
                     </div>
-                    <p className="font-medium text-gray-700 dark:text-gray-300">
+                    <p className="font-medium text-gray-700 dark:text-gray-200">
                       No tenés turnos reservados en este evento
                     </p>
                     <p className="text-sm text-gray-500 dark:text-gray-400 max-w-sm">
@@ -839,15 +839,33 @@ export default function Reuniones() {
                             <Table className="min-w-[1050px]">
                               <TableHeader>
                                 <TableRow className="hover:bg-transparent dark:border-[#68A243]/20">
-                                  <TableHead>Fecha</TableHead>
-                                  <TableHead>Turno</TableHead>
-                                  <TableHead>Mesa</TableHead>
-                                  <TableHead>Mi rol</TableHead>
-                                  <TableHead>Mi representante</TableHead>
-                                  <TableHead>Empresa</TableHead>
-                                  <TableHead>Representante</TableHead>
-                                  <TableHead>Email representante</TableHead>
-                                  <TableHead>Estado</TableHead>
+                                  <TableHead className="dark:text-gray-300">
+                                    Fecha
+                                  </TableHead>
+                                  <TableHead className="dark:text-gray-300">
+                                    Turno
+                                  </TableHead>
+                                  <TableHead className="dark:text-gray-300">
+                                    Mesa
+                                  </TableHead>
+                                  <TableHead className="dark:text-gray-300">
+                                    Mi rol
+                                  </TableHead>
+                                  <TableHead className="dark:text-gray-300">
+                                    Mi representante
+                                  </TableHead>
+                                  <TableHead className="dark:text-gray-300">
+                                    Empresa
+                                  </TableHead>
+                                  <TableHead className="dark:text-gray-300">
+                                    Representante
+                                  </TableHead>
+                                  <TableHead className="dark:text-gray-300">
+                                    Email representante
+                                  </TableHead>
+                                  <TableHead className="dark:text-gray-300">
+                                    Estado
+                                  </TableHead>
                                 </TableRow>
                               </TableHeader>
                               <TableBody>
@@ -907,10 +925,10 @@ export default function Reuniones() {
               <TableSkeleton />
             ) : pastMeetings.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-16 text-center gap-3">
-                <div className="p-4 rounded-full bg-gray-100 dark:bg-[#143E29]">
-                  <History className="h-8 w-8 text-gray-400 dark:text-gray-500" />
+                <div className="p-4 rounded-full bg-gray-100 dark:bg-[#1a5032]">
+                  <History className="h-8 w-8 text-gray-400 dark:text-[#68A243]" />
                 </div>
-                <p className="font-medium text-gray-700 dark:text-gray-300">
+                <p className="font-medium text-gray-700 dark:text-gray-200">
                   No hay historial de reuniones todavía
                 </p>
                 <p className="text-sm text-gray-500 dark:text-gray-400 max-w-sm">
@@ -1106,16 +1124,36 @@ export default function Reuniones() {
                         <Table className="min-w-[1200px]">
                           <TableHeader>
                             <TableRow className="hover:bg-transparent dark:border-[#68A243]/20">
-                              <TableHead>Ronda</TableHead>
-                              <TableHead>Fecha</TableHead>
-                              <TableHead>Turno</TableHead>
-                              <TableHead>Mesa</TableHead>
-                              <TableHead>Mi rol</TableHead>
-                              <TableHead>Mi representante</TableHead>
-                              <TableHead>Empresa</TableHead>
-                              <TableHead>Representante</TableHead>
-                              <TableHead>Email representante</TableHead>
-                              <TableHead>Estado</TableHead>
+                              <TableHead className="dark:text-gray-300">
+                                Ronda
+                              </TableHead>
+                              <TableHead className="dark:text-gray-300">
+                                Fecha
+                              </TableHead>
+                              <TableHead className="dark:text-gray-300">
+                                Turno
+                              </TableHead>
+                              <TableHead className="dark:text-gray-300">
+                                Mesa
+                              </TableHead>
+                              <TableHead className="dark:text-gray-300">
+                                Mi rol
+                              </TableHead>
+                              <TableHead className="dark:text-gray-300">
+                                Mi representante
+                              </TableHead>
+                              <TableHead className="dark:text-gray-300">
+                                Empresa
+                              </TableHead>
+                              <TableHead className="dark:text-gray-300">
+                                Representante
+                              </TableHead>
+                              <TableHead className="dark:text-gray-300">
+                                Email representante
+                              </TableHead>
+                              <TableHead className="dark:text-gray-300">
+                                Estado
+                              </TableHead>
                             </TableRow>
                           </TableHeader>
                           <TableBody>
@@ -1168,7 +1206,7 @@ export default function Reuniones() {
                                   {formatDate(items[0]?.fecha_evento ?? "")}
                                 </p>
                               </div>
-                              <span className="ml-auto text-sm text-gray-400 dark:text-gray-500">
+                              <span className="ml-auto text-sm text-gray-400 dark:text-gray-400">
                                 {items.length}{" "}
                                 {items.length === 1 ? "reunión" : "reuniones"}
                               </span>
