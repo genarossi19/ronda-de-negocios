@@ -1,4 +1,4 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import { Plus } from "lucide-react";
 import { Button } from "./ui/button";
 import TurnoFormModal from "./TurnoFormModal";
@@ -10,6 +10,7 @@ interface CreateTurnoButtonProps {
   onTurnoCreated: () => void;
   lastTurno?: TurnoResponse | null;
   variant?: "default" | "empty-state";
+  buttonRef?: React.RefObject<HTMLButtonElement | null>;
 }
 
 export default function CreateTurnoButton({
@@ -17,6 +18,7 @@ export default function CreateTurnoButton({
   onTurnoCreated,
   lastTurno,
   variant = "default",
+  buttonRef,
 }: CreateTurnoButtonProps) {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -35,6 +37,7 @@ export default function CreateTurnoButton({
   return (
     <>
       <Button
+        ref={buttonRef}
         onClick={handleOpenCreate}
         className={
           isEmptyState

@@ -1,4 +1,10 @@
-import { useCallback, useEffect, useState, useMemo, useRef } from "react";
+import React, {
+  useCallback,
+  useEffect,
+  useState,
+  useMemo,
+  useRef,
+} from "react";
 import {
   Check,
   LayoutGrid,
@@ -52,6 +58,35 @@ import type { MesaResponse } from "../types/Mesa";
 import type { RepresentanteResponse } from "../types/Representante";
 import type { TurnoResponse } from "../types/Turno";
 
+export interface GestionarAsientosModalTourRefs {
+  mesasGridRef?: React.RefObject<HTMLDivElement | null>;
+  sidebarRef?: React.RefObject<HTMLElement | null>;
+  eliminarAsientosBtnRef?: React.RefObject<HTMLButtonElement | null>;
+  eliminarRepresentanteBtnRef?: React.RefObject<HTMLButtonElement | null>;
+}
+
+// Mock asientos usados en el tour para simular una mesa completa sin llamadas al back
+const TOUR_MOCK_ASIENTOS: MesaResponse["asientos"] = [
+  {
+    id: -1,
+    empresa_id: -1,
+    empresa_nombre: "Empresa Alfa S.A.",
+    representante_nombre: "Carlos",
+    representante_apellido: "García",
+    representante_email: "carlos@empresaalfa.com",
+    anfitriona: false,
+  },
+  {
+    id: -2,
+    empresa_id: -2,
+    empresa_nombre: "Empresa Beta S.R.L.",
+    representante_nombre: "María",
+    representante_apellido: "Rodríguez",
+    representante_email: "maria@empresabeta.com",
+    anfitriona: false,
+  },
+];
+
 type MesaStatus = "empty" | "partial" | "full";
 
 type SeatDeleteTarget = {
@@ -103,6 +138,9 @@ interface GestionarAsientosModalProps {
   turnoGestionado: TurnoResponse | null;
   evento: EventoResponse | null;
   loadTurnos: (eventoId: number) => Promise<void>;
+  tourRefs?: GestionarAsientosModalTourRefs;
+  tourSelectMesaKey?: number;
+  tourMockAsiento?: boolean;
 }
 
 export default function GestionarAsientosModal({
@@ -111,6 +149,9 @@ export default function GestionarAsientosModal({
   turnoGestionado,
   evento,
   loadTurnos,
+  tourRefs,
+  tourSelectMesaKey = 0,
+  tourMockAsiento = false,
 }: GestionarAsientosModalProps) {
   const [mesaSeleccionada, setMesaSeleccionada] = useState<MesaResponse | null>(
     null,
@@ -137,6 +178,18 @@ export default function GestionarAsientosModal({
   );
   const [isDeletingSeat, setIsDeletingSeat] = useState(false);
   const [lastRealtimeSync, setLastRealtimeSync] = useState<number | null>(null);
+
+  // Asientos que se muestran en el sidebar: reales + mocks hasta 2 cuando tourMockAsiento=true
+  const mesaDisplayAsientos = useMemo(() => {
+    if (!mesaSeleccionada) return [];
+    if (!tourMockAsiento) return mesaSeleccionada.asientos;
+    const realCount = mesaSeleccionada.asientos.length;
+    const needed = Math.max(0, 2 - realCount);
+    return [
+      ...mesaSeleccionada.asientos,
+      ...TOUR_MOCK_ASIENTOS.slice(0, needed),
+    ];
+  }, [mesaSeleccionada, tourMockAsiento]);
 
   const loadRepresentativesByCompany = useCallback(
     async (companyId: number) => {
@@ -266,6 +319,12 @@ export default function GestionarAsientosModal({
 
     return () => window.clearInterval(intervalId);
   }, [turnoGestionado, refreshMesasForTurno, loadCompaniesCallback]);
+
+  // Auto-select first mesa when tour requests it (tourSelectMesaKey increments)
+  useEffect(() => {
+    if (!tourSelectMesaKey || mesasTurnoGestionado.length === 0) return;
+    setMesaSeleccionada(mesasTurnoGestionado[0]);
+  }, [tourSelectMesaKey, mesasTurnoGestionado]);
 
   const representativesForSelectedCompany = useMemo(() => {
     // Deduplicar representantes por ID para evitar duplicados visuales
@@ -455,7 +514,7 @@ export default function GestionarAsientosModal({
 
   return (
     <>
-      <Dialog open={isOpen} onOpenChange={handleClose}>
+      <Dialog open={isOpen} onOpenChange={handleClose} modal={!tourRefs}>
         <DialogContent className="!w-[min(96vw,1680px)] !max-w-none !h-[min(90vh,1080px)] !grid !grid-rows-[auto_minmax(0,1fr)] !overflow-hidden !rounded-[28px] !border-gray-200 dark:!border-[#68A243]/20 !bg-white dark:!bg-[#11161d] !p-0 !gap-0">
           <DialogHeader className="!gap-0">
             <div className="!border-b !border-[#68A243]/10 !px-8 !py-6 dark:!border-[#68A243]/15">
@@ -591,7 +650,10 @@ export default function GestionarAsientosModal({
                         ))}
                       </div>
                     ) : mesasTurnoGestionado.length > 0 ? (
-                      <div className="!grid !grid-cols-3 md:!grid-cols-4 xl:!grid-cols-6 !gap-5 !max-w-6xl !mx-auto">
+                      <div
+                        ref={tourRefs?.mesasGridRef}
+                        className="!grid !grid-cols-3 md:!grid-cols-4 xl:!grid-cols-6 !gap-5 !max-w-6xl !mx-auto"
+                      >
                         {mesasTurnoGestionado.map((mesa, index) => {
                           const mesaStatus = getMesaStatus(mesa);
                           const firstSeat = mesa.asientos[0];
@@ -679,7 +741,10 @@ export default function GestionarAsientosModal({
               </ScrollArea>
             </div>
 
-            <aside className="!min-h-0 !bg-[#143E29]/[0.03] dark:!bg-[#0f141a]">
+            <aside
+              ref={tourRefs?.sidebarRef as React.RefObject<HTMLDivElement>}
+              className="!min-h-0 !bg-[#143E29]/[0.03] dark:!bg-[#0f141a]"
+            >
               <ScrollArea className="!h-full">
                 <div className="!space-y-4 !p-6 lg:!p-7">
                   {mesaSeleccionada ? (
@@ -694,15 +759,20 @@ export default function GestionarAsientosModal({
                               Mesa {mesaSeleccionada.num_mesa}
                             </h3>
                             <p className="!mt-1 !text-sm !text-gray-600 dark:!text-gray-300">
-                              {mesaSeleccionada.asientos.length} de 2 asientos
+                              {mesaDisplayAsientos.length} de 2 asientos
                               ocupados
                             </p>
                           </div>
                           <Button
+                            ref={tourRefs?.eliminarAsientosBtnRef}
                             variant="destructive"
                             size="sm"
                             onClick={handleDeleteSelectedMesa}
-                            disabled={isDeletingSeat}
+                            disabled={
+                              isDeletingSeat ||
+                              (tourMockAsiento &&
+                                mesaSeleccionada.asientos.length === 0)
+                            }
                             className="!h-10 !px-4 !bg-[#F05826] hover:!bg-[#d84f21] !text-white"
                           >
                             {isDeletingSeat ? (
@@ -720,58 +790,75 @@ export default function GestionarAsientosModal({
                         </div>
                       </div>
 
-                      {mesaSeleccionada.asientos.map((asiento) => (
-                        <Card
-                          key={asiento.id}
-                          className="!gap-3 !py-4 !border-[#68A243]/20 dark:!bg-[#143E29] dark:!border-[#68A243]/20"
-                        >
-                          <CardContent className="!px-5 !pt-2">
-                            <div className="!flex !items-start !justify-between !gap-4">
-                              <div className="!space-y-2">
-                                <div className="!flex !flex-wrap !items-center !gap-2">
-                                  <p className="!font-semibold !text-[#143E29] dark:!text-white">
-                                    {formatRepresentativeName(asiento)}
-                                  </p>
-                                  {asiento.anfitriona && (
-                                    <Badge className="!bg-[#68A243]/10 !text-[#3F6E20] !border-[#68A243]/20 dark:!bg-[#68A243]/20 dark:!text-[#9FD27B] dark:!border-[#68A243]/30">
-                                      Anfitriona
-                                    </Badge>
+                      {mesaDisplayAsientos.map((asiento, asientoIdx) => {
+                        const isMock = asiento.id < 0;
+                        return (
+                          <Card
+                            key={asiento.id}
+                            className={`!gap-3 !py-4 !border-[#68A243]/20 dark:!bg-[#143E29] dark:!border-[#68A243]/20${isMock ? " opacity-75" : ""}`}
+                          >
+                            <CardContent className="!px-5 !pt-2">
+                              <div className="!flex !items-start !justify-between !gap-4">
+                                <div className="!space-y-2">
+                                  <div className="!flex !flex-wrap !items-center !gap-2">
+                                    <p className="!font-semibold !text-[#143E29] dark:!text-white">
+                                      {formatRepresentativeName(asiento)}
+                                    </p>
+                                    {isMock ? (
+                                      <Badge className="!bg-[#68A243]/10 !text-[#3F6E20] !border-[#68A243]/20 dark:!bg-[#68A243]/20 dark:!text-[#9FD27B] dark:!border-[#68A243]/30">
+                                        Demo
+                                      </Badge>
+                                    ) : asiento.anfitriona ? (
+                                      <Badge className="!bg-[#68A243]/10 !text-[#3F6E20] !border-[#68A243]/20 dark:!bg-[#68A243]/20 dark:!text-[#9FD27B] dark:!border-[#68A243]/30">
+                                        Anfitriona
+                                      </Badge>
+                                    ) : null}
+                                  </div>
+                                  {asiento.representante_email && (
+                                    <p className="!text-xs text-muted-foreground dark:!text-gray-400">
+                                      {asiento.representante_email}
+                                    </p>
                                   )}
-                                </div>
-                                {asiento.representante_email && (
-                                  <p className="!text-xs text-muted-foreground dark:!text-gray-400">
-                                    {asiento.representante_email}
+                                  <p className="!text-xs text-gray-600 dark:text-gray-300">
+                                    {asiento.empresa_nombre}
                                   </p>
-                                )}
-                                <p className="!text-xs text-gray-600 dark:text-gray-300">
-                                  {asiento.empresa_nombre}
-                                </p>
+                                </div>
+
+                                <Button
+                                  ref={
+                                    asientoIdx === 0
+                                      ? tourRefs?.eliminarRepresentanteBtnRef
+                                      : undefined
+                                  }
+                                  variant="outline"
+                                  size="icon"
+                                  onClick={
+                                    isMock
+                                      ? undefined
+                                      : () =>
+                                          setSeatToDelete({
+                                            asiento,
+                                            mesaNumero:
+                                              mesaSeleccionada.num_mesa,
+                                            turnoId: turnoGestionado?.id ?? 0,
+                                            turnoHorario: turnoGestionado
+                                              ? `${turnoGestionado.hora_inicio} - ${turnoGestionado.hora_fin}`
+                                              : "",
+                                          })
+                                  }
+                                  disabled={isMock}
+                                  className="!h-10 !w-10 !border-[#F05826]/30 !text-[#F05826] hover:!bg-[#F05826] hover:!text-white dark:!border-[#F05826]/40"
+                                  aria-label={`Eliminar asiento de ${asiento.empresa_nombre}${isMock ? " (demo)" : ""}`}
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
                               </div>
+                            </CardContent>
+                          </Card>
+                        );
+                      })}
 
-                              <Button
-                                variant="outline"
-                                size="icon"
-                                onClick={() =>
-                                  setSeatToDelete({
-                                    asiento,
-                                    mesaNumero: mesaSeleccionada.num_mesa,
-                                    turnoId: turnoGestionado?.id ?? 0,
-                                    turnoHorario: turnoGestionado
-                                      ? `${turnoGestionado.hora_inicio} - ${turnoGestionado.hora_fin}`
-                                      : "",
-                                  })
-                                }
-                                className="!h-10 !w-10 !border-[#F05826]/30 !text-[#F05826] hover:!bg-[#F05826] hover:!text-white dark:!border-[#F05826]/40"
-                                aria-label={`Eliminar asiento de ${asiento.empresa_nombre}`}
-                              >
-                                <Trash2 className="h-4 w-4" />
-                              </Button>
-                            </div>
-                          </CardContent>
-                        </Card>
-                      ))}
-
-                      {mesaSeleccionada.asientos.length < 2 ? (
+                      {mesaDisplayAsientos.length < 2 ? (
                         <Card className="!gap-4 !py-5 !border-[#68A243]/20 dark:!bg-[#143E29] dark:!border-[#68A243]/20">
                           <CardHeader className="!px-5 !pb-0">
                             <CardTitle className="!text-lg !text-[#143E29] dark:!text-white !flex !items-center !gap-2">

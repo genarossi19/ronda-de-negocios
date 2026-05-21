@@ -290,6 +290,7 @@ interface LocalidadesTabProps {
   localidades: LocalidadResponse[];
   provincias: GenericType[];
   loading: boolean;
+  loadingProvincias: boolean;
   onAdd: (nombre: string, provinciaId: number) => Promise<void>;
   onEdit: (id: number, nombre: string, provinciaId: number) => Promise<void>;
   onDelete: (id: number) => Promise<void>;
@@ -299,6 +300,7 @@ function LocalidadesTab({
   localidades,
   provincias,
   loading,
+  loadingProvincias,
   onAdd,
   onEdit,
   onDelete,
@@ -352,9 +354,15 @@ function LocalidadesTab({
           onKeyDown={(e) => e.key === "Enter" && handleAdd()}
           className="flex-1"
         />
-        <Select value={newProvincia} onValueChange={setNewProvincia}>
+        <Select
+          value={newProvincia}
+          onValueChange={setNewProvincia}
+          disabled={loadingProvincias}
+        >
           <SelectTrigger className="w-48 shrink-0">
-            <SelectValue placeholder="Provincia" />
+            <SelectValue
+              placeholder={loadingProvincias ? "Cargando..." : "Provincia"}
+            />
           </SelectTrigger>
           <SelectContent>
             {provincias.map((p) => (
@@ -366,7 +374,12 @@ function LocalidadesTab({
         </Select>
         <Button
           onClick={handleAdd}
-          disabled={!newNombre.trim() || !newProvincia || submitting}
+          disabled={
+            !newNombre.trim() ||
+            !newProvincia ||
+            submitting ||
+            loadingProvincias
+          }
           size="sm"
           className="bg-[#68A243] hover:bg-[#5a9139] text-white gap-1.5 shrink-0"
         >
@@ -796,6 +809,7 @@ export default function GestionarOtros() {
                   localidades={localidades}
                   provincias={provincias}
                   loading={loadingLocalidades}
+                  loadingProvincias={loadingProvincias}
                   onAdd={handleAddLocalidad}
                   onEdit={handleEditLocalidad}
                   onDelete={handleDeleteLocalidad}

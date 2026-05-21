@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router";
 import {
   ArrowLeft,
@@ -17,6 +17,9 @@ import Footer from "../../layout/Footer";
 import GestionarAsientosModal from "../../components/GestionarAsientosModal";
 import TurnoFormModal from "../../components/TurnoFormModal";
 import CreateTurnoButton from "../../components/CreateTurnoButton";
+import { SpotlightTour } from "../../components/SpotlightTour";
+import type { TourStep } from "../../components/SpotlightTour";
+import type { GestionarAsientosModalTourRefs } from "../../components/GestionarAsientosModal";
 import { Button } from "../../components/ui/button";
 import { Badge } from "../../components/ui/badge";
 import {
@@ -34,6 +37,8 @@ import type { EventoResponse } from "../../types/Evento";
 import type { TurnoResponse } from "../../types/Turno";
 import { getApiErrorMessage, isSessionExpiredError } from "../../lib/axios";
 import { createTurnoNumberMap } from "../../lib/utils";
+
+const TOUR_KEY = "tour_gestionar_turnos_v1_seen";
 
 const turnoStatusOptions: Array<{
   value: "abierto" | "cerrado";
@@ -206,6 +211,79 @@ export default function GestionarTurnos() {
   );
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
 
+  // --- Tour state ---
+  const [shouldShowTour, setShouldShowTour] = useState(false);
+  const [tourRestartKey, setTourRestartKey] = useState(0);
+  const [tourAutoOpenedModal, setTourAutoOpenedModal] = useState(false);
+  const [tourSelectMesaKey, setTourSelectMesaKey] = useState(0);
+  const [tourMockAsiento, setTourMockAsiento] = useState(false);
+
+  // --- Tour refs ---
+  const createTurnoBtnRef = useRef<HTMLButtonElement>(null);
+  const gestionarAsientosBtnRef = useRef<HTMLButtonElement>(null);
+  const tourMesasGridRef = useRef<HTMLDivElement>(null);
+  const tourSidebarRef = useRef<HTMLElement>(null);
+  const tourEliminarAsientosBtnRef = useRef<HTMLButtonElement>(null);
+  const tourEliminarRepresentanteBtnRef = useRef<HTMLButtonElement>(null);
+
+  const tourModalRefs = React.useMemo<GestionarAsientosModalTourRefs>(
+    () => ({
+      mesasGridRef: tourMesasGridRef,
+      sidebarRef: tourSidebarRef,
+      eliminarAsientosBtnRef: tourEliminarAsientosBtnRef,
+      eliminarRepresentanteBtnRef: tourEliminarRepresentanteBtnRef,
+    }),
+    [],
+  );
+
+  const tourSteps = React.useMemo<TourStep[]>(
+    () => [
+      {
+        ref: createTurnoBtnRef,
+        title: "Crear nuevo turno",
+        description:
+          "Con este botón creás un nuevo turno para la ronda activa. Definís el horario de inicio y fin, y la cantidad de mesas disponibles.",
+        side: "bottom",
+      },
+      {
+        ref: gestionarAsientosBtnRef,
+        title: "Gestionar asientos",
+        description:
+          "Accedé al gestor de asientos de cada turno. Desde acá podés ver todas las mesas, quién está sentado en cada lugar y administrar las empresas participantes.",
+        side: "left",
+      },
+      {
+        ref: tourMesasGridRef,
+        title: "Grilla de mesas",
+        description:
+          "Visualizás todas las mesas del turno en tiempo real. Las libres, parciales (una empresa) y completas (dos empresas) se muestran con distintos colores. Hacé clic en cualquiera para ver el detalle.",
+        side: "right",
+      },
+      {
+        ref: tourSidebarRef,
+        title: "Panel de detalle",
+        description:
+          "Al seleccionar una mesa, acá aparece su información completa: qué empresa y representante ocupa cada asiento, y el formulario para agregar uno nuevo si hay lugar disponible.",
+        side: "left",
+      },
+      {
+        ref: tourEliminarAsientosBtnRef,
+        title: "Eliminar todos los asientos",
+        description:
+          "Este botón borra todos los asientos de la mesa seleccionada de una vez, dejándola completamente libre. Útil para corregir errores o reorganizar una mesa entera.",
+        side: "bottom",
+      },
+      {
+        ref: tourEliminarRepresentanteBtnRef,
+        title: "Eliminar un asiento específico",
+        description:
+          "Este ícono elimina únicamente el asiento de ese representante en particular, sin afectar al otro. Lo usás cuando solo necesitás liberar uno de los lugares de la mesa.",
+        side: "left",
+      },
+    ],
+    [],
+  );
+
   const loadTurnos = async (selectedEventoId: number) => {
     const data = await getTurnoByEventoId(selectedEventoId);
     setTurnos(data);
@@ -236,6 +314,11 @@ export default function GestionarTurnos() {
 
         setEvento(selectedEvento);
         await loadTurnos(selectedEvento.id);
+
+        // Mostrar tour solo si no fue visto antes
+        if (!localStorage.getItem(TOUR_KEY)) {
+          setShouldShowTour(true);
+        }
       } catch (error) {
         if (!isSessionExpiredError(error)) {
           console.error("Error loading shifts:", error);
@@ -295,6 +378,46 @@ export default function GestionarTurnos() {
 
   const handleOpenSeatManager = (turno: TurnoResponse) => {
     setTurnoGestionado(turno);
+  };
+
+  const handleTurnoCreated = async () => {
+    const wasEmpty = turnos.length === 0;
+    if (evento) {
+      await loadTurnos(evento.id);
+    }
+    if (wasEmpty) {
+      localStorage.removeItem(TOUR_KEY);
+      setTourRestartKey((k) => k + 1);
+    }
+  };
+
+  const handleTourStepChange = (stepIdx: number) => {
+    if (stepIdx === 2) {
+      // Auto-abrir el modal con el primer turno + activar mock asientos desde el inicio
+      if (turnosOrdenados.length > 0) {
+        setTurnoGestionado(turnosOrdenados[0]);
+        setTourAutoOpenedModal(true);
+        setTourSelectMesaKey((k) => k + 1);
+        setTourMockAsiento(true);
+      }
+    }
+
+    // Volver antes del paso 2: cerrar modal si fue abierto por el tour
+    if (stepIdx < 2 && tourAutoOpenedModal) {
+      setTurnoGestionado(null);
+      setTourAutoOpenedModal(false);
+      setTourSelectMesaKey(0);
+      setTourMockAsiento(false);
+    }
+  };
+
+  const handleTourClose = () => {
+    if (tourAutoOpenedModal) {
+      setTurnoGestionado(null);
+      setTourAutoOpenedModal(false);
+    }
+    setTourSelectMesaKey(0);
+    setTourMockAsiento(false);
   };
 
   const openEditDialog = (turno: TurnoResponse) => {
@@ -372,7 +495,8 @@ export default function GestionarTurnos() {
                 <CreateTurnoButton
                   evento={evento}
                   lastTurno={lastTurno}
-                  onTurnoCreated={() => evento && loadTurnos(evento.id)}
+                  onTurnoCreated={handleTurnoCreated}
+                  buttonRef={createTurnoBtnRef}
                 />
               </div>
             </div>
@@ -573,6 +697,11 @@ export default function GestionarTurnos() {
                                     Editar turno
                                   </Button>
                                   <Button
+                                    ref={
+                                      turnosOrdenados.indexOf(turno) === 0
+                                        ? gestionarAsientosBtnRef
+                                        : undefined
+                                    }
                                     onClick={() => handleOpenSeatManager(turno)}
                                     className="bg-[#143E29] hover:bg-[#0f2f25] text-white dark:bg-[#68A243] dark:hover:bg-[#5a9038]"
                                   >
@@ -648,7 +777,7 @@ export default function GestionarTurnos() {
                     <CreateTurnoButton
                       evento={evento}
                       lastTurno={lastTurno}
-                      onTurnoCreated={() => evento && loadTurnos(evento.id)}
+                      onTurnoCreated={handleTurnoCreated}
                       variant="empty-state"
                     />
                   </div>
@@ -674,10 +803,31 @@ export default function GestionarTurnos() {
 
       <GestionarAsientosModal
         isOpen={Boolean(turnoGestionado)}
-        onClose={() => setTurnoGestionado(null)}
+        onClose={() => {
+          setTurnoGestionado(null);
+          if (tourAutoOpenedModal) {
+            setTourAutoOpenedModal(false);
+            setTourSelectMesaKey(0);
+            setTourMockAsiento(false);
+          }
+        }}
         turnoGestionado={turnoGestionado}
         evento={evento}
         loadTurnos={loadTurnos}
+        tourRefs={tourModalRefs}
+        tourSelectMesaKey={tourSelectMesaKey}
+        tourMockAsiento={tourMockAsiento}
+      />
+
+      <SpotlightTour
+        key={tourRestartKey}
+        steps={tourSteps}
+        storageKey={TOUR_KEY}
+        readyToStart={!isLoading}
+        shouldShowOnMount={shouldShowTour}
+        startStep={tourRestartKey > 0 ? 1 : 0}
+        onClose={handleTourClose}
+        onStepChange={handleTourStepChange}
       />
     </div>
   );
