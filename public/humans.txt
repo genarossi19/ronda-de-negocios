@@ -1,0 +1,29 @@
+/* TEAM */
+
+Frontend Developer: Genaro Rossi
+Location: Trenque Lauquen, Buenos Aires, Argentina
+
+Backend Developer: Facundo Rivero
+Location: Trenque Lauquen, Buenos Aires, Argentina
+
+Stakeholder / Product Owner: Jessica Borla
+Organization: Subsecretaría de Desarrollo Económico y Productivo
+
+/* ORGANIZATION */
+
+Name: Subsecretaría de Desarrollo Económico y Productivo en conjunto con el Polo Científico Tecnológico
+Location: Trenque Lauquen, Buenos Aires, Argentina
+
+/* THANKS */
+
+A toda la comunidad de empresarios y emprendedores de Trenque Lauquen
+que participan en las Rondas de Negocios.
+
+/* SITE */
+
+Last update: 2026/05/22
+Language: Spanish (Argentina)
+Standards: HTML5, CSS3, WCAG 2.1
+Components: React 19, TypeScript, Vite, Tailwind CSS v4, shadcn/ui
+Backend: Django (Python)
+Software: VS Code
