@@ -23,3 +23,7 @@ export async function createTurno(payload: TurnoWrite): Promise<TurnoResponse> {
   const { data } = await api.post<TurnoResponse>("/turnos/", payload);
   return data;
 }
+
+export async function deleteTurno(turnoId: number): Promise<void> {
+  await api.delete(`/turnos/${turnoId}/`);
+}

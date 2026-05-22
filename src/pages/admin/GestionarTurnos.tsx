@@ -6,6 +6,8 @@ import {
   CheckCircle2,
   Clock3,
   LayoutGrid,
+  LockKeyhole,
+  Loader2,
   MapPin,
   Pencil,
   Users,
@@ -29,10 +31,21 @@ import {
   CardTitle,
 } from "../../components/ui/card";
 import { ScrollArea } from "../../components/ui/scroll-area";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "../../components/ui/alert-dialog";
 import { Skeleton } from "../../components/ui/skeleton";
 import { toast } from "sonner";
 import { getEventos } from "../../api/EventoService";
-import { getTurnoByEventoId } from "../../api/TurnoService";
+import { getTurnoByEventoId, editTurno } from "../../api/TurnoService";
 import type { EventoResponse } from "../../types/Evento";
 import type { TurnoResponse } from "../../types/Turno";
 import { getApiErrorMessage, isSessionExpiredError } from "../../lib/axios";
@@ -210,6 +223,7 @@ export default function GestionarTurnos() {
     null,
   );
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
+  const [isClosingAll, setIsClosingAll] = useState(false);
 
   // --- Tour state ---
   const [shouldShowTour, setShouldShowTour] = useState(false);
@@ -375,6 +389,55 @@ export default function GestionarTurnos() {
     }),
     [turnos],
   );
+
+  const handleCloseAllTurnos = async () => {
+    const abiertos = turnos.filter((t) => t.estado === "abierto");
+    if (abiertos.length === 0 || isClosingAll) return;
+
+    setIsClosingAll(true);
+    const closedIds: number[] = [];
+
+    try {
+      // Enviar en cola: si falla uno, se corta y se hace rollback
+      for (const turno of abiertos) {
+        await editTurno(turno.id, { estado: "cerrado" });
+        closedIds.push(turno.id);
+      }
+
+      if (evento) await loadTurnos(evento.id);
+      toast.success(
+        `${abiertos.length} turno${abiertos.length > 1 ? "s" : ""} cerrado${
+          abiertos.length > 1 ? "s" : ""
+        } correctamente`,
+      );
+    } catch (error) {
+      // Rollback: reabrir todos los que se cerraron exitosamente
+      const rollbackFailed: number[] = [];
+      for (const id of closedIds) {
+        try {
+          await editTurno(id, { estado: "abierto" });
+        } catch {
+          rollbackFailed.push(id);
+        }
+      }
+
+      if (evento) await loadTurnos(evento.id);
+
+      const message = getApiErrorMessage(
+        error,
+        "No se pudieron cerrar los turnos",
+      );
+      if (rollbackFailed.length > 0) {
+        toast.error(
+          `${message}. Atención: los turnos con ID ${rollbackFailed.join(", ")} no pudieron revertirse.`,
+        );
+      } else if (message) {
+        toast.error(`${message}. Los cambios fueron revertidos.`);
+      }
+    } finally {
+      setIsClosingAll(false);
+    }
+  };
 
   const handleOpenSeatManager = (turno: TurnoResponse) => {
     setTurnoGestionado(turno);
@@ -631,6 +694,52 @@ export default function GestionarTurnos() {
                     Todos los turnos
                   </CardTitle>
                   <div className="flex items-center gap-2">
+                    {stats.abiertos > 0 && (
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            disabled={isClosingAll}
+                            className="border-red-500/40 text-red-600 dark:text-red-400 hover:bg-red-500 hover:text-white dark:hover:bg-red-600 dark:border-red-500/40"
+                          >
+                            {isClosingAll ? (
+                              <Loader2 className="h-4 w-4 animate-spin" />
+                            ) : (
+                              <LockKeyhole className="h-4 w-4" />
+                            )}
+                            Cerrar todos
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>
+                              ¿Cerrar todos los turnos abiertos?
+                            </AlertDialogTitle>
+                            <AlertDialogDescription>
+                              Esta acción cerrará{" "}
+                              <strong>
+                                {stats.abiertos} turno
+                                {stats.abiertos > 1 ? "s" : ""} abierto
+                                {stats.abiertos > 1 ? "s" : ""}
+                              </strong>
+                              . Las peticiones se envían en cola: si alguna
+                              falla, todos los cambios se revierten
+                              automáticamente.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                            <AlertDialogAction
+                              onClick={handleCloseAllTurnos}
+                              className="!bg-red-600 !text-white hover:!bg-red-700 dark:!bg-red-600 dark:hover:!bg-red-700"
+                            >
+                              Cerrar todos
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
+                    )}
                     <Button
                       variant="outline"
                       size="sm"

@@ -9,6 +9,7 @@ import {
   Settings,
 } from "lucide-react";
 import EmpresaProfileModal from "./EmpresaProfileModal";
+import SettingsModal from "./SettingsModal";
 import { Sheet, SheetContent, SheetTrigger } from "../components/ui/sheet";
 import {
   DropdownMenu,
@@ -51,6 +52,7 @@ export default function Navbar() {
   const lastScrollY = useRef(0);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isEmpresaModalOpen, setIsEmpresaModalOpen] = useState(false);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
   const getSessionCountdownLabel = () => {
     if (sessionSecondsRemaining === null) return null;
@@ -533,12 +535,16 @@ export default function Navbar() {
                       <DropdownMenuLabel className="text-xs font-semibold text-gray-500 dark:text-gray-400 px-2 py-1.5">
                         Configuración
                       </DropdownMenuLabel>
-                      <Link to="/settings">
-                        <DropdownMenuItem className="cursor-pointer transition-colors duration-200">
-                          <Settings className="mr-2 h-4 w-4" />
-                          <span className="text-sm">Rendimiento</span>
-                        </DropdownMenuItem>
-                      </Link>
+                      <DropdownMenuItem
+                        className="cursor-pointer transition-colors duration-200"
+                        onSelect={() => {
+                          setIsDropdownOpen(false);
+                          setIsSettingsOpen(true);
+                        }}
+                      >
+                        <Settings className="mr-2 h-4 w-4" />
+                        <span className="text-sm">Configuración</span>
+                      </DropdownMenuItem>
                     </DropdownMenuGroup>
                     <DropdownMenuSeparator className="bg-[#669649]/30 dark:bg-[#1a5032]" />
                     <DropdownMenuItem
@@ -905,6 +911,8 @@ export default function Navbar() {
           empresaId={user.empresa_id}
         />
       )}
+
+      <SettingsModal isOpen={isSettingsOpen} onOpenChange={setIsSettingsOpen} />
     </>
   );
 }

@@ -466,7 +466,7 @@ export default function Footer() {
               </p>
               <span className="hidden sm:inline text-gray-400/60">•</span>
               <p className="text-xs text-gray-300/80">
-                beta {import.meta.env.VITE_APP_VERSION}
+                v{__APP_VERSION__} beta
               </p>
               <EasterEggTrigger />
             </div>

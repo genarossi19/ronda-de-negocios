@@ -3,6 +3,8 @@ import { createPortal } from "react-dom";
 import { ChevronLeft, ChevronRight, HelpCircle, X } from "lucide-react";
 import { Button } from "./ui/button";
 
+export const TUTORIALS_DISABLED_KEY = "tutorials_disabled";
+
 export interface TourStep {
   ref: { current: HTMLElement | null };
   title: string;
@@ -71,6 +73,8 @@ export function SpotlightTour({
 
   const startTour = () => {
     if (!readyToStart) return;
+    if (localStorage.getItem(TUTORIALS_DISABLED_KEY) === "1") return;
+    localStorage.setItem(storageKey, "1"); // marcar como visto de inmediato
     setStepIdx(startStep);
     setRect(null);
     setActive(true);
@@ -78,7 +82,6 @@ export function SpotlightTour({
   };
 
   const close = () => {
-    localStorage.setItem(storageKey, "1");
     setActive(false);
     setStepIdx(0);
     setRect(null);
@@ -86,21 +89,48 @@ export function SpotlightTour({
   };
 
   const restartTour = () => {
+    if (localStorage.getItem(TUTORIALS_DISABLED_KEY) === "1") return;
     localStorage.removeItem(storageKey);
     startTour();
   };
 
-  // Activacion inicial: respetar shouldShowOnMount o localStorage
+  // Bloquear scroll del usuario mientras el tour está activo
+  // Solo el tour puede mover la posición de scroll (scrollIntoView programático)
+  useEffect(() => {
+    if (!active) return;
+
+    const blockScroll = (e: Event) => e.preventDefault();
+    const blockKeyScroll = (e: KeyboardEvent) => {
+      if ([" ", "ArrowUp", "ArrowDown", "PageUp", "PageDown"].includes(e.key)) {
+        e.preventDefault();
+      }
+    };
+
+    window.addEventListener("wheel", blockScroll, { passive: false });
+    window.addEventListener("touchmove", blockScroll, { passive: false });
+    document.addEventListener("keydown", blockKeyScroll);
+
+    return () => {
+      window.removeEventListener("wheel", blockScroll);
+      window.removeEventListener("touchmove", blockScroll);
+      document.removeEventListener("keydown", blockKeyScroll);
+    };
+  }, [active]);
+
+  // Activacion inicial: respetar shouldShowOnMount y siempre validar localStorage
   useEffect(() => {
     if (!readyToStart) return;
+    if (localStorage.getItem(TUTORIALS_DISABLED_KEY) === "1") return;
 
+    // Si ya fue visto en este navegador, nunca volver a mostrar
     const alreadyCompleted = localStorage.getItem(storageKey) === "1";
+    if (alreadyCompleted) return;
 
-    // Si shouldShowOnMount es true, mostrar sin importar localStorage
-    // Si es false, respetar localStorage
-    if (!shouldShowOnMount && alreadyCompleted) return;
+    // Solo mostrar si el padre lo solicita explícitamente
+    if (!shouldShowOnMount) return;
 
     const t = setTimeout(() => {
+      localStorage.setItem(storageKey, "1"); // marcar antes de mostrar
       setStepIdx(startStep);
       setRect(null);
       setActive(true);
@@ -200,7 +230,7 @@ export function SpotlightTour({
 
   return (
     <>
-      {!active && (
+      {!active && localStorage.getItem(TUTORIALS_DISABLED_KEY) !== "1" && (
         <Button
           onClick={restartTour}
           size="icon"

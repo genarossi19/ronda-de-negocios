@@ -27,6 +27,12 @@ import {
 import { Button } from "../../components/ui/button";
 import { Badge } from "../../components/ui/badge";
 import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "../../components/ui/tooltip";
+import {
   Card,
   CardContent,
   CardHeader,
@@ -1233,13 +1239,50 @@ export default function CompaniesManagement() {
     }
   };
 
-  // Verificar si todas las seleccionadas son desaprobadas (aprobada: false)
-  const canApprove =
-    selectedCompanies.size > 0 &&
-    Array.from(selectedCompanies).every((id) => {
-      const company = companies.find((c) => c.id === id);
-      return company && !company.aprobada;
-    });
+  // Lógica de acciones masivas — derivada del estado de las empresas seleccionadas
+  const selectedList = useMemo(
+    () => companies.filter((c) => selectedCompanies.has(c.id)),
+    [companies, selectedCompanies],
+  );
+
+  const hasDeleted = selectedList.some((c) => c.eliminado);
+  const allDeleted =
+    selectedList.length > 0 && selectedList.every((c) => c.eliminado);
+  const nonDeletedSelected = selectedList.filter((c) => !c.eliminado);
+  const allApproved =
+    nonDeletedSelected.length > 0 &&
+    nonDeletedSelected.every((c) => c.aprobada);
+  const allPending =
+    nonDeletedSelected.length > 0 &&
+    nonDeletedSelected.every((c) => !c.aprobada);
+  const mixedApprovalState =
+    !allDeleted &&
+    nonDeletedSelected.some((c) => c.aprobada) &&
+    nonDeletedSelected.some((c) => !c.aprobada);
+
+  // El botón masivo alterna entre "Aprobar" y "Desaprobar" según el estado uniforme
+  const canBulkApprove = allPending && !hasDeleted;
+  const canBulkUnapprove = allApproved && !hasDeleted;
+  const bulkApproveAction: "approve" | "unapprove" = allApproved
+    ? "unapprove"
+    : "approve";
+
+  const bulkApproveDisabledReason: string | null = !(
+    canBulkApprove || canBulkUnapprove
+  )
+    ? hasDeleted
+      ? "Deseleccioná las empresas eliminadas para usar esta acción"
+      : mixedApprovalState
+        ? "Las empresas seleccionadas tienen estados distintos. Usá los botones individuales"
+        : allDeleted
+          ? "Todas las seleccionadas están eliminadas"
+          : null
+    : null;
+
+  const canBulkDelete = selectedList.length > 0 && !allDeleted;
+  const bulkDeleteDisabledReason: string | null = allDeleted
+    ? "Todas las empresas seleccionadas ya están eliminadas"
+    : null;
 
   const processBulkAction = async (
     action: "approve" | "delete",
@@ -1670,70 +1713,127 @@ export default function CompaniesManagement() {
                   )}
                 </div>
 
-                <div className="flex gap-2">
-                  <Button
-                    onClick={handleCancelSelection}
-                    disabled={isBulkApproving || isBulkDeleting}
-                    variant="ghost"
-                    className="border-gray-300 text-gray-700 hover:bg-gray-100 dark:border-[#68A243]/40 dark:text-[#68A243] dark:hover:bg-[#68A243]/10"
-                  >
-                    Cancelar
-                  </Button>
+                <TooltipProvider>
+                  <div className="flex gap-2">
+                    <Button
+                      onClick={handleCancelSelection}
+                      disabled={isBulkApproving || isBulkDeleting}
+                      variant="ghost"
+                      className="border-gray-300 text-gray-700 hover:bg-gray-100 dark:border-[#68A243]/40 dark:text-[#68A243] dark:hover:bg-[#68A243]/10"
+                    >
+                      Cancelar
+                    </Button>
 
-                  <Button
-                    onClick={() => processBulkAction("approve", true)}
-                    disabled={isBulkApproving || isBulkDeleting || !canApprove}
-                    className="gap-2 bg-[#68A243] hover:bg-[#5a9038] text-white disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    {isBulkApproving ? (
-                      <>
-                        <motion.div
-                          animate={{ rotate: 360 }}
-                          transition={{
-                            duration: 1,
-                            repeat: Infinity,
-                            ease: "linear",
-                          }}
+                    {/* Aprobar / Desaprobar masivo */}
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <span className="inline-block">
+                          <Button
+                            onClick={() =>
+                              processBulkAction(
+                                bulkApproveAction === "unapprove"
+                                  ? "approve"
+                                  : "approve",
+                                bulkApproveAction !== "unapprove",
+                              )
+                            }
+                            disabled={
+                              isBulkApproving ||
+                              isBulkDeleting ||
+                              !(canBulkApprove || canBulkUnapprove)
+                            }
+                            className={`gap-2 text-white disabled:opacity-50 disabled:cursor-not-allowed ${
+                              canBulkUnapprove
+                                ? "bg-amber-500 hover:bg-amber-600"
+                                : "bg-[#68A243] hover:bg-[#5a9038]"
+                            }`}
+                          >
+                            {isBulkApproving ? (
+                              <>
+                                <motion.div
+                                  animate={{ rotate: 360 }}
+                                  transition={{
+                                    duration: 1,
+                                    repeat: Infinity,
+                                    ease: "linear",
+                                  }}
+                                >
+                                  <Loader2 className="h-4 w-4" />
+                                </motion.div>
+                                {canBulkUnapprove
+                                  ? "Desaprobando..."
+                                  : "Aprobando..."}
+                              </>
+                            ) : (
+                              <>
+                                {canBulkUnapprove ? (
+                                  <XCircle className="h-4 w-4" />
+                                ) : (
+                                  <CheckCircle className="h-4 w-4" />
+                                )}
+                                {canBulkUnapprove ? "Desaprobar" : "Aprobar"}
+                              </>
+                            )}
+                          </Button>
+                        </span>
+                      </TooltipTrigger>
+                      {bulkApproveDisabledReason && (
+                        <TooltipContent
+                          side="top"
+                          className="max-w-56 text-center"
                         >
-                          <Loader2 className="h-4 w-4" />
-                        </motion.div>
-                        Aprobando...
-                      </>
-                    ) : (
-                      <>
-                        <CheckCircle className="h-4 w-4" />
-                        Aprobar
-                      </>
-                    )}
-                  </Button>
+                          {bulkApproveDisabledReason}
+                        </TooltipContent>
+                      )}
+                    </Tooltip>
 
-                  <Button
-                    onClick={() => processBulkAction("delete", false)}
-                    disabled={isBulkApproving || isBulkDeleting}
-                    className="gap-2 bg-red-600 hover:bg-red-700 text-white disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    {isBulkDeleting ? (
-                      <>
-                        <motion.div
-                          animate={{ rotate: 360 }}
-                          transition={{
-                            duration: 1,
-                            repeat: Infinity,
-                            ease: "linear",
-                          }}
+                    {/* Eliminar masivo */}
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <span className="inline-block">
+                          <Button
+                            onClick={() => processBulkAction("delete", false)}
+                            disabled={
+                              isBulkApproving ||
+                              isBulkDeleting ||
+                              !canBulkDelete
+                            }
+                            className="gap-2 bg-red-600 hover:bg-red-700 text-white disabled:opacity-50 disabled:cursor-not-allowed"
+                          >
+                            {isBulkDeleting ? (
+                              <>
+                                <motion.div
+                                  animate={{ rotate: 360 }}
+                                  transition={{
+                                    duration: 1,
+                                    repeat: Infinity,
+                                    ease: "linear",
+                                  }}
+                                >
+                                  <Loader2 className="h-4 w-4" />
+                                </motion.div>
+                                Eliminando...
+                              </>
+                            ) : (
+                              <>
+                                <Trash2 className="h-4 w-4" />
+                                Eliminar
+                              </>
+                            )}
+                          </Button>
+                        </span>
+                      </TooltipTrigger>
+                      {bulkDeleteDisabledReason && (
+                        <TooltipContent
+                          side="top"
+                          className="max-w-56 text-center"
                         >
-                          <Loader2 className="h-4 w-4" />
-                        </motion.div>
-                        Eliminando...
-                      </>
-                    ) : (
-                      <>
-                        <Trash2 className="h-4 w-4" />
-                        Eliminar
-                      </>
-                    )}
-                  </Button>
-                </div>
+                          {bulkDeleteDisabledReason}
+                        </TooltipContent>
+                      )}
+                    </Tooltip>
+                  </div>
+                </TooltipProvider>
               </div>
             </motion.div>
           )}

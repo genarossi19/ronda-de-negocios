@@ -1,6 +1,14 @@
 import { useState } from "react";
 import { useNavigate } from "react-router";
-import { ArrowLeft, Monitor, Zap, Wifi, Cpu, Droplets } from "lucide-react";
+import {
+  ArrowLeft,
+  BookOpen,
+  Monitor,
+  Zap,
+  Wifi,
+  Cpu,
+  Droplets,
+} from "lucide-react";
 import { Button } from "../components/ui/button";
 import {
   Card,
@@ -11,6 +19,7 @@ import {
 import Navbar from "../components/Navbar";
 import Footer from "../layout/Footer";
 import { useMotionContext } from "../context/MotionPreferencesContext";
+import { TUTORIALS_DISABLED_KEY } from "../components/SpotlightTour";
 
 export default function Settings() {
   const navigate = useNavigate();
@@ -20,6 +29,20 @@ export default function Settings() {
   const [selectedOption, setSelectedOption] = useState<"auto" | "on" | "off">(
     isAutomatic ? "auto" : shouldReduceMotion ? "on" : "off",
   );
+
+  const [tutorialsDisabled, setTutorialsDisabled] = useState(
+    localStorage.getItem(TUTORIALS_DISABLED_KEY) === "1",
+  );
+
+  const handleTutorialsToggle = () => {
+    const next = !tutorialsDisabled;
+    setTutorialsDisabled(next);
+    if (next) {
+      localStorage.setItem(TUTORIALS_DISABLED_KEY, "1");
+    } else {
+      localStorage.removeItem(TUTORIALS_DISABLED_KEY);
+    }
+  };
 
   const handlePreferenceChange = (option: "auto" | "on" | "off") => {
     setSelectedOption(option);
@@ -232,6 +255,77 @@ export default function Settings() {
                     : "✓ Animaciones habilitadas"}
                 </p>
               </div>
+            </CardContent>
+          </Card>
+
+          {/* Tutorials Card */}
+          <Card className="border-[#68A243]/20 dark:bg-[#143E29]">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-gray-900 dark:text-white">
+                <BookOpen className="h-5 w-5 text-[#68A243]" />
+                Tutoriales
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-5">
+              <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed">
+                Los tutoriales interactivos aparecen automáticamente la primera
+                vez que visitás una sección nueva para guiarte en el uso del
+                panel. Podés desactivarlos si ya no los necesitás.
+              </p>
+
+              {/* Toggle row */}
+              <div
+                className={`flex items-center justify-between gap-4 p-4 rounded-lg border-2 cursor-pointer transition-all select-none ${
+                  tutorialsDisabled
+                    ? "border-red-200 dark:border-red-900/50 bg-red-50 dark:bg-red-950/10"
+                    : "border-[#68A243]/30 bg-[#68A243]/5 dark:bg-[#68A243]/10"
+                }`}
+                onClick={handleTutorialsToggle}
+              >
+                <div className="flex-1 min-w-0">
+                  <h3 className="font-semibold text-gray-900 dark:text-white text-sm">
+                    {tutorialsDisabled
+                      ? "Tutoriales desactivados"
+                      : "Tutoriales activados"}
+                  </h3>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                    {tutorialsDisabled
+                      ? "No aparecerán tutoriales ni el botón de ayuda en ninguna sección"
+                      : "Los tutoriales se mostrarán la primera vez que visites cada sección"}
+                  </p>
+                </div>
+                {/* Switch visual */}
+                <div
+                  className={`relative flex-shrink-0 h-6 w-11 rounded-full transition-colors duration-200 ${
+                    tutorialsDisabled
+                      ? "bg-red-400 dark:bg-red-600"
+                      : "bg-[#68A243]"
+                  }`}
+                >
+                  <div
+                    className={`absolute top-0.5 h-5 w-5 rounded-full bg-white shadow-sm transition-transform duration-200 ${
+                      tutorialsDisabled ? "translate-x-5" : "translate-x-0.5"
+                    }`}
+                  />
+                </div>
+              </div>
+
+              {/* Reset individual tours */}
+              {!tutorialsDisabled && (
+                <div className="p-4 rounded-lg bg-amber-50 dark:bg-amber-950/15 border border-amber-200 dark:border-amber-900/40 space-y-2">
+                  <p className="text-xs font-medium text-amber-800 dark:text-amber-300">
+                    ¿Querés volver a ver un tutorial específico?
+                  </p>
+                  <p className="text-xs text-amber-700/80 dark:text-amber-400/70">
+                    Usá el botón{" "}
+                    <span className="inline-flex items-center gap-1 font-medium">
+                      <BookOpen className="h-3 w-3" /> Ayuda
+                    </span>{" "}
+                    que aparece en la esquina inferior derecha de cada sección
+                    del panel de administración.
+                  </p>
+                </div>
+              )}
             </CardContent>
           </Card>
 

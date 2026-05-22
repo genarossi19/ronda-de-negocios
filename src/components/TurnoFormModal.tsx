@@ -143,6 +143,7 @@ export default function TurnoFormModal({
         ...initialFormState,
         hora_inicio: suggestedStart,
         hora_fin: suggestedEnd,
+        cant_mesas: String(lastTurno.cant_mesas),
       });
       setIsEndTimeManuallyEdited(false);
     } else {

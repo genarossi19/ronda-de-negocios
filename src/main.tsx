@@ -5,7 +5,7 @@ import "./index.css";
 import App from "./App.tsx";
 
 // Firma de build — visible en DevTools > Console en producción
-const _version = `${import.meta.env.VITE_APP_VERSION ?? __APP_VERSION__} beta`;
+const _version = `v${__APP_VERSION__} beta`;
 console.log(
   `%c Ronda de Negocios %c ${_version} — Build ${new Date(__BUILD_DATE__).toLocaleDateString("es-AR")} `,
   "background:#15803d;color:#fff;font-weight:bold;font-size:13px;padding:4px 8px;border-radius:4px 0 0 4px",

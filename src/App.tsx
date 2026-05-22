@@ -34,7 +34,6 @@ const VerificarEmailRepresentante = lazy(
 );
 const ForgotPassword = lazy(() => import("./pages/ForgotPassword"));
 const ResetPassword = lazy(() => import("./pages/ResetPassword"));
-const Settings = lazy(() => import("./pages/Settings"));
 const RegisterSuccess = lazy(() => import("./pages/RegisterSuccess"));
 const Reuniones = lazy(() => import("./pages/Reuniones"));
 import {
@@ -198,14 +197,6 @@ function AppRoutes() {
             element={
               <ProtectedRoute>
                 <Representantes />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/settings"
-            element={
-              <ProtectedRoute>
-                <Settings />
               </ProtectedRoute>
             }
           />

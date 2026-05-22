@@ -27,7 +27,11 @@ interface ParticipacionInfoModalProps {
 
 // ─── Mock: CompanyCard (replica real) ────────────────────────────────────────
 
-function MockCompanyCard({ showContact }: { showContact: boolean }) {
+function MockCompanyCard({
+  showContact: _showContact,
+}: {
+  showContact: boolean;
+}) {
   return (
     <div className="cursor-pointer rounded-xl shadow-sm border border-gray-200 dark:border-[#68A243]/20 dark:bg-[#143E29] transition-all duration-300 p-4 max-w-[220px] mx-auto">
       <div className="flex flex-col items-center text-center">

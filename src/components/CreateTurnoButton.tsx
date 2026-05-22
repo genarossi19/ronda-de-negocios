@@ -1,7 +1,14 @@
 import React, { useState } from "react";
-import { Plus } from "lucide-react";
+import { ChevronDown, Layers, Plus } from "lucide-react";
 import { Button } from "./ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "./ui/dropdown-menu";
 import TurnoFormModal from "./TurnoFormModal";
+import BulkTurnoFormModal from "./BulkTurnoFormModal";
 import type { EventoResponse } from "../types/Evento";
 import type { TurnoResponse } from "../types/Turno";
 
@@ -21,11 +28,8 @@ export default function CreateTurnoButton({
   buttonRef,
 }: CreateTurnoButtonProps) {
   const [isFormOpen, setIsFormOpen] = useState(false);
+  const [isBulkFormOpen, setIsBulkFormOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
-
-  const handleOpenCreate = () => {
-    setIsFormOpen(true);
-  };
 
   const handleFormSubmitSuccess = async () => {
     setIsFormOpen(false);
@@ -36,18 +40,48 @@ export default function CreateTurnoButton({
 
   return (
     <>
-      <Button
-        ref={buttonRef}
-        onClick={handleOpenCreate}
-        className={
-          isEmptyState
-            ? "bg-[#68A243] hover:bg-[#5a9038] text-white"
-            : "h-11 px-5 bg-[#68A243] hover:bg-[#5a9038] text-white shadow-lg shadow-[#68A243]/20"
-        }
-      >
-        <Plus className="h-4 w-4" />
-        {isEmptyState ? "Crear primer turno" : "Nuevo turno"}
-      </Button>
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button
+            ref={buttonRef}
+            className={
+              isEmptyState
+                ? "bg-[#68A243] hover:bg-[#5a9038] text-white"
+                : "h-11 px-5 bg-[#68A243] hover:bg-[#5a9038] text-white shadow-lg shadow-[#68A243]/20"
+            }
+          >
+            <Plus className="h-4 w-4" />
+            {isEmptyState ? "Crear primer turno" : "Nuevo turno"}
+            <ChevronDown className="h-3.5 w-3.5 opacity-70" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end" className="w-52">
+          <DropdownMenuItem
+            onClick={() => setIsFormOpen(true)}
+            className="cursor-pointer gap-2.5 py-2.5"
+          >
+            <Plus className="h-4 w-4 text-[#68A243] shrink-0" />
+            <div>
+              <p className="font-medium text-sm">Un turno</p>
+              <p className="text-xs text-muted-foreground">
+                Crear turno individual
+              </p>
+            </div>
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            onClick={() => setIsBulkFormOpen(true)}
+            className="cursor-pointer gap-2.5 py-2.5"
+          >
+            <Layers className="h-4 w-4 text-[#68A243] shrink-0" />
+            <div>
+              <p className="font-medium text-sm">Varios turnos</p>
+              <p className="text-xs text-muted-foreground">
+                Crear turnos automáticamente
+              </p>
+            </div>
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
 
       <TurnoFormModal
         isOpen={isFormOpen}
@@ -58,6 +92,14 @@ export default function CreateTurnoButton({
         onSubmitSuccess={handleFormSubmitSuccess}
         isSaving={isSaving}
         onSavingChange={setIsSaving}
+      />
+
+      <BulkTurnoFormModal
+        isOpen={isBulkFormOpen}
+        onOpenChange={setIsBulkFormOpen}
+        evento={evento}
+        lastTurno={lastTurno}
+        onSubmitSuccess={onTurnoCreated}
       />
     </>
   );
