@@ -24,12 +24,18 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc -b && vite build",
+    "build": "npm run clean && tsc -b && vite build",
+    "typecheck": "tsc -b --noEmit",
     "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
     "preview": "vite preview",
-    "release:patch": "npm version patch && npm run build",
-    "release:minor": "npm version minor && npm run build",
-    "release:major": "npm version major && npm run build"
+    "clean": "rm -rf dist",
+    "release:rc": "npm version prerelease --preid=rc && npm run build && git push && git push --tags",
+    "release:patch": "npm version patch && npm run build && git push && git push --tags",
+    "release:minor": "npm version minor && npm run build && git push && git push --tags",
+    "release:major": "npm version major && npm run build && git push && git push --tags",
+    "build:local": "npm run clean && tsc -b && vite build",
+    "version": "echo 'Nueva versión: ' && node -e \"console.log(require('./package.json').version)\""
   },
   "dependencies": {
     "@radix-ui/react-avatar": "^1.1.11",
