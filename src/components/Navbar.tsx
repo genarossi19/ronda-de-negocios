@@ -381,11 +381,11 @@ export default function Navbar() {
             <div className="ml-auto flex items-center gap-3">
               {/* Notification rail sin layout shift: slots fijos con opacity-0 */}
               {isAuthenticated && (
-                <div className="hidden md:flex items-center gap-2">
+                <div className="hidden md:flex items-center gap-1.5">
                   <div
                     aria-hidden={!sessionCountdownLabel}
                     className={cn(
-                      "inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-semibold whitespace-nowrap transition-opacity duration-300",
+                      "inline-flex items-center gap-1 rounded-full border px-2 lg:px-2.5 py-1 text-xs font-semibold whitespace-nowrap transition-opacity duration-300",
                       sessionCountdownLabel
                         ? "opacity-100"
                         : "opacity-0 pointer-events-none",
@@ -394,8 +394,8 @@ export default function Navbar() {
                         : "border-red-200 bg-red-50 text-red-800",
                     )}
                   >
-                    <Clock3 className="h-3.5 w-3.5 flex-shrink-0" />
-                    <span>Sesi&#xF3;n:</span>
+                    <Clock3 className="h-3 w-3 flex-shrink-0" />
+                    <span className="hidden xl:inline">Sesi&#xF3;n:</span>
                     <span className="font-mono tabular-nums w-[38px] text-right">
                       {sessionCountdownLabel ?? "00:00"}
                     </span>
@@ -404,7 +404,7 @@ export default function Navbar() {
                     <div
                       aria-hidden={!isPendingApproval}
                       className={cn(
-                        "inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-medium whitespace-nowrap transition-opacity duration-300",
+                        "inline-flex items-center gap-1 rounded-full border px-2 lg:px-2.5 py-1 text-xs font-medium whitespace-nowrap transition-opacity duration-300",
                         isPendingApproval
                           ? "opacity-100"
                           : "opacity-0 pointer-events-none",
@@ -413,8 +413,11 @@ export default function Navbar() {
                           : "border-amber-200 bg-amber-50 text-amber-800",
                       )}
                     >
-                      <Clock3 className="h-3.5 w-3.5 flex-shrink-0" />
-                      Pendiente de aprobaci&#xF3;n
+                      <Clock3 className="h-3 w-3 flex-shrink-0" />
+                      <span className="hidden xl:inline">
+                        Pendiente de aprobaci&#xF3;n
+                      </span>
+                      <span className="inline xl:hidden">Pendiente</span>
                     </div>
                   )}
                 </div>

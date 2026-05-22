@@ -526,7 +526,7 @@ export default function Tables() {
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-12">
             <div className="bg-white dark:bg-[#143E29] rounded-xl shadow-sm border border-gray-200 dark:border-[#68A243]/20 p-8 transition-colors duration-300">
               <h2 className="text-2xl font-bold text-[#143E29] dark:text-white mb-6 text-center transition-colors duration-300">
-                Seleccioná tu Mesa
+                Seleccioná una Mesa
               </h2>
 
               <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4 max-w-5xl mx-auto">

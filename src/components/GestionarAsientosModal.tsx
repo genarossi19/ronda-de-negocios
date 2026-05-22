@@ -339,9 +339,9 @@ export default function GestionarAsientosModal({
   }, [representantes]);
 
   const availableCompanies = useMemo(() => {
-    // Mostrar solo empresas que tienen representantes
+    // Mostrar solo empresas que participan del evento
     return companies
-      .filter((company) => company.id)
+      .filter((company) => company.id && company.participa_evento === true)
       .sort((a, b) => a.razon_social.localeCompare(b.razon_social));
   }, [companies]);
 

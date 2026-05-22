@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router";
+import { useNavigate, useLocation } from "react-router";
 import Cookies from "js-cookie";
 import { useUserStore } from "../store/userStore";
 
@@ -87,6 +87,38 @@ export const ProtectedRoute = ({
   }, [clearUser, navigate, requiredAdmin]);
 
   // Mostrar nada mientras se verifica
+  if (!isVerified) {
+    return null;
+  }
+
+  return <>{children}</>;
+};
+
+/**
+ * Componente para rutas públicas exclusivas (login, register).
+ * Si el usuario ya tiene sesión activa, lo redirige a la página anterior o a la landing.
+ */
+export const PublicOnlyRoute = ({
+  children,
+}: {
+  children: React.ReactNode;
+}) => {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const [isVerified, setIsVerified] = useState(false);
+
+  useEffect(() => {
+    const token = Cookies.get(TOKEN_COOKIE_NAME);
+
+    if (token && isTokenValid(token)) {
+      const from = (location.state as { from?: string } | null)?.from ?? "/";
+      navigate(from, { replace: true });
+      return;
+    }
+
+    setIsVerified(true);
+  }, [navigate, location.state]);
+
   if (!isVerified) {
     return null;
   }

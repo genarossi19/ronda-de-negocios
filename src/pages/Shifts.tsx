@@ -11,14 +11,7 @@ import {
 } from "../components/ui/card";
 import { Badge } from "../components/ui/badge";
 import { Skeleton } from "../components/ui/skeleton";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "../components/ui/dialog";
+import ConfirmarParticipacionDialog from "../components/ConfirmarParticipacionDialog";
 import {
   Calendar,
   CalendarDays,
@@ -33,7 +26,6 @@ import {
   Sparkles,
   CheckCircle2,
   MapPin,
-  Loader2,
 } from "lucide-react";
 import { useCurrentUser } from "../hooks/useCurrentUser";
 import { HelpTutorial } from "../components/HelpTutorial";
@@ -475,47 +467,12 @@ export default function Shifts() {
               </div>
 
               {/* Dialog de confirmación */}
-              <Dialog open={isConfirmOpen} onOpenChange={setIsConfirmOpen}>
-                <DialogContent className="dark:bg-[#143E29] dark:border-[#68A243]/20">
-                  <DialogHeader>
-                    <DialogTitle className="text-[#143E29] dark:text-white text-xl">
-                      ¿Confirmás tu participación?
-                    </DialogTitle>
-                    <DialogDescription className="dark:text-gray-300 text-base">
-                      Al confirmar, tu empresa quedará registrada como
-                      participante del evento y podrás reservar turnos para
-                      reunirte con otras empresas.
-                    </DialogDescription>
-                  </DialogHeader>
-                  <DialogFooter className="gap-2 sm:gap-0">
-                    <Button
-                      variant="ghost"
-                      onClick={() => setIsConfirmOpen(false)}
-                      disabled={isConfirming}
-                      className="dark:text-gray-300 dark:hover:bg-[#0f2f25]"
-                    >
-                      Cancelar
-                    </Button>
-                    <Button
-                      onClick={handleConfirmarParticipacion}
-                      disabled={isConfirming}
-                      className="bg-[#68A243] hover:bg-[#5a9038] text-white font-semibold"
-                    >
-                      {isConfirming ? (
-                        <>
-                          <Loader2 className="h-4 w-4 animate-spin" />
-                          Confirmando...
-                        </>
-                      ) : (
-                        <>
-                          <CheckCircle2 className="h-4 w-4 mr-1" />
-                          ¡Quiero participar!
-                        </>
-                      )}
-                    </Button>
-                  </DialogFooter>
-                </DialogContent>
-              </Dialog>
+              <ConfirmarParticipacionDialog
+                isOpen={isConfirmOpen}
+                onOpenChange={setIsConfirmOpen}
+                isConfirming={isConfirming}
+                onConfirm={handleConfirmarParticipacion}
+              />
             </>
           ) : error ? (
             <Card className="border-destructive/50 bg-destructive/5 dark:bg-destructive/10 dark:border-destructive/30 dark:text-white transition-colors duration-300">

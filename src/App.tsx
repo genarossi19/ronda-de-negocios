@@ -4,7 +4,7 @@ import { BookingProvider } from "./context/BookingContext";
 import { AuthProvider } from "./context/AuthContext";
 import { ThemeProvider } from "./context/ThemeContext";
 import { MotionPreferencesProvider } from "./context/MotionPreferencesContext";
-import { ProtectedRoute } from "./components/ProtectedRoute";
+import { ProtectedRoute, PublicOnlyRoute } from "./components/ProtectedRoute";
 import { useAuth } from "./hooks/useAuth";
 import { useSessionExpiryGuard } from "./hooks/useSessionExpiryGuard";
 import { Toaster } from "./components/ui/sonner";
@@ -95,7 +95,14 @@ function AppRoutes() {
       <AuthRedirectHandler />
       <Suspense fallback={null}>
         <Routes>
-          <Route path="/login" element={<Login />} />
+          <Route
+            path="/login"
+            element={
+              <PublicOnlyRoute>
+                <Login />
+              </PublicOnlyRoute>
+            }
+          />
           <Route path="/olvide-contraseña" element={<ForgotPassword />} />
           <Route
             path="/reset-password/:uidb/:token"
@@ -104,7 +111,14 @@ function AppRoutes() {
           <Route path="/" element={<Landing />} />
           <Route path="/empresas" element={<Empresas />} />
           <Route path="/empresas/:id" element={<EmpresasDetail />} />
-          <Route path="/register" element={<Register />} />
+          <Route
+            path="/register"
+            element={
+              <PublicOnlyRoute>
+                <Register />
+              </PublicOnlyRoute>
+            }
+          />
           <Route path="/register-success" element={<RegisterSuccess />} />
           <Route
             path="/verificar-email/:uidb64/:token"

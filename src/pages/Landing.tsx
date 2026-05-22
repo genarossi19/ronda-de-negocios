@@ -5,14 +5,6 @@ import Carousel from "../components/Carousel";
 import { Button } from "../components/ui/button";
 import { Skeleton } from "../components/ui/skeleton";
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter,
-} from "../components/ui/dialog";
-import {
   ArrowRight,
   Building2,
   Users,
@@ -21,8 +13,6 @@ import {
   Calendar,
   MapPin,
   Clock,
-  CheckCircle2,
-  Loader2,
 } from "lucide-react";
 import { getEventos } from "../api/EventoService";
 import { confirmarParticipacion } from "../api/EmpresaService";
@@ -31,7 +21,9 @@ import type { EventoResponse } from "../types/Evento";
 import { TextAnimate } from "../components/ui/text-animate";
 import { Link, useNavigate } from "react-router";
 import { useAuth } from "../hooks/useAuth";
+import { useCurrentUser } from "../hooks/useCurrentUser";
 import { toast } from "sonner";
+import ConfirmarParticipacionDialog from "../components/ConfirmarParticipacionDialog";
 
 function getClosestActiveEvent(eventos: EventoResponse[]) {
   const today = new Date();
@@ -93,6 +85,7 @@ function EventInfoSkeleton({ icon: Icon }: { icon: typeof Calendar }) {
 export default function Landing() {
   const navigate = useNavigate();
   const { isAuthenticated } = useAuth();
+  const { isPendingApproval } = useCurrentUser();
   const [companyCount, setCompanyCount] = useState(0);
   const [isLoadingCompanies, setIsLoadingCompanies] = useState(true);
 
@@ -329,6 +322,7 @@ export default function Landing() {
           <Carousel
             onCompaniesLoaded={handleCompaniesLoaded}
             isAuthenticated={isAuthenticated}
+            isPendingApproval={isPendingApproval}
             onParticipate={() => setIsConfirmOpen(true)}
           />
         </div>
@@ -430,46 +424,12 @@ export default function Landing() {
       <Footer />
 
       {/* Dialog confirmación de participación */}
-      <Dialog open={isConfirmOpen} onOpenChange={setIsConfirmOpen}>
-        <DialogContent className="dark:bg-[#143E29] dark:border-[#68A243]/20">
-          <DialogHeader>
-            <DialogTitle className="text-[#143E29] dark:text-white text-xl">
-              ¿Confirmás tu participación?
-            </DialogTitle>
-            <DialogDescription className="dark:text-gray-300 text-base">
-              Al confirmar, tu empresa quedará registrada como participante del
-              evento y podrás reservar turnos para reunirte con otras empresas.
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter className="gap-2 sm:gap-0">
-            <Button
-              variant="ghost"
-              onClick={() => setIsConfirmOpen(false)}
-              disabled={isConfirming}
-              className="dark:text-gray-300 dark:hover:bg-[#0f2f25]"
-            >
-              Cancelar
-            </Button>
-            <Button
-              onClick={handleConfirmarParticipacion}
-              disabled={isConfirming}
-              className="bg-[#68A243] hover:bg-[#5a9038] text-white font-semibold"
-            >
-              {isConfirming ? (
-                <>
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                  Confirmando...
-                </>
-              ) : (
-                <>
-                  <CheckCircle2 className="h-4 w-4 mr-1" />
-                  ¡Quiero participar!
-                </>
-              )}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <ConfirmarParticipacionDialog
+        isOpen={isConfirmOpen}
+        onOpenChange={setIsConfirmOpen}
+        isConfirming={isConfirming}
+        onConfirm={handleConfirmarParticipacion}
+      />
     </div>
   );
 }

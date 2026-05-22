@@ -177,7 +177,7 @@ export default function VerificarEmailRepresentante() {
                   <Button
                     asChild
                     variant="outline"
-                    className="flex-1 border-gray-300 text-gray-700 hover:bg-gray-50 dark:border-[#68A243]/40 dark:text-[#68A243] dark:hover:bg-[#68A243]/10 h-11"
+                    className="flex-1 !border-gray-300 !text-gray-700 hover:!bg-gray-100 hover:!text-gray-700 dark:!border-[#68A243]/40 dark:!text-[#68A243] dark:hover:!bg-[#68A243]/10 dark:hover:!text-[#68A243] h-11"
                   >
                     <Link to="/">
                       <ArrowLeft className="h-4 w-4 mr-2" />

@@ -9,6 +9,7 @@ import { Link } from "react-router";
 interface CarouselProps {
   onCompaniesLoaded?: (count: number) => void;
   isAuthenticated?: boolean;
+  isPendingApproval?: boolean;
   onParticipate?: () => void;
 }
 
@@ -23,6 +24,7 @@ interface ImageErrors {
 export default function Carousel({
   onCompaniesLoaded,
   isAuthenticated,
+  isPendingApproval = false,
   onParticipate,
 }: CarouselProps) {
   const [companies, setCompanies] = useState<EmpresaResponse[]>([]);
@@ -46,7 +48,8 @@ export default function Carousel({
         const data = await getCompanies();
         isLoading(false);
         const filtered = data.filter(
-          (e: EmpresaResponse) => e.aprobada !== false && e.participa_evento !== false,
+          (e: EmpresaResponse) =>
+            e.aprobada !== false && e.participa_evento !== false,
         );
         setCompanies(filtered);
         onCompaniesLoaded?.(filtered.length);
@@ -141,7 +144,8 @@ export default function Carousel({
         const data = await getCompanies();
         isLoading(false);
         const filtered = data.filter(
-          (e: EmpresaResponse) => e.aprobada !== false && e.participa_evento !== false,
+          (e: EmpresaResponse) =>
+            e.aprobada !== false && e.participa_evento !== false,
         );
         setCompanies(filtered);
         onCompaniesLoaded?.(filtered.length);
@@ -201,27 +205,41 @@ export default function Carousel({
             <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-[#68A243]/15 dark:bg-[#68A243]/20 text-[#68A243] mb-4">
               <Building2 className="h-8 w-8" />
             </div>
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
-              Aún no hay empresas registradas
-            </h3>
-            <p className="text-gray-600 dark:text-gray-400 mb-6 max-w-sm">
-              {isAuthenticated
-                ? "Confirmá tu participación en la Ronda de Negocios y sé parte del evento."
-                : "Sé la primera en inscribirte a la Ronda de Negocios y accede a oportunidades exclusivas."}
-            </p>
-            {isAuthenticated ? (
-              <Button
-                className="bg-[#68A243] hover:bg-[#68A243]/90 text-white"
-                onClick={onParticipate}
-              >
-                Quiero participar
-              </Button>
+            {isPendingApproval ? (
+              <>
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+                  Tu empresa aparecerá aquí pronto
+                </h3>
+                <p className="text-gray-600 dark:text-gray-400 max-w-sm">
+                  Una vez que tu empresa sea aprobada y confirmes tu
+                  participación, vas a aparecer en este carrusel.
+                </p>
+              </>
             ) : (
-              <Link to="/register">
-                <Button className="bg-[#68A243] hover:bg-[#68A243]/90 text-white">
-                  Inscribir mi empresa
-                </Button>
-              </Link>
+              <>
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+                  Aún no hay empresas registradas
+                </h3>
+                <p className="text-gray-600 dark:text-gray-400 mb-6 max-w-sm">
+                  {isAuthenticated
+                    ? "Confirmá tu participación en la Ronda de Negocios y sé parte del evento."
+                    : "Sé la primera en inscribirte a la Ronda de Negocios y accede a oportunidades exclusivas."}
+                </p>
+                {isAuthenticated ? (
+                  <Button
+                    className="bg-[#68A243] hover:bg-[#68A243]/90 text-white"
+                    onClick={onParticipate}
+                  >
+                    Quiero participar
+                  </Button>
+                ) : (
+                  <Link to="/register">
+                    <Button className="bg-[#68A243] hover:bg-[#68A243]/90 text-white">
+                      Inscribir mi empresa
+                    </Button>
+                  </Link>
+                )}
+              </>
             )}
           </div>
         </div>

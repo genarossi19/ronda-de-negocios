@@ -173,7 +173,7 @@ export default function RegisterSuccess() {
                   },
                   {
                     icon: Building2,
-                    text: "Iniciá sesión y completá tu perfil",
+                    text: "Iniciá sesión y gestioná tus representantes",
                   },
                 ].map((item, i) => (
                   <div key={i} className="flex items-center gap-3">
