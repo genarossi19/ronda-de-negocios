@@ -10,6 +10,7 @@ interface CarouselProps {
   onCompaniesLoaded?: (count: number) => void;
   isAuthenticated?: boolean;
   isPendingApproval?: boolean;
+  isAdmin?: boolean;
   onParticipate?: () => void;
 }
 
@@ -25,6 +26,7 @@ export default function Carousel({
   onCompaniesLoaded,
   isAuthenticated,
   isPendingApproval = false,
+  isAdmin = false,
   onParticipate,
 }: CarouselProps) {
   const [companies, setCompanies] = useState<EmpresaResponse[]>([]);
@@ -220,24 +222,28 @@ export default function Carousel({
                 <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
                   Aún no hay empresas registradas
                 </h3>
-                <p className="text-gray-600 dark:text-gray-400 mb-6 max-w-sm">
-                  {isAuthenticated
-                    ? "Confirmá tu participación en la Ronda de Negocios y sé parte del evento."
-                    : "Sé la primera en inscribirte a la Ronda de Negocios y accede a oportunidades exclusivas."}
-                </p>
-                {isAuthenticated ? (
-                  <Button
-                    className="bg-[#68A243] hover:bg-[#68A243]/90 text-white"
-                    onClick={onParticipate}
-                  >
-                    Quiero participar
-                  </Button>
-                ) : (
-                  <Link to="/register">
-                    <Button className="bg-[#68A243] hover:bg-[#68A243]/90 text-white">
-                      Inscribir mi empresa
-                    </Button>
-                  </Link>
+                {!isAdmin && (
+                  <>
+                    <p className="text-gray-600 dark:text-gray-400 mb-6 max-w-sm">
+                      {isAuthenticated
+                        ? "Confirmá tu participación en la Ronda de Negocios y sé parte del evento."
+                        : "Sé la primera en inscribirte a la Ronda de Negocios y accede a oportunidades exclusivas."}
+                    </p>
+                    {isAuthenticated ? (
+                      <Button
+                        className="bg-[#68A243] hover:bg-[#68A243]/90 text-white"
+                        onClick={onParticipate}
+                      >
+                        Quiero participar
+                      </Button>
+                    ) : (
+                      <Link to="/register">
+                        <Button className="bg-[#68A243] hover:bg-[#68A243]/90 text-white">
+                          Inscribir mi empresa
+                        </Button>
+                      </Link>
+                    )}
+                  </>
                 )}
               </>
             )}

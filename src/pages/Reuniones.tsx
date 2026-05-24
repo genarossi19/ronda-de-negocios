@@ -396,7 +396,13 @@ export default function Reuniones() {
         setHistorial(hist);
         setEventos(evts);
       } catch (err) {
-        setError(getApiErrorMessage(err, "Error al cargar las reuniones"));
+        const msg = getApiErrorMessage(err, "Error al cargar las reuniones");
+        if (msg?.includes("You do not have permission")) {
+          // La empresa está pendiente de aprobación — el aviso amarillo ya lo explica
+          setError(null);
+        } else {
+          setError(msg);
+        }
       } finally {
         setLoading(false);
       }

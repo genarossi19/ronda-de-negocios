@@ -1266,7 +1266,13 @@ export default function RegistrationForm() {
                       }
                       className={`${
                         currentStep === 1 ? "w-full" : "flex-1"
-                      } relative overflow-hidden bg-primary dark:bg-[#68A243] hover:bg-primary-strong dark:hover:bg-[#5a8f38] h-11 font-semibold disabled:opacity-100 disabled:cursor-not-allowed text-white transition-colors duration-200`}
+                      } relative overflow-hidden h-11 font-semibold text-white transition-colors duration-200 cursor-pointer
+                        ${
+                          isLoading
+                            ? "!cursor-wait bg-primary dark:!bg-[#68A243]"
+                            : "disabled:cursor-not-allowed disabled:!bg-gray-200 dark:disabled:!bg-gray-700/60 disabled:!text-gray-400 dark:disabled:!text-gray-500 disabled:!shadow-none"
+                        }
+                        bg-primary dark:bg-[#68A243] hover:bg-primary-strong dark:hover:bg-[#5a8f38]`}
                     >
                       {/* Relleno animado de izquierda a derecha mientras carga */}
                       {isLoading &&

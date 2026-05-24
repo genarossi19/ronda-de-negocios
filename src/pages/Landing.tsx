@@ -85,7 +85,7 @@ function EventInfoSkeleton({ icon: Icon }: { icon: typeof Calendar }) {
 export default function Landing() {
   const navigate = useNavigate();
   const { isAuthenticated } = useAuth();
-  const { isPendingApproval } = useCurrentUser();
+  const { isPendingApproval, isAdmin } = useCurrentUser();
   const [companyCount, setCompanyCount] = useState(0);
   const [isLoadingCompanies, setIsLoadingCompanies] = useState(true);
 
@@ -323,6 +323,7 @@ export default function Landing() {
             onCompaniesLoaded={handleCompaniesLoaded}
             isAuthenticated={isAuthenticated}
             isPendingApproval={isPendingApproval}
+            isAdmin={isAdmin}
             onParticipate={() => setIsConfirmOpen(true)}
           />
         </div>

@@ -26,6 +26,11 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "../components/ui/tooltip";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "../components/ui/popover";
 import { Avatar, AvatarFallback } from "../components/ui/avatar";
 import { Badge } from "../components/ui/badge";
 import { useState, useEffect, useRef } from "react";
@@ -337,11 +342,11 @@ export default function Navbar() {
         } ${navClasses} ${isDarkTheme ? "border-[#1a5032]" : "border-gray-100"}`}
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center h-16 relative">
+          <div className="grid grid-cols-[1fr_auto_1fr] items-center h-16">
             {/* Logo - Izquierda */}
             <Link
               to="/"
-              className="flex items-center gap-3 group flex-shrink-0 relative z-10"
+              className="flex items-center gap-3 group justify-self-start"
             >
               <div
                 className={`p-1.5 rounded-xl transition-all duration-300 group-hover:scale-110 ${
@@ -374,20 +379,22 @@ export default function Navbar() {
               </div>
             </Link>
 
-            {/* Centro - Navigation Links (Desktop) - VERDADERAMENTE CENTRADOS */}
-            <div className="absolute left-1/2 transform -translate-x-1/2 hidden lg:flex">
-              <div className="flex items-center gap-1">{renderNavLinks()}</div>
+            {/* Centro - Navigation Links (Desktop) */}
+            <div className="flex justify-center">
+              <div className="hidden lg:flex items-center gap-1">
+                {renderNavLinks()}
+              </div>
             </div>
 
             {/* Derecha - User Section */}
-            <div className="ml-auto flex items-center gap-3">
+            <div className="flex items-center gap-3 justify-self-end">
               {/* Notification rail sin layout shift: slots fijos con opacity-0 */}
               {isAuthenticated && (
-                <div className="hidden md:flex items-center gap-1.5">
+                <div className="hidden md:flex items-center gap-1.5 shrink-0">
                   <div
                     aria-hidden={!sessionCountdownLabel}
                     className={cn(
-                      "inline-flex items-center gap-1 rounded-full border px-2 lg:px-2.5 py-1 text-xs font-semibold whitespace-nowrap transition-opacity duration-300",
+                      "inline-flex items-center gap-1 rounded-full border px-2 py-1 text-xs font-semibold whitespace-nowrap transition-opacity duration-300",
                       sessionCountdownLabel
                         ? "opacity-100"
                         : "opacity-0 pointer-events-none",
@@ -397,30 +404,47 @@ export default function Navbar() {
                     )}
                   >
                     <Clock3 className="h-3 w-3 flex-shrink-0" />
-                    <span className="hidden xl:inline">Sesi&#xF3;n:</span>
+                    <span className="hidden 2xl:inline">Sesi&#xF3;n:</span>
                     <span className="font-mono tabular-nums w-[38px] text-right">
                       {sessionCountdownLabel ?? "00:00"}
                     </span>
                   </div>
-                  {!user?.is_superuser && (
-                    <div
-                      aria-hidden={!isPendingApproval}
-                      className={cn(
-                        "inline-flex items-center gap-1 rounded-full border px-2 lg:px-2.5 py-1 text-xs font-medium whitespace-nowrap transition-opacity duration-300",
-                        isPendingApproval
-                          ? "opacity-100"
-                          : "opacity-0 pointer-events-none",
-                        isDarkTheme
-                          ? "border-amber-400/30 bg-amber-400/15 text-amber-100"
-                          : "border-amber-200 bg-amber-50 text-amber-800",
-                      )}
-                    >
-                      <Clock3 className="h-3 w-3 flex-shrink-0" />
-                      <span className="hidden xl:inline">
-                        Pendiente de aprobaci&#xF3;n
-                      </span>
-                      <span className="inline xl:hidden">Pendiente</span>
-                    </div>
+                  {!user?.is_superuser && isPendingApproval && (
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <button
+                          className={cn(
+                            "inline-flex items-center gap-1 rounded-full border px-2 py-1 text-xs font-medium whitespace-nowrap transition-opacity duration-300 cursor-pointer",
+                            isDarkTheme
+                              ? "border-amber-400/30 bg-amber-400/15 text-amber-100 hover:bg-amber-400/25"
+                              : "border-amber-200 bg-amber-50 text-amber-800 hover:bg-amber-100",
+                          )}
+                        >
+                          <Clock3 className="h-3 w-3 flex-shrink-0" />
+                          <span className="text-xs">En revisión</span>
+                        </button>
+                      </PopoverTrigger>
+                      <PopoverContent
+                        side="bottom"
+                        align="end"
+                        className="w-72 text-sm"
+                      >
+                        <div className="space-y-2">
+                          <p className="font-semibold text-amber-700 dark:text-amber-300">
+                            Tu empresa está en revisión
+                          </p>
+                          <p className="text-xs leading-relaxed text-gray-600 dark:text-gray-300">
+                            Estamos verificando los datos de tu empresa. Una vez
+                            aprobada, vas a poder inscribirte a turnos,
+                            coordinar reuniones con otras empresas y acceder a
+                            todas las funcionalidades de la Ronda de Negocios.
+                          </p>
+                          <p className="text-xs text-gray-500 dark:text-gray-400">
+                            Te avisaremos por mail cuando quede activa.
+                          </p>
+                        </div>
+                      </PopoverContent>
+                    </Popover>
                   )}
                 </div>
               )}
