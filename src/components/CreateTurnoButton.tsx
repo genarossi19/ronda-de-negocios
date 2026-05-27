@@ -63,7 +63,7 @@ export default function CreateTurnoButton({
             <Plus className="h-4 w-4 text-[#68A243] shrink-0" />
             <div>
               <p className="font-medium text-sm">Un turno</p>
-              <p className="text-xs text-muted-foreground">
+              <p className="text-xs text-muted-foreground dark:text-gray-300">
                 Crear turno individual
               </p>
             </div>
@@ -75,7 +75,7 @@ export default function CreateTurnoButton({
             <Layers className="h-4 w-4 text-[#68A243] shrink-0" />
             <div>
               <p className="font-medium text-sm">Varios turnos</p>
-              <p className="text-xs text-muted-foreground">
+              <p className="text-xs text-muted-foreground dark:text-gray-300">
                 Crear turnos automáticamente
               </p>
             </div>

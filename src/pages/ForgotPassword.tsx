@@ -205,7 +205,7 @@ export default function ForgotPassword() {
                         onFocus={() => setFocusedField("email")}
                         onBlur={() => setFocusedField(null)}
                         placeholder="tu@empresa.com"
-                        className={`pl-12 h-12 border-2 focus:ring-0 transition-all duration-300 rounded-xl bg-gray-50 dark:bg-[#0f2f25] focus:bg-white dark:focus:bg-[#143E29] font-medium dark:text-white dark:placeholder-gray-500 ${
+                        className={`pl-12 h-12 border-2 focus:ring-0 transition-all duration-300 rounded-xl bg-gray-50 dark:bg-[#0f2f25] focus:bg-white dark:focus:bg-[#143E29] font-medium dark:text-white dark:placeholder-[#b8c0ca] ${
                           error
                             ? "border-red-500"
                             : "border-gray-200 dark:border-[#68A243]/20 focus-visible:border-[#68A243]"

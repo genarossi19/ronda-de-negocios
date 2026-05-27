@@ -14,6 +14,7 @@ export interface TurnoWrite {
   hora_inicio: string;
   hora_fin: string;
   cant_mesas: number;
+  mesas_max_empresa: number;
   evento: number;
   estado: "abierto" | "cerrado";
 }

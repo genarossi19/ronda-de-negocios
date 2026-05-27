@@ -1030,7 +1030,7 @@ export default function Reuniones() {
                           value={histSearch}
                           onChange={(e) => setHistSearch(e.target.value)}
                           placeholder="Buscar…"
-                          className="h-9 w-full pl-9 border-[#68A243]/20 focus-visible:border-[#68A243] focus-visible:ring-[#68A243]/20 bg-white dark:bg-[#0f2f25] dark:border-[#68A243]/20 dark:text-white dark:placeholder-gray-400"
+                          className="h-9 w-full pl-9 border-[#68A243]/20 focus-visible:border-[#68A243] focus-visible:ring-[#68A243]/20 bg-white dark:bg-[#0f2f25] dark:border-[#68A243]/20 dark:text-white dark:placeholder-[#b8c0ca]"
                         />
                       </div>
 

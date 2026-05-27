@@ -346,6 +346,10 @@ export default function Shifts() {
                   <p className="text-sm text-amber-900/80 dark:text-amber-100/80">
                     Te enviaremos un correo cuando la aprobación quede
                     confirmada y ya puedas reservar tu turno.
+                    <span className="block mt-1 text-xs text-amber-700 dark:text-amber-300 font-semibold">
+                      Cuando recibas la notificación, recuerda volver a iniciar
+                      sesión para actualizar tu acceso.
+                    </span>
                   </p>
                 </div>
 

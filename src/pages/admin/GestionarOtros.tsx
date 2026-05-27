@@ -84,6 +84,7 @@ function GenericTab({
   onEdit,
   onDelete,
 }: GenericTabProps) {
+  const singularTitle = title.toLowerCase().slice(0, -1);
   const [newNombre, setNewNombre] = useState("");
   const [editingId, setEditingId] = useState<number | null>(null);
   const [editingNombre, setEditingNombre] = useState("");
@@ -121,41 +122,46 @@ function GenericTab({
   return (
     <div className="space-y-4">
       {/* Formulario de agregar */}
-      <div className="flex items-center gap-2 p-4 rounded-lg border border-dashed border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/30">
-        <Input
-          placeholder={`Nombre del ${title.toLowerCase().slice(0, -1)}`}
-          value={newNombre}
-          onChange={(e) => setNewNombre(e.target.value)}
-          onKeyDown={(e) => e.key === "Enter" && handleAdd()}
-          className="flex-1"
-        />
-        <Button
-          onClick={handleAdd}
-          disabled={!newNombre.trim() || submitting}
-          size="sm"
-          className="bg-[#68A243] hover:bg-[#5a9139] text-white gap-1.5 shrink-0"
-        >
-          {submitting ? (
-            <Loader2 className="h-4 w-4 animate-spin" />
-          ) : (
-            <Plus className="h-4 w-4" />
-          )}
-          Agregar
-        </Button>
+      <div className="rounded-xl border border-dashed border-[#68A243]/35 bg-[#68A243]/5 p-4 dark:border-[#2f5f45] dark:bg-[#0f2419]">
+        <p className="mb-3 text-xs font-semibold uppercase tracking-[0.14em] text-[#2f5f1f] dark:text-[#9FD27B]">
+          Nuevo {singularTitle}
+        </p>
+        <div className="flex items-center gap-2">
+          <Input
+            placeholder={`Nombre del ${singularTitle}`}
+            value={newNombre}
+            onChange={(e) => setNewNombre(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && handleAdd()}
+            className="h-10 flex-1 border-gray-300 bg-white text-gray-900 placeholder:text-gray-500 dark:border-[#2f5f45] dark:bg-[#0f2419] dark:text-gray-100 dark:placeholder:text-[#b8c0ca]"
+          />
+          <Button
+            onClick={handleAdd}
+            disabled={!newNombre.trim() || submitting}
+            size="sm"
+            className="h-10 bg-[#68A243] hover:bg-[#5a9139] text-white gap-1.5 shrink-0"
+          >
+            {submitting ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <Plus className="h-4 w-4" />
+            )}
+            Agregar
+          </Button>
+        </div>
       </div>
 
       {/* Tabla */}
-      <div className="rounded-lg border border-gray-200 dark:border-gray-800 overflow-hidden">
+      <div className="rounded-lg border border-gray-200 dark:border-[#2f5f45] overflow-hidden">
         <Table>
-          <TableHeader>
-            <TableRow className="bg-gray-50 dark:bg-gray-900/50">
-              <TableHead className="w-16 text-gray-600 dark:text-gray-400">
+          <TableHeader className="dark:border-[#2f5f45]">
+            <TableRow className="bg-gray-50 dark:bg-[#0f2419] dark:border-[#2f5f45]">
+              <TableHead className="w-16 text-gray-600 dark:text-gray-300">
                 #
               </TableHead>
-              <TableHead className="text-gray-600 dark:text-gray-400">
+              <TableHead className="text-gray-600 dark:text-gray-300">
                 Nombre
               </TableHead>
-              <TableHead className="w-28 text-right text-gray-600 dark:text-gray-400">
+              <TableHead className="w-28 text-right text-gray-600 dark:text-gray-300">
                 Acciones
               </TableHead>
             </TableRow>
@@ -165,7 +171,7 @@ function GenericTab({
               <TableRow>
                 <TableCell
                   colSpan={3}
-                  className="text-center py-8 text-gray-500 dark:text-gray-400"
+                  className="text-center py-8 text-gray-500 dark:text-gray-300"
                 >
                   <Loader2 className="h-5 w-5 animate-spin mx-auto" />
                 </TableCell>
@@ -174,7 +180,7 @@ function GenericTab({
               <TableRow>
                 <TableCell
                   colSpan={3}
-                  className="text-center py-8 text-gray-500 dark:text-gray-400"
+                  className="text-center py-8 text-gray-500 dark:text-gray-300"
                 >
                   No hay {title.toLowerCase()} cargados.
                 </TableCell>
@@ -183,9 +189,9 @@ function GenericTab({
               items.map((item) => (
                 <TableRow
                   key={item.id}
-                  className="hover:bg-gray-50 dark:hover:bg-gray-900/30"
+                  className="hover:bg-gray-50 dark:border-[#2f5f45]/70 dark:hover:bg-[#2f5f45]/15"
                 >
-                  <TableCell className="text-gray-500 dark:text-gray-400 text-sm">
+                  <TableCell className="text-gray-500 dark:text-gray-300 text-sm">
                     {item.id}
                   </TableCell>
                   <TableCell>
@@ -222,7 +228,7 @@ function GenericTab({
                           <Button
                             size="icon"
                             variant="ghost"
-                            className="h-7 w-7 text-gray-500 hover:text-gray-700 hover:bg-gray-100 dark:hover:bg-gray-800"
+                            className="h-7 w-7 text-gray-500 dark:text-gray-300 hover:text-gray-700 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800"
                             onClick={cancelEdit}
                           >
                             <X className="h-3.5 w-3.5" />
@@ -233,7 +239,7 @@ function GenericTab({
                           <Button
                             size="icon"
                             variant="ghost"
-                            className="h-7 w-7 text-gray-500 hover:text-[#68A243] hover:bg-[#68A243]/10"
+                            className="h-7 w-7 text-gray-500 dark:text-gray-300 hover:text-[#68A243] dark:hover:text-[#9FD27B] hover:bg-[#68A243]/10 dark:hover:bg-[#68A243]/20"
                             onClick={() => startEdit(item)}
                           >
                             <Pencil className="h-3.5 w-3.5" />
@@ -243,7 +249,7 @@ function GenericTab({
                               <Button
                                 size="icon"
                                 variant="ghost"
-                                className="h-7 w-7 text-gray-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/20"
+                                className="h-7 w-7 text-gray-500 dark:text-gray-300 hover:text-red-600 dark:hover:text-red-300 hover:bg-red-50 dark:hover:bg-red-950/20"
                               >
                                 <Trash2 className="h-3.5 w-3.5" />
                               </Button>
@@ -346,67 +352,72 @@ function LocalidadesTab({
   return (
     <div className="space-y-4">
       {/* Formulario de agregar */}
-      <div className="flex items-center gap-2 p-4 rounded-lg border border-dashed border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/30">
-        <Input
-          placeholder="Nombre de la localidad"
-          value={newNombre}
-          onChange={(e) => setNewNombre(e.target.value)}
-          onKeyDown={(e) => e.key === "Enter" && handleAdd()}
-          className="flex-1"
-        />
-        <Select
-          value={newProvincia}
-          onValueChange={setNewProvincia}
-          disabled={loadingProvincias}
-        >
-          <SelectTrigger className="w-48 shrink-0">
-            <SelectValue
-              placeholder={loadingProvincias ? "Cargando..." : "Provincia"}
-            />
-          </SelectTrigger>
-          <SelectContent>
-            {provincias.map((p) => (
-              <SelectItem key={p.id} value={String(p.id)}>
-                {p.nombre}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        <Button
-          onClick={handleAdd}
-          disabled={
-            !newNombre.trim() ||
-            !newProvincia ||
-            submitting ||
-            loadingProvincias
-          }
-          size="sm"
-          className="bg-[#68A243] hover:bg-[#5a9139] text-white gap-1.5 shrink-0"
-        >
-          {submitting ? (
-            <Loader2 className="h-4 w-4 animate-spin" />
-          ) : (
-            <Plus className="h-4 w-4" />
-          )}
-          Agregar
-        </Button>
+      <div className="rounded-xl border border-dashed border-[#68A243]/35 bg-[#68A243]/5 p-4 dark:border-[#2f5f45] dark:bg-[#0f2419]">
+        <p className="mb-3 text-xs font-semibold uppercase tracking-[0.14em] text-[#2f5f1f] dark:text-[#9FD27B]">
+          Nueva localidad
+        </p>
+        <div className="flex items-center gap-2">
+          <Input
+            placeholder="Nombre de la localidad"
+            value={newNombre}
+            onChange={(e) => setNewNombre(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && handleAdd()}
+            className="h-10 flex-1 border-gray-300 bg-white text-gray-900 placeholder:text-gray-500 dark:border-[#2f5f45] dark:bg-[#0f2419] dark:text-gray-100 dark:placeholder:text-[#b8c0ca]"
+          />
+          <Select
+            value={newProvincia}
+            onValueChange={setNewProvincia}
+            disabled={loadingProvincias}
+          >
+            <SelectTrigger className="h-10 w-48 shrink-0 border-gray-300 bg-white text-gray-900 dark:border-[#2f5f45] dark:bg-[#0f2419] dark:text-gray-100">
+              <SelectValue
+                placeholder={loadingProvincias ? "Cargando..." : "Provincia"}
+              />
+            </SelectTrigger>
+            <SelectContent>
+              {provincias.map((p) => (
+                <SelectItem key={p.id} value={String(p.id)}>
+                  {p.nombre}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Button
+            onClick={handleAdd}
+            disabled={
+              !newNombre.trim() ||
+              !newProvincia ||
+              submitting ||
+              loadingProvincias
+            }
+            size="sm"
+            className="h-10 bg-[#68A243] hover:bg-[#5a9139] text-white gap-1.5 shrink-0"
+          >
+            {submitting ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <Plus className="h-4 w-4" />
+            )}
+            Agregar
+          </Button>
+        </div>
       </div>
 
       {/* Tabla */}
-      <div className="rounded-lg border border-gray-200 dark:border-gray-800 overflow-hidden">
+      <div className="rounded-lg border border-gray-200 dark:border-[#2f5f45] overflow-hidden">
         <Table>
-          <TableHeader>
-            <TableRow className="bg-gray-50 dark:bg-gray-900/50">
-              <TableHead className="w-16 text-gray-600 dark:text-gray-400">
+          <TableHeader className="dark:border-[#2f5f45]">
+            <TableRow className="bg-gray-50 dark:bg-[#0f2419] dark:border-[#2f5f45]">
+              <TableHead className="w-16 text-gray-600 dark:text-gray-300">
                 #
               </TableHead>
-              <TableHead className="text-gray-600 dark:text-gray-400">
+              <TableHead className="text-gray-600 dark:text-gray-300">
                 Nombre
               </TableHead>
-              <TableHead className="text-gray-600 dark:text-gray-400">
+              <TableHead className="text-gray-600 dark:text-gray-300">
                 Provincia
               </TableHead>
-              <TableHead className="w-28 text-right text-gray-600 dark:text-gray-400">
+              <TableHead className="w-28 text-right text-gray-600 dark:text-gray-300">
                 Acciones
               </TableHead>
             </TableRow>
@@ -416,7 +427,7 @@ function LocalidadesTab({
               <TableRow>
                 <TableCell
                   colSpan={4}
-                  className="text-center py-8 text-gray-500 dark:text-gray-400"
+                  className="text-center py-8 text-gray-500 dark:text-gray-300"
                 >
                   <Loader2 className="h-5 w-5 animate-spin mx-auto" />
                 </TableCell>
@@ -425,7 +436,7 @@ function LocalidadesTab({
               <TableRow>
                 <TableCell
                   colSpan={4}
-                  className="text-center py-8 text-gray-500 dark:text-gray-400"
+                  className="text-center py-8 text-gray-500 dark:text-gray-300"
                 >
                   No hay localidades cargadas.
                 </TableCell>
@@ -434,9 +445,9 @@ function LocalidadesTab({
               localidades.map((loc) => (
                 <TableRow
                   key={loc.id}
-                  className="hover:bg-gray-50 dark:hover:bg-gray-900/30"
+                  className="hover:bg-gray-50 dark:border-[#2f5f45]/70 dark:hover:bg-[#2f5f45]/15"
                 >
-                  <TableCell className="text-gray-500 dark:text-gray-400 text-sm">
+                  <TableCell className="text-gray-500 dark:text-gray-300 text-sm">
                     {loc.id}
                   </TableCell>
                   <TableCell>
@@ -472,7 +483,7 @@ function LocalidadesTab({
                         </SelectContent>
                       </Select>
                     ) : (
-                      <span className="text-gray-600 dark:text-gray-400 text-sm">
+                      <span className="text-gray-600 dark:text-gray-300 text-sm">
                         {loc.provincia.nombre}
                       </span>
                     )}
@@ -493,7 +504,7 @@ function LocalidadesTab({
                           <Button
                             size="icon"
                             variant="ghost"
-                            className="h-7 w-7 text-gray-500 hover:text-gray-700 hover:bg-gray-100 dark:hover:bg-gray-800"
+                            className="h-7 w-7 text-gray-500 dark:text-gray-300 hover:text-gray-700 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800"
                             onClick={cancelEdit}
                           >
                             <X className="h-3.5 w-3.5" />
@@ -504,7 +515,7 @@ function LocalidadesTab({
                           <Button
                             size="icon"
                             variant="ghost"
-                            className="h-7 w-7 text-gray-500 hover:text-[#68A243] hover:bg-[#68A243]/10"
+                            className="h-7 w-7 text-gray-500 dark:text-gray-300 hover:text-[#68A243] dark:hover:text-[#9FD27B] hover:bg-[#68A243]/10 dark:hover:bg-[#68A243]/20"
                             onClick={() => startEdit(loc)}
                           >
                             <Pencil className="h-3.5 w-3.5" />
@@ -514,7 +525,7 @@ function LocalidadesTab({
                               <Button
                                 size="icon"
                                 variant="ghost"
-                                className="h-7 w-7 text-gray-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/20"
+                                className="h-7 w-7 text-gray-500 dark:text-gray-300 hover:text-red-600 dark:hover:text-red-300 hover:bg-red-50 dark:hover:bg-red-950/20"
                               >
                                 <Trash2 className="h-3.5 w-3.5" />
                               </Button>
@@ -758,7 +769,7 @@ export default function GestionarOtros() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-950 transition-colors duration-300">
+    <div className="min-h-screen bg-gray-50 dark:bg-[#081710] transition-colors duration-300">
       <Navbar />
       <div className="pt-16">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -767,19 +778,39 @@ export default function GestionarOtros() {
             <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
               Gestión de elementos generales
             </h1>
-            <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+            <p className="text-sm text-gray-500 dark:text-gray-300 mt-1">
               Administrá cargos, sectores, localidades y provincias del sistema.
             </p>
           </div>
 
           {/* Tabs */}
-          <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 shadow-sm p-6">
+          <div className="bg-white dark:bg-[#0f2419] rounded-xl border border-gray-200 dark:border-[#2f5f45] shadow-sm p-6">
             <Tabs defaultValue="cargos">
-              <TabsList className="mb-6 grid w-full grid-cols-4 bg-gray-100 dark:bg-gray-800">
-                <TabsTrigger value="cargos">Cargos</TabsTrigger>
-                <TabsTrigger value="sectores">Sectores</TabsTrigger>
-                <TabsTrigger value="localidades">Localidades</TabsTrigger>
-                <TabsTrigger value="provincias">Provincias</TabsTrigger>
+              <TabsList className="mb-6 grid h-auto w-full grid-cols-4 rounded-xl bg-gray-100 p-1.5 dark:bg-[#0f2419]">
+                <TabsTrigger
+                  value="cargos"
+                  className="rounded-lg py-2 data-[state=active]:bg-white data-[state=active]:text-[#143E29] dark:text-gray-200 dark:data-[state=active]:bg-[#143E29] dark:data-[state=active]:text-white"
+                >
+                  Cargos
+                </TabsTrigger>
+                <TabsTrigger
+                  value="sectores"
+                  className="rounded-lg py-2 data-[state=active]:bg-white data-[state=active]:text-[#143E29] dark:text-gray-200 dark:data-[state=active]:bg-[#143E29] dark:data-[state=active]:text-white"
+                >
+                  Sectores
+                </TabsTrigger>
+                <TabsTrigger
+                  value="localidades"
+                  className="rounded-lg py-2 data-[state=active]:bg-white data-[state=active]:text-[#143E29] dark:text-gray-200 dark:data-[state=active]:bg-[#143E29] dark:data-[state=active]:text-white"
+                >
+                  Localidades
+                </TabsTrigger>
+                <TabsTrigger
+                  value="provincias"
+                  className="rounded-lg py-2 data-[state=active]:bg-white data-[state=active]:text-[#143E29] dark:text-gray-200 dark:data-[state=active]:bg-[#143E29] dark:data-[state=active]:text-white"
+                >
+                  Provincias
+                </TabsTrigger>
               </TabsList>
 
               <TabsContent value="cargos">

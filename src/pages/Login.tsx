@@ -122,6 +122,15 @@ export default function Login() {
     } catch (err) {
       const message =
         err instanceof Error ? err.message : "Error al iniciar sesión";
+
+      if (message.toLowerCase().includes("network error")) {
+        setError(
+          "Ha ocurrido un error interno con el servidor. Intenta de nuevo más tarde",
+        );
+        setIsLoading(false);
+        return;
+      }
+
       if (message === "Usuario no encontrado.") {
         setEmailError(message);
       } else if (message === "Credenciales inválidas.") {
@@ -388,7 +397,7 @@ export default function Login() {
                       onBlur={() => setFocusedField(null)}
                       placeholder="tu@empresa.com"
                       aria-invalid={!!emailError}
-                      className={`pl-12 h-12 border-2 focus:ring-0 transition-all duration-300 rounded-xl bg-gray-50 dark:bg-[#0f2f25] focus:bg-white dark:focus:bg-[#143E29] font-medium dark:text-white dark:placeholder-gray-500 ${
+                      className={`pl-12 h-12 border-2 focus:ring-0 transition-all duration-300 rounded-xl bg-gray-50 dark:bg-[#0f2f25] focus:bg-white dark:focus:bg-[#143E29] font-medium dark:text-white dark:placeholder-[#b8c0ca] ${
                         emailError
                           ? "border-red-500"
                           : "border-gray-200 dark:border-[#68A243]/20 focus-visible:border-[#68A243]"
@@ -438,7 +447,7 @@ export default function Login() {
                       onBlur={() => setFocusedField(null)}
                       placeholder="••••••••"
                       aria-invalid={!!passwordError}
-                      className={`pl-12 pr-12 h-12 border-2 focus:ring-0 transition-all duration-300 rounded-xl bg-gray-50 dark:bg-[#0f2f25] focus:bg-white dark:focus:bg-[#143E29] font-medium dark:text-white dark:placeholder-gray-500 ${
+                      className={`pl-12 pr-12 h-12 border-2 focus:ring-0 transition-all duration-300 rounded-xl bg-gray-50 dark:bg-[#0f2f25] focus:bg-white dark:focus:bg-[#143E29] font-medium dark:text-white dark:placeholder-[#b8c0ca] ${
                         passwordError
                           ? "border-red-500"
                           : "border-gray-200 dark:border-[#68A243]/20 focus-visible:border-[#68A243]"

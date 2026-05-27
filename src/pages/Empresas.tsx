@@ -56,7 +56,7 @@ export default function Companies() {
   useEffect(() => {
     const fetchCompanies = async () => {
       try {
-        const data = await getCompanies(); // llama a tu API real
+        const data = await getCompanies();
         setCompanies(data);
       } catch (err) {
         console.error(err);
@@ -72,9 +72,7 @@ export default function Companies() {
   const filteredCompanies = companies.filter((company) =>
     company.razon_social.toLowerCase().includes(searchQuery.toLowerCase()),
   );
-  const activeCompaniesCount = companies.filter(
-    (company) => company.aprobada === true,
-  ).length;
+  const activeCompaniesCount = companies.length;
 
   const handleCompanyClick = (company: EmpresaResponse) => {
     setSelectedCompany(company);
@@ -138,7 +136,7 @@ export default function Companies() {
               placeholder="Buscar empresas por nombre..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10 h-12 border-[#68A243]/20 focus-visible:border-[#68A243] focus-visible:ring-[#68A243]/20 dark:bg-[#143E29] dark:border-[#68A243]/20 dark:text-white dark:placeholder-gray-400 transition-colors"
+              className="pl-10 h-12 border-[#68A243]/20 focus-visible:border-[#68A243] focus-visible:ring-[#68A243]/20 dark:bg-[#143E29] dark:border-[#68A243]/20 dark:text-white dark:placeholder-[#b8c0ca] transition-colors"
             />
           </div>
           {searchQuery && (

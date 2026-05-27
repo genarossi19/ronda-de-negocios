@@ -463,107 +463,117 @@ export default function EmpresaProfileModal({
         {isLoading ? (
           <LoadingState />
         ) : empresa ? (
-          <div className="space-y-6 py-2">
-            {/* Company header card */}
-            <div className="rounded-2xl border border-[#68A243]/20 bg-gradient-to-br from-[#68A243]/8 to-white dark:from-[#68A243]/15 dark:to-[#143E29] p-5">
-              <div className="flex items-start gap-4">
-                <div className="h-16 w-16 rounded-xl overflow-hidden flex-shrink-0 relative bg-[#68A243]/10 dark:bg-[#68A243]/20">
-                  {empresa.logo && !imageError ? (
-                    <img
-                      src={empresa.logo}
-                      alt={empresa.razon_social}
-                      onError={() => setImageError(true)}
-                      className="absolute inset-0 w-full h-full object-cover rounded-xl"
-                    />
-                  ) : (
-                    <div className="absolute inset-0 flex items-center justify-center">
-                      <span className="text-xl font-bold text-[#143E29] dark:text-[#d7efc8]">
-                        {companyInitials || "?"}
-                      </span>
-                    </div>
-                  )}
-                </div>
+          <form
+            onSubmit={(event) => {
+              event.preventDefault();
+              if (isEditing) {
+                handleSubmit();
+              }
+            }}
+          >
+            <div className="space-y-6 py-2">
+              {/* Company header card */}
+              <div className="rounded-2xl border border-[#68A243]/20 bg-gradient-to-br from-[#68A243]/8 to-white dark:from-[#68A243]/15 dark:to-[#143E29] p-5">
+                <div className="flex items-start gap-4">
+                  <div className="h-16 w-16 rounded-xl overflow-hidden flex-shrink-0 relative bg-[#68A243]/10 dark:bg-[#68A243]/20">
+                    {empresa.logo && !imageError ? (
+                      <img
+                        src={empresa.logo}
+                        alt={empresa.razon_social}
+                        onError={() => setImageError(true)}
+                        className="absolute inset-0 w-full h-full object-cover rounded-xl"
+                      />
+                    ) : (
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <span className="text-xl font-bold text-[#143E29] dark:text-[#d7efc8]">
+                          {companyInitials || "?"}
+                        </span>
+                      </div>
+                    )}
+                  </div>
 
-                <div className="flex-1 min-w-0">
-                  <h2 className="text-lg font-semibold text-[#143E29] dark:text-white truncate">
-                    {isEditing
-                      ? formData.razon_social || empresa.razon_social
-                      : empresa.razon_social}
-                  </h2>
-                  <div className="flex flex-wrap gap-2 mt-2">
-                    <Badge className="bg-[#68A243]/10 text-[#3F6E20] border-[#68A243]/20 dark:bg-[#68A243]/20 dark:text-[#9FD27B] dark:border-[#68A243]/30 text-xs">
-                      <Building2 className="h-3 w-3 mr-1" />
+                  <div className="flex-1 min-w-0">
+                    <h2 className="text-lg font-semibold text-[#143E29] dark:text-white truncate">
                       {isEditing
-                        ? (sectors.find(
-                            (s) => String(s.id) === formData.sector_id,
-                          )?.nombre ?? empresa.sector.nombre)
-                        : empresa.sector.nombre}
-                    </Badge>
-                    <Badge className="bg-[#143E29]/8 text-[#143E29] border-[#143E29]/15 dark:bg-[#143E29]/40 dark:text-white dark:border-[#143E29]/50 text-xs">
-                      <MapPin className="h-3 w-3 mr-1" />
-                      {isEditing
-                        ? (localidades.find(
-                            (l) => String(l.id) === formData.localidad_id,
-                          )?.nombre ?? empresa.localidad.nombre)
-                        : empresa.localidad.nombre}
-                    </Badge>
+                        ? formData.razon_social || empresa.razon_social
+                        : empresa.razon_social}
+                    </h2>
+                    <div className="flex flex-wrap gap-2 mt-2">
+                      <Badge className="bg-[#68A243]/10 text-[#3F6E20] border-[#68A243]/20 dark:bg-[#68A243]/20 dark:text-[#9FD27B] dark:border-[#68A243]/30 text-xs">
+                        <Building2 className="h-3 w-3 mr-1" />
+                        {isEditing
+                          ? (sectors.find(
+                              (s) => String(s.id) === formData.sector_id,
+                            )?.nombre ?? empresa.sector.nombre)
+                          : empresa.sector.nombre}
+                      </Badge>
+                      <Badge className="bg-[#143E29]/8 text-[#143E29] border-[#143E29]/15 dark:bg-[#143E29]/40 dark:text-white dark:border-[#143E29]/50 text-xs">
+                        <MapPin className="h-3 w-3 mr-1" />
+                        {isEditing
+                          ? (localidades.find(
+                              (l) => String(l.id) === formData.localidad_id,
+                            )?.nombre ?? empresa.localidad.nombre)
+                          : empresa.localidad.nombre}
+                      </Badge>
+                    </div>
                   </div>
                 </div>
               </div>
+
+              {isEditing ? (
+                <EditForm
+                  formData={formData}
+                  sectors={sectors}
+                  localidades={localidades}
+                  onChange={handleFormChange}
+                />
+              ) : (
+                <ViewInfo empresa={empresa} />
+              )}
             </div>
 
-            {isEditing ? (
-              <EditForm
-                formData={formData}
-                sectors={sectors}
-                localidades={localidades}
-                onChange={handleFormChange}
-              />
-            ) : (
-              <ViewInfo empresa={empresa} />
+            {!isLoading && empresa && (
+              <DialogFooter className="pt-2">
+                {isEditing ? (
+                  <>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={handleCancelEdit}
+                      disabled={isSaving}
+                    >
+                      Cancelar
+                    </Button>
+                    <Button
+                      type="submit"
+                      disabled={isSaving}
+                      className="bg-[#68A243] hover:bg-[#5a9038] text-white"
+                    >
+                      {isSaving ? "Guardando..." : "Guardar cambios"}
+                    </Button>
+                  </>
+                ) : (
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <span tabIndex={0}>
+                          <Button
+                            disabled
+                            className="bg-[#68A243] hover:bg-[#5a9038] text-white pointer-events-none"
+                          >
+                            <Pencil className="h-4 w-4" />
+                            Editar información
+                          </Button>
+                        </span>
+                      </TooltipTrigger>
+                      <TooltipContent>Próximamente</TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                )}
+              </DialogFooter>
             )}
-          </div>
+          </form>
         ) : null}
-
-        {!isLoading && empresa && (
-          <DialogFooter className="pt-2">
-            {isEditing ? (
-              <>
-                <Button
-                  variant="outline"
-                  onClick={handleCancelEdit}
-                  disabled={isSaving}
-                >
-                  Cancelar
-                </Button>
-                <Button
-                  onClick={handleSubmit}
-                  disabled={isSaving}
-                  className="bg-[#68A243] hover:bg-[#5a9038] text-white"
-                >
-                  {isSaving ? "Guardando..." : "Guardar cambios"}
-                </Button>
-              </>
-            ) : (
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <span tabIndex={0}>
-                      <Button
-                        disabled
-                        className="bg-[#68A243] hover:bg-[#5a9038] text-white pointer-events-none"
-                      >
-                        <Pencil className="h-4 w-4" />
-                        Editar información
-                      </Button>
-                    </span>
-                  </TooltipTrigger>
-                  <TooltipContent>Próximamente</TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-            )}
-          </DialogFooter>
-        )}
       </DialogContent>
     </Dialog>
   );

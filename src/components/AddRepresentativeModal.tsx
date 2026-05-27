@@ -72,7 +72,7 @@ export function AddRepresentativeModal({
                 value={form.nombre}
                 onChange={onChange}
                 placeholder="Juan"
-                className={`${formErrors.nombre ? "border-red-500" : ""} dark:bg-[#0f2f25] dark:border-[#68A243]/20 dark:text-white dark:placeholder-gray-500 dark:focus:!border-[#68A243] transition-colors duration-300`}
+                className={`${formErrors.nombre ? "border-red-500" : ""} dark:bg-[#0f2f25] dark:border-[#68A243]/20 dark:text-white dark:placeholder-[#b8c0ca] dark:focus:!border-[#68A243] transition-colors duration-300`}
                 aria-invalid={!!formErrors.nombre}
               />
               {formErrors.nombre && (
@@ -92,7 +92,7 @@ export function AddRepresentativeModal({
                 value={form.apellido}
                 onChange={onChange}
                 placeholder="Pérez"
-                className={`${formErrors.apellido ? "border-red-500" : ""} dark:bg-[#0f2f25] dark:border-[#68A243]/20 dark:text-white dark:placeholder-gray-500 dark:focus:!border-[#68A243] transition-colors duration-300`}
+                className={`${formErrors.apellido ? "border-red-500" : ""} dark:bg-[#0f2f25] dark:border-[#68A243]/20 dark:text-white dark:placeholder-[#b8c0ca] dark:focus:!border-[#68A243] transition-colors duration-300`}
                 aria-invalid={!!formErrors.apellido}
               />
               {formErrors.apellido && (
@@ -115,7 +115,7 @@ export function AddRepresentativeModal({
               value={form.email}
               onChange={onChange}
               placeholder="juan@empresa.com"
-              className={`${formErrors.email ? "border-red-500" : ""} dark:bg-[#0f2f25] dark:border-[#68A243]/20 dark:text-white dark:placeholder-gray-500 dark:focus:!border-[#68A243] transition-colors duration-300`}
+              className={`${formErrors.email ? "border-red-500" : ""} dark:bg-[#0f2f25] dark:border-[#68A243]/20 dark:text-white dark:placeholder-[#b8c0ca] dark:focus:!border-[#68A243] transition-colors duration-300`}
               aria-invalid={!!formErrors.email}
             />
             {formErrors.email && (

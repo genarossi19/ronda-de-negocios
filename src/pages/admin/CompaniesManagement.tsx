@@ -1528,14 +1528,14 @@ export default function CompaniesManagement() {
             <div className="flex flex-col sm:flex-row gap-4">
               {/* Search */}
               <div ref={searchInputRef} className="flex-1 relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400 dark:text-gray-300" />
                 <Input
                   placeholder="Buscar por nombre o CUIT..."
                   value={searchTerm}
                   onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                     setSearchTerm(e.target.value)
                   }
-                  className="pl-10 h-11 border-gray-200 dark:border-gray-700 dark:bg-[#143E29] dark:text-white dark:placeholder-gray-500"
+                  className="pl-10 h-11 border-gray-200 dark:border-gray-700 dark:bg-[#143E29] dark:text-white dark:placeholder-[#b8c0ca]"
                 />
               </div>
 

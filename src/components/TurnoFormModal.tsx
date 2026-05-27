@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Loader2 } from "lucide-react";
+import { Info, Loader2 } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -18,6 +18,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "./ui/select";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "./ui/tooltip";
 import { toast } from "sonner";
 import { editTurno, createTurno } from "../api/TurnoService";
 import { getApiErrorMessage } from "../lib/axios";
@@ -30,6 +36,7 @@ type TurnoFormState = {
   hora_inicio: string;
   hora_fin: string;
   cant_mesas: string;
+  mesas_max_empresa: string;
   estado: EstadoEditableTurno;
 };
 
@@ -48,6 +55,7 @@ const initialFormState: TurnoFormState = {
   hora_inicio: "",
   hora_fin: "",
   cant_mesas: "1",
+  mesas_max_empresa: "1",
   estado: "abierto",
 };
 
@@ -144,6 +152,9 @@ export default function TurnoFormModal({
         hora_inicio: suggestedStart,
         hora_fin: suggestedEnd,
         cant_mesas: String(lastTurno.cant_mesas),
+        mesas_max_empresa: lastTurno.mesas_max_empresa
+          ? String(lastTurno.mesas_max_empresa)
+          : "1",
       });
       setIsEndTimeManuallyEdited(false);
     } else {
@@ -185,16 +196,30 @@ export default function TurnoFormModal({
     }
   };
 
+  const handleMesasMaxEmpresaChange = (value: string) => {
+    if (/^\d*$/.test(value)) {
+      handleFormChange("mesas_max_empresa", value);
+    }
+  };
+
   const handleSubmit = async () => {
     if (!evento) {
       return;
     }
 
     const cantMesas = parseCantMesas(formData.cant_mesas);
+    const mesasMaxEmpresa = parseCantMesas(formData.mesas_max_empresa);
 
     if (!turnoEnEdicion) {
-      if (!formData.hora_inicio || !formData.hora_fin || cantMesas === null) {
-        toast.error("Completá horario y cantidad de mesas antes de guardar");
+      if (
+        !formData.hora_inicio ||
+        !formData.hora_fin ||
+        cantMesas === null ||
+        mesasMaxEmpresa === null
+      ) {
+        toast.error(
+          "Completá horario, cantidad de mesas y mesas máximas por empresa antes de guardar",
+        );
         return;
       }
 
@@ -243,6 +268,7 @@ export default function TurnoFormModal({
           hora_inicio: formData.hora_inicio,
           hora_fin: formData.hora_fin,
           cant_mesas: cantMesas,
+          mesas_max_empresa: mesasMaxEmpresa!,
           evento: evento.id,
           estado: formData.estado,
         });
@@ -287,118 +313,159 @@ export default function TurnoFormModal({
           </DialogDescription>
         </DialogHeader>
 
-        <div className="grid gap-4 py-2">
-          <div className="rounded-2xl border border-[#68A243]/20 bg-[#68A243]/5 dark:bg-[#143E29]/60 p-4 space-y-2">
-            <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground dark:text-gray-300">
-              Evento asociado
-            </p>
-            <p className="text-base font-semibold text-[#143E29] dark:text-white">
-              {evento?.nombre}
-            </p>
-            <p className="text-sm text-muted-foreground dark:text-gray-300">
-              {evento ? formatDate(evento.fecha) : ""} - {evento?.ubicacion}
-            </p>
-          </div>
+        <form
+          onSubmit={(event) => {
+            event.preventDefault();
+            handleSubmit();
+          }}
+        >
+          <div className="grid gap-4 py-2">
+            <div className="rounded-2xl border border-[#68A243]/20 bg-[#68A243]/5 dark:bg-[#143E29]/60 p-4 space-y-2">
+              <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground dark:text-gray-300">
+                Evento asociado
+              </p>
+              <p className="text-base font-semibold text-[#143E29] dark:text-white">
+                {evento?.nombre}
+              </p>
+              <p className="text-sm text-muted-foreground dark:text-gray-300">
+                {evento ? formatDate(evento.fecha) : ""} - {evento?.ubicacion}
+              </p>
+            </div>
 
-          {turnoEnEdicion ? (
-            <>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="grid gap-2">
-                  <Label className="dark:text-white">Horario</Label>
-                  <Input
-                    value={`${turnoEnEdicion.hora_inicio} - ${turnoEnEdicion.hora_fin}`}
-                    readOnly
-                    className="border-[#68A243]/20 dark:bg-[#143E29] dark:border-[#68A243]/20 dark:text-white"
-                  />
+            {turnoEnEdicion ? (
+              <>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="grid gap-2">
+                    <Label className="dark:text-white">Horario</Label>
+                    <Input
+                      value={`${turnoEnEdicion.hora_inicio} - ${turnoEnEdicion.hora_fin}`}
+                      readOnly
+                      className="border-[#68A243]/20 dark:bg-[#143E29] dark:border-[#68A243]/20 dark:text-white"
+                    />
+                  </div>
+
+                  <div className="grid gap-2">
+                    <Label
+                      htmlFor="cant_mesas_edit"
+                      className="dark:text-white"
+                    >
+                      Cantidad de mesas
+                    </Label>
+                    <Input
+                      id="cant_mesas_edit"
+                      type="number"
+                      min={1}
+                      value={formData.cant_mesas}
+                      onChange={(event) =>
+                        handleCantMesasChange(event.target.value)
+                      }
+                      className="border-[#68A243]/20 focus-visible:border-[#68A243] focus-visible:ring-[#68A243]/20 dark:bg-[#143E29] dark:border-[#68A243]/20 dark:text-white transition-colors"
+                    />
+                  </div>
                 </div>
 
                 <div className="grid gap-2">
-                  <Label htmlFor="cant_mesas_edit" className="dark:text-white">
-                    Cantidad de mesas
-                  </Label>
-                  <Input
-                    id="cant_mesas_edit"
-                    type="number"
-                    min={1}
-                    value={formData.cant_mesas}
-                    onChange={(event) =>
-                      handleCantMesasChange(event.target.value)
+                  <Label className="dark:text-white">Estado</Label>
+                  <Select
+                    value={formData.estado}
+                    onValueChange={(value) =>
+                      handleFormChange("estado", value as EstadoEditableTurno)
                     }
-                    className="border-[#68A243]/20 focus-visible:border-[#68A243] focus-visible:ring-[#68A243]/20 dark:bg-[#143E29] dark:border-[#68A243]/20 dark:text-white transition-colors"
-                  />
+                  >
+                    <SelectTrigger className="w-full border-[#68A243]/20 focus-visible:border-[#68A243] focus-visible:ring-[#68A243]/20 dark:bg-[#143E29] dark:border-[#68A243]/20 dark:text-white transition-colors">
+                      <SelectValue placeholder="Seleccionar estado" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {turnoStatusOptions.map((status) => (
+                        <SelectItem key={status.value} value={status.value}>
+                          {status.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
-              </div>
+              </>
+            ) : (
+              <>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="grid gap-2">
+                    <Label htmlFor="hora_inicio" className="dark:text-white">
+                      Hora de inicio
+                    </Label>
+                    <Input
+                      id="hora_inicio"
+                      type="time"
+                      value={formData.hora_inicio}
+                      onChange={(event) =>
+                        handleStartTimeChange(event.target.value)
+                      }
+                      className="border-[#68A243]/20 focus-visible:border-[#68A243] focus-visible:ring-[#68A243]/20 dark:bg-[#143E29] dark:border-[#68A243]/20 dark:text-white transition-colors [color-scheme:light] dark:[color-scheme:dark]"
+                    />
+                  </div>
 
-              <div className="grid gap-2">
-                <Label className="dark:text-white">Estado</Label>
-                <Select
-                  value={formData.estado}
-                  onValueChange={(value) =>
-                    handleFormChange("estado", value as EstadoEditableTurno)
-                  }
-                >
-                  <SelectTrigger className="w-full border-[#68A243]/20 focus-visible:border-[#68A243] focus-visible:ring-[#68A243]/20 dark:bg-[#143E29] dark:border-[#68A243]/20 dark:text-white transition-colors">
-                    <SelectValue placeholder="Seleccionar estado" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {turnoStatusOptions.map((status) => (
-                      <SelectItem key={status.value} value={status.value}>
-                        {status.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </>
-          ) : (
-            <>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="grid gap-2">
-                  <Label htmlFor="hora_inicio" className="dark:text-white">
-                    Hora de inicio
-                  </Label>
-                  <Input
-                    id="hora_inicio"
-                    type="time"
-                    value={formData.hora_inicio}
-                    onChange={(event) =>
-                      handleStartTimeChange(event.target.value)
-                    }
-                    className="border-[#68A243]/20 focus-visible:border-[#68A243] focus-visible:ring-[#68A243]/20 dark:bg-[#143E29] dark:border-[#68A243]/20 dark:text-white transition-colors [color-scheme:light] dark:[color-scheme:dark]"
-                  />
+                  <div className="grid gap-2">
+                    <Label htmlFor="hora_fin" className="dark:text-white">
+                      Hora de fin
+                    </Label>
+                    <Input
+                      id="hora_fin"
+                      type="time"
+                      value={formData.hora_fin}
+                      onChange={(event) =>
+                        handleEndTimeChange(event.target.value)
+                      }
+                      className="border-[#68A243]/20 focus-visible:border-[#68A243] focus-visible:ring-[#68A243]/20 dark:bg-[#143E29] dark:border-[#68A243]/20 dark:text-white transition-colors [color-scheme:light] dark:[color-scheme:dark]"
+                    />
+                  </div>
                 </div>
 
-                <div className="grid gap-2">
-                  <Label htmlFor="hora_fin" className="dark:text-white">
-                    Hora de fin
-                  </Label>
-                  <Input
-                    id="hora_fin"
-                    type="time"
-                    value={formData.hora_fin}
-                    onChange={(event) =>
-                      handleEndTimeChange(event.target.value)
-                    }
-                    className="border-[#68A243]/20 focus-visible:border-[#68A243] focus-visible:ring-[#68A243]/20 dark:bg-[#143E29] dark:border-[#68A243]/20 dark:text-white transition-colors [color-scheme:light] dark:[color-scheme:dark]"
-                  />
-                </div>
-              </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="grid gap-2">
+                    <Label htmlFor="cant_mesas" className="dark:text-white">
+                      Cantidad de mesas
+                    </Label>
+                    <Input
+                      id="cant_mesas"
+                      type="number"
+                      min={1}
+                      value={formData.cant_mesas}
+                      onChange={(event) =>
+                        handleCantMesasChange(event.target.value)
+                      }
+                      className="border-[#68A243]/20 focus-visible:border-[#68A243] focus-visible:ring-[#68A243]/20 dark:bg-[#143E29] dark:border-[#68A243]/20 dark:text-white transition-colors"
+                    />
+                  </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="grid gap-2">
-                  <Label htmlFor="cant_mesas" className="dark:text-white">
-                    Cantidad de mesas
-                  </Label>
-                  <Input
-                    id="cant_mesas"
-                    type="number"
-                    min={1}
-                    value={formData.cant_mesas}
-                    onChange={(event) =>
-                      handleCantMesasChange(event.target.value)
-                    }
-                    className="border-[#68A243]/20 focus-visible:border-[#68A243] focus-visible:ring-[#68A243]/20 dark:bg-[#143E29] dark:border-[#68A243]/20 dark:text-white transition-colors"
-                  />
+                  <div className="grid gap-2">
+                    <Label
+                      htmlFor="mesas_max_empresa"
+                      className="flex items-center gap-1.5 dark:text-white"
+                    >
+                      Mesas máx. por empresa
+                      <TooltipProvider delayDuration={200}>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Info className="h-3.5 w-3.5 text-muted-foreground cursor-default shrink-0" />
+                          </TooltipTrigger>
+                          <TooltipContent className="max-w-56 text-center">
+                            Cantidad máxima de mesas que una misma empresa puede
+                            ocupar dentro de este turno, con distintos
+                            representantes.
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    </Label>
+                    <Input
+                      id="mesas_max_empresa"
+                      type="number"
+                      min={1}
+                      value={formData.mesas_max_empresa}
+                      onChange={(event) =>
+                        handleMesasMaxEmpresaChange(event.target.value)
+                      }
+                      className="border-[#68A243]/20 focus-visible:border-[#68A243] focus-visible:ring-[#68A243]/20 dark:bg-[#143E29] dark:border-[#68A243]/20 dark:text-white transition-colors"
+                    />
+                  </div>
                 </div>
 
                 <div className="grid gap-2">
@@ -421,32 +488,36 @@ export default function TurnoFormModal({
                     </SelectContent>
                   </Select>
                 </div>
-              </div>
-            </>
-          )}
-        </div>
-
-        <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Cancelar
-          </Button>
-          <Button
-            onClick={handleSubmit}
-            disabled={isSaving}
-            className="bg-[#68A243] hover:bg-[#5a9038] text-white"
-          >
-            {isSaving ? (
-              <>
-                <Loader2 className="h-4 w-4 animate-spin" />
-                Guardando...
               </>
-            ) : turnoEnEdicion ? (
-              "Actualizar turno"
-            ) : (
-              "Crear turno"
             )}
-          </Button>
-        </DialogFooter>
+          </div>
+
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => onOpenChange(false)}
+            >
+              Cancelar
+            </Button>
+            <Button
+              type="submit"
+              disabled={isSaving}
+              className="bg-[#68A243] hover:bg-[#5a9038] text-white"
+            >
+              {isSaving ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Guardando...
+                </>
+              ) : turnoEnEdicion ? (
+                "Actualizar turno"
+              ) : (
+                "Crear turno"
+              )}
+            </Button>
+          </DialogFooter>
+        </form>
       </DialogContent>
     </Dialog>
   );

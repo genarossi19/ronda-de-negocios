@@ -1099,7 +1099,7 @@ export default function MeetingsSummary() {
                       value={searchTerm}
                       onChange={(event) => setSearchTerm(event.target.value)}
                       placeholder="Empresa, representante, email, mesa o 'Empresa1 y Empresa2'"
-                      className="h-10 w-full pl-9 border-[#68A243]/20 focus-visible:border-[#68A243] focus-visible:ring-[#68A243]/20 bg-white dark:bg-[#143E29] dark:border-[#68A243]/20 dark:text-white dark:placeholder-gray-400 transition-colors"
+                      className="h-10 w-full pl-9 border-[#68A243]/20 focus-visible:border-[#68A243] focus-visible:ring-[#68A243]/20 bg-white dark:bg-[#143E29] dark:border-[#68A243]/20 dark:text-white dark:placeholder-[#b8c0ca] transition-colors"
                     />
                   </div>
                 </div>

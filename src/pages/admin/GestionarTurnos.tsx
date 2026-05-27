@@ -628,8 +628,16 @@ export default function GestionarTurnos() {
               </CardHeader>
               <CardContent className="!px-5 !pt-0">
                 <div className="flex items-center justify-between gap-3">
-                  <div className="text-3xl font-bold leading-none text-[#143E29] dark:text-white">
-                    {stats.mesasTotales}
+                  <div>
+                    <div className="text-3xl font-bold leading-none text-[#143E29] dark:text-white">
+                      {stats.mesasTotales}
+                    </div>
+                    {stats.total > 0 && (
+                      <p className="text-xs text-muted-foreground dark:text-gray-400 mt-1">
+                        ~{Math.round(stats.mesasTotales / stats.total)} por
+                        turno
+                      </p>
+                    )}
                   </div>
                   <div className="rounded-full bg-[#143E29]/10 p-2 dark:bg-[#143E29]/40">
                     <Users className="h-3.5 w-3.5 text-[#143E29] dark:text-white" />

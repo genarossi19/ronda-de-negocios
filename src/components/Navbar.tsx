@@ -1,13 +1,5 @@
 import { Button } from "../components/ui/button";
-import {
-  Building,
-  Menu,
-  X,
-  LogOut,
-  User2Icon,
-  Clock3,
-  Settings,
-} from "lucide-react";
+import { Menu, X, LogOut, User2Icon, Clock3, Settings } from "lucide-react";
 import EmpresaProfileModal from "./EmpresaProfileModal";
 import SettingsModal from "./SettingsModal";
 import { Sheet, SheetContent, SheetTrigger } from "../components/ui/sheet";
@@ -20,12 +12,6 @@ import {
   DropdownMenuLabel,
   DropdownMenuGroup,
 } from "../components/ui/dropdown-menu";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "../components/ui/tooltip";
 import {
   Popover,
   PopoverContent,
@@ -527,26 +513,6 @@ export default function Navbar() {
                       <DropdownMenuLabel className="text-xs font-semibold text-gray-500 dark:text-gray-400 px-2 py-1.5">
                         Mi Perfil
                       </DropdownMenuLabel>
-                      {!user?.is_superuser && (
-                        <TooltipProvider>
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <span className="block">
-                                <DropdownMenuItem
-                                  disabled
-                                  className="opacity-50 cursor-not-allowed transition-colors duration-200"
-                                >
-                                  <Building className="mr-2 h-4 w-4" />
-                                  <span className="text-sm">Mi empresa</span>
-                                </DropdownMenuItem>
-                              </span>
-                            </TooltipTrigger>
-                            <TooltipContent side="left">
-                              Próximamente
-                            </TooltipContent>
-                          </Tooltip>
-                        </TooltipProvider>
-                      )}
                       <Link to="/representantes">
                         <DropdownMenuItem className="cursor-pointer transition-colors duration-200">
                           <User2Icon className="mr-2 h-4 w-4" />

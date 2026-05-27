@@ -887,7 +887,7 @@ export default function GestionarRondas() {
                       value={searchTerm}
                       onChange={(event) => setSearchTerm(event.target.value)}
                       placeholder="Buscar por nombre o ubicación"
-                      className="w-full sm:w-64 border-[#68A243]/20 focus-visible:border-[#68A243] focus-visible:ring-[#68A243]/20 dark:bg-[#143E29] dark:border-[#68A243]/20 dark:text-white dark:placeholder-gray-400 transition-colors"
+                      className="w-full sm:w-64 border-[#68A243]/20 focus-visible:border-[#68A243] focus-visible:ring-[#68A243]/20 dark:bg-[#143E29] dark:border-[#68A243]/20 dark:text-white dark:placeholder-[#b8c0ca] transition-colors"
                     />
 
                     <Select
@@ -1044,221 +1044,236 @@ export default function GestionarRondas() {
             </DialogDescription>
           </DialogHeader>
 
-          <div className="grid gap-4 py-2">
-            {eventoEnEdicion ? (
-              <>
-                <div className="rounded-2xl border border-[#68A243]/20 bg-[#68A243]/5 dark:bg-[#143E29]/60 p-4 space-y-3">
-                  <div className="grid gap-1">
-                    <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground dark:text-gray-300">
-                      Nombre
-                    </p>
-                    <p className="text-base font-semibold text-[#143E29] dark:text-white">
-                      {eventoEnEdicion.nombre}
-                    </p>
-                  </div>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-sm">
-                    <div>
-                      <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground dark:text-gray-300 mb-1">
-                        Fecha
+          <form
+            onSubmit={(event) => {
+              event.preventDefault();
+              handleSubmit();
+            }}
+          >
+            <div className="grid gap-4 py-2">
+              {eventoEnEdicion ? (
+                <>
+                  <div className="rounded-2xl border border-[#68A243]/20 bg-[#68A243]/5 dark:bg-[#143E29]/60 p-4 space-y-3">
+                    <div className="grid gap-1">
+                      <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground dark:text-gray-300">
+                        Nombre
                       </p>
-                      <p className="text-[#143E29] dark:text-white">
-                        {formatDate(eventoEnEdicion.fecha)}
+                      <p className="text-base font-semibold text-[#143E29] dark:text-white">
+                        {eventoEnEdicion.nombre}
                       </p>
                     </div>
-                    <div>
-                      <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground dark:text-gray-300 mb-1">
-                        Hora de inicio
-                      </p>
-                      <p className="text-[#143E29] dark:text-white">
-                        {eventoEnEdicion.hora_inicio}
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground dark:text-gray-300 mb-1">
-                        Ubicación
-                      </p>
-                      <p className="text-[#143E29] dark:text-white">
-                        {eventoEnEdicion.ubicacion}
-                      </p>
-                    </div>
-                    {eventoEnEdicion.direccion ? (
-                      <div className="md:col-span-3">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-sm">
+                      <div>
                         <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground dark:text-gray-300 mb-1">
-                          Dirección
+                          Fecha
                         </p>
                         <p className="text-[#143E29] dark:text-white">
-                          {eventoEnEdicion.direccion}
+                          {formatDate(eventoEnEdicion.fecha)}
                         </p>
                       </div>
-                    ) : null}
+                      <div>
+                        <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground dark:text-gray-300 mb-1">
+                          Hora de inicio
+                        </p>
+                        <p className="text-[#143E29] dark:text-white">
+                          {eventoEnEdicion.hora_inicio}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground dark:text-gray-300 mb-1">
+                          Ubicación
+                        </p>
+                        <p className="text-[#143E29] dark:text-white">
+                          {eventoEnEdicion.ubicacion}
+                        </p>
+                      </div>
+                      {eventoEnEdicion.direccion ? (
+                        <div className="md:col-span-3">
+                          <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground dark:text-gray-300 mb-1">
+                            Dirección
+                          </p>
+                          <p className="text-[#143E29] dark:text-white">
+                            {eventoEnEdicion.direccion}
+                          </p>
+                        </div>
+                      ) : null}
+                    </div>
                   </div>
-                </div>
 
-                <div className="grid gap-2">
-                  <Label className="dark:text-white">Nuevo estado</Label>
-                  <Select
-                    value={formData.estado}
-                    onValueChange={(value) =>
-                      handleFormChange("estado", value as EstadoEvento)
-                    }
-                  >
-                    <SelectTrigger className="w-full border-[#68A243]/20 focus-visible:border-[#68A243] focus-visible:ring-[#68A243]/20 dark:bg-[#143E29] dark:border-[#68A243]/20 dark:text-white transition-colors">
-                      <SelectValue placeholder="Seleccionar estado" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {statusOptions.map((status) => (
-                        <SelectItem key={status.value} value={status.value}>
-                          {status.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </>
-            ) : (
-              <>
-                <div className="grid gap-2">
-                  <Label htmlFor="nombre" className="dark:text-white">
-                    Nombre
-                  </Label>
-                  <div className="flex flex-col sm:flex-row gap-2">
-                    <Input
-                      id="nombre"
-                      value={formData.nombre}
-                      onChange={(event) =>
-                        handleFormChange("nombre", event.target.value)
+                  <div className="grid gap-2">
+                    <Label className="dark:text-white">Nuevo estado</Label>
+                    <Select
+                      value={formData.estado}
+                      onValueChange={(value) =>
+                        handleFormChange("estado", value as EstadoEvento)
                       }
-                      placeholder="Ej: Ronda de Negocios Otoño 2026"
-                      aria-invalid={!!formErrors.nombre}
-                      className="border-[#68A243]/20 focus-visible:border-[#68A243] focus-visible:ring-[#68A243]/20 dark:bg-[#143E29] dark:border-[#68A243]/20 dark:text-white dark:placeholder-gray-400 transition-colors aria-invalid:border-red-500 aria-invalid:ring-red-500/20"
-                    />
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={() =>
-                        handleFormChange(
-                          "nombre",
-                          generateEventNameFromDate(formData.fecha),
-                        )
-                      }
-                      className="shrink-0 border-[#68A243]/30 text-[#68A243] hover:bg-[#68A243]/10 hover:text-[#3F6E20] hover:border-[#68A243]/50 dark:border-[#68A243]/40 dark:text-[#9FD27B] dark:hover:bg-[#68A243]/20 dark:hover:text-[#9FD27B] dark:hover:border-[#68A243]/60"
                     >
-                      <Sparkles className="h-4 w-4" />
-                    </Button>
+                      <SelectTrigger className="w-full border-[#68A243]/20 focus-visible:border-[#68A243] focus-visible:ring-[#68A243]/20 dark:bg-[#143E29] dark:border-[#68A243]/20 dark:text-white transition-colors">
+                        <SelectValue placeholder="Seleccionar estado" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {statusOptions.map((status) => (
+                          <SelectItem key={status.value} value={status.value}>
+                            {status.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
-                  {formErrors.nombre ? (
-                    <p className="text-red-600 text-xs">{formErrors.nombre}</p>
-                  ) : null}
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                </>
+              ) : (
+                <>
                   <div className="grid gap-2">
-                    <Label htmlFor="fecha" className="dark:text-white">
-                      Fecha
+                    <Label htmlFor="nombre" className="dark:text-white">
+                      Nombre
                     </Label>
-                    <Input
-                      id="fecha"
-                      type="date"
-                      value={formData.fecha}
-                      onChange={(event) =>
-                        handleFormChange("fecha", event.target.value)
-                      }
-                      aria-invalid={!!formErrors.fecha}
-                      className="border-[#68A243]/20 focus-visible:border-[#68A243] focus-visible:ring-[#68A243]/20 dark:bg-[#143E29] dark:border-[#68A243]/20 dark:text-white transition-colors [color-scheme:light] dark:[color-scheme:dark] aria-invalid:border-red-500 aria-invalid:ring-red-500/20"
-                    />
-                    {formErrors.fecha ? (
-                      <p className="text-red-600 text-xs">{formErrors.fecha}</p>
-                    ) : null}
-                  </div>
-
-                  <div className="grid gap-2">
-                    <Label htmlFor="hora_inicio" className="dark:text-white">
-                      Hora de inicio
-                    </Label>
-                    <Input
-                      id="hora_inicio"
-                      type="time"
-                      value={formData.hora_inicio}
-                      onChange={(event) =>
-                        handleFormChange("hora_inicio", event.target.value)
-                      }
-                      aria-invalid={!!formErrors.hora_inicio}
-                      className="border-[#68A243]/20 focus-visible:border-[#68A243] focus-visible:ring-[#68A243]/20 dark:bg-[#143E29] dark:border-[#68A243]/20 dark:text-white transition-colors [color-scheme:light] dark:[color-scheme:dark] aria-invalid:border-red-500 aria-invalid:ring-red-500/20"
-                    />
-                    {formErrors.hora_inicio ? (
+                    <div className="flex flex-col sm:flex-row gap-2">
+                      <Input
+                        id="nombre"
+                        value={formData.nombre}
+                        onChange={(event) =>
+                          handleFormChange("nombre", event.target.value)
+                        }
+                        placeholder="Ej: Ronda de Negocios Otoño 2026"
+                        aria-invalid={!!formErrors.nombre}
+                        className="border-[#68A243]/20 focus-visible:border-[#68A243] focus-visible:ring-[#68A243]/20 dark:bg-[#143E29] dark:border-[#68A243]/20 dark:text-white dark:placeholder-[#b8c0ca] transition-colors aria-invalid:border-red-500 aria-invalid:ring-red-500/20"
+                      />
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() =>
+                          handleFormChange(
+                            "nombre",
+                            generateEventNameFromDate(formData.fecha),
+                          )
+                        }
+                        className="shrink-0 border-[#68A243]/30 text-[#68A243] hover:bg-[#68A243]/10 hover:text-[#3F6E20] hover:border-[#68A243]/50 dark:border-[#68A243]/40 dark:text-[#9FD27B] dark:hover:bg-[#68A243]/20 dark:hover:text-[#9FD27B] dark:hover:border-[#68A243]/60"
+                      >
+                        <Sparkles className="h-4 w-4" />
+                      </Button>
+                    </div>
+                    {formErrors.nombre ? (
                       <p className="text-red-600 text-xs">
-                        {formErrors.hora_inicio}
+                        {formErrors.nombre}
                       </p>
                     ) : null}
                   </div>
-                </div>
 
-                <div className="grid gap-2">
-                  <Label htmlFor="ubicacion" className="dark:text-white">
-                    Ubicación
-                  </Label>
-                  <Input
-                    id="ubicacion"
-                    value={formData.ubicacion}
-                    onChange={(event) =>
-                      handleFormChange("ubicacion", event.target.value)
-                    }
-                    placeholder="Ej: Polo Científico Tecnológico"
-                    aria-invalid={!!formErrors.ubicacion}
-                    className="border-[#68A243]/20 focus-visible:border-[#68A243] focus-visible:ring-[#68A243]/20 dark:bg-[#143E29] dark:border-[#68A243]/20 dark:text-white dark:placeholder-gray-400 transition-colors aria-invalid:border-red-500 aria-invalid:ring-red-500/20"
-                  />
-                  {formErrors.ubicacion ? (
-                    <p className="text-red-600 text-xs">
-                      {formErrors.ubicacion}
-                    </p>
-                  ) : null}
-                </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="grid gap-2">
+                      <Label htmlFor="fecha" className="dark:text-white">
+                        Fecha
+                      </Label>
+                      <Input
+                        id="fecha"
+                        type="date"
+                        value={formData.fecha}
+                        onChange={(event) =>
+                          handleFormChange("fecha", event.target.value)
+                        }
+                        aria-invalid={!!formErrors.fecha}
+                        className="border-[#68A243]/20 focus-visible:border-[#68A243] focus-visible:ring-[#68A243]/20 dark:bg-[#143E29] dark:border-[#68A243]/20 dark:text-white transition-colors [color-scheme:light] dark:[color-scheme:dark] aria-invalid:border-red-500 aria-invalid:ring-red-500/20"
+                      />
+                      {formErrors.fecha ? (
+                        <p className="text-red-600 text-xs">
+                          {formErrors.fecha}
+                        </p>
+                      ) : null}
+                    </div>
 
-                <div className="grid gap-2">
-                  <Label htmlFor="direccion" className="dark:text-white">
-                    Dirección
-                  </Label>
-                  <Input
-                    id="direccion"
-                    value={formData.direccion}
-                    onChange={(event) =>
-                      handleFormChange("direccion", event.target.value)
-                    }
-                    placeholder="Ej: Hernández 816"
-                    aria-invalid={!!formErrors.direccion}
-                    className="border-[#68A243]/20 focus-visible:border-[#68A243] focus-visible:ring-[#68A243]/20 dark:bg-[#143E29] dark:border-[#68A243]/20 dark:text-white dark:placeholder-gray-400 transition-colors aria-invalid:border-red-500 aria-invalid:ring-red-500/20"
-                  />
-                  {formErrors.direccion ? (
-                    <p className="text-red-600 text-xs">
-                      {formErrors.direccion}
-                    </p>
-                  ) : null}
-                </div>
-              </>
-            )}
-          </div>
+                    <div className="grid gap-2">
+                      <Label htmlFor="hora_inicio" className="dark:text-white">
+                        Hora de inicio
+                      </Label>
+                      <Input
+                        id="hora_inicio"
+                        type="time"
+                        value={formData.hora_inicio}
+                        onChange={(event) =>
+                          handleFormChange("hora_inicio", event.target.value)
+                        }
+                        aria-invalid={!!formErrors.hora_inicio}
+                        className="border-[#68A243]/20 focus-visible:border-[#68A243] focus-visible:ring-[#68A243]/20 dark:bg-[#143E29] dark:border-[#68A243]/20 dark:text-white transition-colors [color-scheme:light] dark:[color-scheme:dark] aria-invalid:border-red-500 aria-invalid:ring-red-500/20"
+                      />
+                      {formErrors.hora_inicio ? (
+                        <p className="text-red-600 text-xs">
+                          {formErrors.hora_inicio}
+                        </p>
+                      ) : null}
+                    </div>
+                  </div>
 
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsFormOpen(false)}>
-              Cancelar
-            </Button>
-            <Button
-              onClick={handleSubmit}
-              disabled={isSaving}
-              className="bg-[#68A243] hover:bg-[#5a9038] text-white"
-            >
-              {isSaving ? (
-                <>
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                  Guardando...
+                  <div className="grid gap-2">
+                    <Label htmlFor="ubicacion" className="dark:text-white">
+                      Ubicación
+                    </Label>
+                    <Input
+                      id="ubicacion"
+                      value={formData.ubicacion}
+                      onChange={(event) =>
+                        handleFormChange("ubicacion", event.target.value)
+                      }
+                      placeholder="Ej: Polo Científico Tecnológico"
+                      aria-invalid={!!formErrors.ubicacion}
+                      className="border-[#68A243]/20 focus-visible:border-[#68A243] focus-visible:ring-[#68A243]/20 dark:bg-[#143E29] dark:border-[#68A243]/20 dark:text-white dark:placeholder-[#b8c0ca] transition-colors aria-invalid:border-red-500 aria-invalid:ring-red-500/20"
+                    />
+                    {formErrors.ubicacion ? (
+                      <p className="text-red-600 text-xs">
+                        {formErrors.ubicacion}
+                      </p>
+                    ) : null}
+                  </div>
+
+                  <div className="grid gap-2">
+                    <Label htmlFor="direccion" className="dark:text-white">
+                      Dirección
+                    </Label>
+                    <Input
+                      id="direccion"
+                      value={formData.direccion}
+                      onChange={(event) =>
+                        handleFormChange("direccion", event.target.value)
+                      }
+                      placeholder="Ej: Hernández 816"
+                      aria-invalid={!!formErrors.direccion}
+                      className="border-[#68A243]/20 focus-visible:border-[#68A243] focus-visible:ring-[#68A243]/20 dark:bg-[#143E29] dark:border-[#68A243]/20 dark:text-white dark:placeholder-[#b8c0ca] transition-colors aria-invalid:border-red-500 aria-invalid:ring-red-500/20"
+                    />
+                    {formErrors.direccion ? (
+                      <p className="text-red-600 text-xs">
+                        {formErrors.direccion}
+                      </p>
+                    ) : null}
+                  </div>
                 </>
-              ) : eventoEnEdicion ? (
-                "Actualizar estado"
-              ) : (
-                "Crear ronda"
               )}
-            </Button>
-          </DialogFooter>
+            </div>
+
+            <DialogFooter>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setIsFormOpen(false)}
+              >
+                Cancelar
+              </Button>
+              <Button
+                type="submit"
+                disabled={isSaving}
+                className="bg-[#68A243] hover:bg-[#5a9038] text-white"
+              >
+                {isSaving ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Guardando...
+                  </>
+                ) : eventoEnEdicion ? (
+                  "Actualizar estado"
+                ) : (
+                  "Crear ronda"
+                )}
+              </Button>
+            </DialogFooter>
+          </form>
         </DialogContent>
       </Dialog>
 

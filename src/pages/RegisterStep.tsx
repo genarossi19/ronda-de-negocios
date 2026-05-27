@@ -608,7 +608,7 @@ export default function RegistrationForm() {
                                 });
                               }}
                               placeholder="Ej: TechSolutions SA"
-                              className={`h-11 !bg-white dark:!bg-[#0f1419] !text-foreground dark:!text-white !border-slate-200 dark:!border-[#1a5032] dark:placeholder:!text-gray-500 ${
+                              className={`h-11 !bg-white dark:!bg-[#0f1419] !text-foreground dark:!text-white !border-slate-200 dark:!border-[#1a5032] dark:placeholder:!text-[#b8c0ca] ${
                                 hasFieldError("razon_social")
                                   ? "!border-red-500 focus-visible:!ring-red-500/50"
                                   : "focus-visible:border-[#68A243] dark:focus-visible:!border-[#2d7a52]"
@@ -640,7 +640,7 @@ export default function RegistrationForm() {
                                 setFieldErrors({ ...fieldErrors, cuit: [] });
                               }}
                               placeholder="30-12345678-9"
-                              className={`h-11 !bg-white dark:!bg-[#0f1419] !text-foreground dark:!text-white !border-slate-200 dark:!border-[#1a5032] dark:placeholder:!text-gray-500 ${
+                              className={`h-11 !bg-white dark:!bg-[#0f1419] !text-foreground dark:!text-white !border-slate-200 dark:!border-[#1a5032] dark:placeholder:!text-[#b8c0ca] ${
                                 hasFieldError("cuit") || cuitValidationError
                                   ? "!border-red-500 focus-visible:!ring-red-500/50"
                                   : "focus-visible:border-[#68A243] dark:focus-visible:!border-[#2d7a52]"
@@ -664,6 +664,7 @@ export default function RegistrationForm() {
                             <Input
                               id="direccion"
                               value={formData.direccion}
+                              maxLength={80}
                               onChange={(e) => {
                                 setFormData({
                                   ...formData,
@@ -675,7 +676,7 @@ export default function RegistrationForm() {
                                 });
                               }}
                               placeholder="Ej: Calle Principal 123"
-                              className={`h-11 !bg-white dark:!bg-[#0f1419] !text-foreground dark:!text-white !border-slate-200 dark:!border-[#1a5032] dark:placeholder:!text-gray-500 ${
+                              className={`h-11 !bg-white dark:!bg-[#0f1419] !text-foreground dark:!text-white !border-slate-200 dark:!border-[#1a5032] dark:placeholder:!text-[#b8c0ca] ${
                                 hasFieldError("direccion")
                                   ? "!border-red-500 focus-visible:!ring-red-500/50"
                                   : "focus-visible:border-[#68A243] dark:focus-visible:!border-[#2d7a52]"
@@ -931,6 +932,7 @@ export default function RegistrationForm() {
                             <Textarea
                               id="descripcion"
                               value={formData.descripcion}
+                              maxLength={500}
                               onChange={(e) => {
                                 setFormData({
                                   ...formData,
@@ -941,18 +943,34 @@ export default function RegistrationForm() {
                                   descripcion: [],
                                 });
                               }}
+                              rows={5}
                               placeholder="Cuéntanos más sobre tu empresa..."
-                              className={`!bg-white dark:!bg-[#0f1419] !text-foreground dark:!text-white !border-slate-200 dark:!border-[#1a5032] dark:placeholder:!text-gray-500 ${
+                              className={`!resize-none !max-h-40 !bg-white dark:!bg-[#0f1419] !text-foreground dark:!text-white !border-slate-200 dark:!border-[#1a5032] dark:placeholder:!text-[#b8c0ca] ${
                                 hasFieldError("descripcion")
                                   ? "!border-red-500 focus-visible:!ring-red-500/50"
                                   : "dark:focus-visible:!ring-[#68A243]/50"
                               }`}
                             />
-                            {hasFieldError("descripcion") && (
-                              <p className="text-sm text-red-500">
-                                {fieldErrors.descripcion.join(", ")}
+                            <div className="flex items-center justify-between">
+                              {hasFieldError("descripcion") ? (
+                                <p className="text-sm text-red-500">
+                                  {fieldErrors.descripcion.join(", ")}
+                                </p>
+                              ) : (
+                                <span />
+                              )}
+                              <p
+                                className={`text-xs tabular-nums ${
+                                  formData.descripcion.length >= 500
+                                    ? "text-red-500 dark:text-red-400"
+                                    : formData.descripcion.length >= 450
+                                      ? "text-amber-500 dark:text-amber-400"
+                                      : "text-muted-foreground dark:text-gray-500"
+                                }`}
+                              >
+                                {formData.descripcion.length}/500
                               </p>
-                            )}
+                            </div>
                           </div>
 
                           <div className="space-y-4 pt-4 border-t dark:border-[#2a3d4d]">
@@ -1030,7 +1048,7 @@ export default function RegistrationForm() {
                                 setFieldErrors({ ...fieldErrors, email: [] });
                               }}
                               placeholder="contacto@empresa.com"
-                              className={`h-11 !bg-white dark:!bg-[#0f1419] !text-foreground dark:!text-white !border-slate-200 dark:!border-[#1a5032] dark:placeholder:!text-gray-500 ${
+                              className={`h-11 !bg-white dark:!bg-[#0f1419] !text-foreground dark:!text-white !border-slate-200 dark:!border-[#1a5032] dark:placeholder:!text-[#b8c0ca] ${
                                 hasFieldError("email")
                                   ? "!border-red-500 focus-visible:!ring-red-500/50"
                                   : "focus-visible:border-[#68A243] dark:focus-visible:!border-[#2d7a52]"
@@ -1069,7 +1087,7 @@ export default function RegistrationForm() {
                                 });
                               }}
                               placeholder="+54 11 1234-5678"
-                              className={`h-11 !bg-white dark:!bg-[#0f1419] !text-foreground dark:!text-white !border-slate-200 dark:!border-[#1a5032] dark:placeholder:!text-gray-500 ${
+                              className={`h-11 !bg-white dark:!bg-[#0f1419] !text-foreground dark:!text-white !border-slate-200 dark:!border-[#1a5032] dark:placeholder:!text-[#b8c0ca] ${
                                 hasFieldError("telefono_contacto")
                                   ? "!border-red-500 focus-visible:!ring-red-500/50"
                                   : "dark:focus-visible:!ring-[#68A243]/30"
@@ -1121,7 +1139,7 @@ export default function RegistrationForm() {
                                     });
                                   }}
                                   placeholder="••••••••"
-                                  className={`h-11 pr-10 !bg-white dark:!bg-[#0f1419] !text-foreground dark:!text-white !border-slate-200 dark:!border-[#1a5032] dark:placeholder:!text-gray-500 ${
+                                  className={`h-11 pr-10 !bg-white dark:!bg-[#0f1419] !text-foreground dark:!text-white !border-slate-200 dark:!border-[#1a5032] dark:placeholder:!text-[#b8c0ca] ${
                                     hasFieldError("password") ||
                                     passwordsMismatch()
                                       ? "!border-red-500 focus-visible:!ring-red-500/50"
@@ -1172,7 +1190,7 @@ export default function RegistrationForm() {
                                     });
                                   }}
                                   placeholder="••••••••"
-                                  className={`h-11 pr-10 !bg-white dark:!bg-[#0f1419] !text-foreground dark:!text-white !border-slate-200 dark:!border-[#1a5032] dark:placeholder:!text-gray-500 ${
+                                  className={`h-11 pr-10 !bg-white dark:!bg-[#0f1419] !text-foreground dark:!text-white !border-slate-200 dark:!border-[#1a5032] dark:placeholder:!text-[#b8c0ca] ${
                                     hasFieldError("password2") ||
                                     passwordsMismatch()
                                       ? "!border-red-500 focus-visible:!ring-red-500/50"

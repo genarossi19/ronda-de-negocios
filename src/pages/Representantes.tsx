@@ -254,6 +254,8 @@ export default function Representantes() {
   const validateEditForm = (): boolean => {
     const errors: Partial<RepresentanteWrite> = {};
     if (!editForm.nombre?.trim()) errors.nombre = "El nombre es requerido";
+    if (!editForm.apellido?.trim())
+      errors.apellido = "El apellido es requerido";
     if (!editForm.cargo) errors.cargo = 0;
     setEditFormErrors(errors);
     return Object.keys(errors).length === 0;
@@ -266,6 +268,7 @@ export default function Representantes() {
     try {
       const payloadToSend = {
         nombre: editForm.nombre,
+        apellido: editForm.apellido,
         cargo: editForm.cargo,
       };
       await editRepresentante(repToEdit.id, payloadToSend);
@@ -455,7 +458,7 @@ export default function Representantes() {
                     placeholder="Ej: Juan García"
                     value={searchName}
                     onChange={(e) => setSearchName(e.target.value)}
-                    className="pl-10 bg-white dark:bg-[#143E29] border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus-visible:ring-[#68A243]/50 dark:focus-visible:ring-[#68A243]/50"
+                    className="pl-10 bg-white dark:bg-[#143E29] border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-[#b8c0ca] focus-visible:ring-[#68A243]/50 dark:focus-visible:ring-[#68A243]/50"
                   />
                 </div>
               </div>
@@ -741,29 +744,20 @@ export default function Representantes() {
               Editar representante
             </DialogTitle>
             <DialogDescription className="dark:text-gray-300 transition-colors duration-300">
-              Solo se puede editar el nombre y cargo.
+              Podés editar nombre, apellido y cargo. El email no se puede
+              modificar.
             </DialogDescription>
           </DialogHeader>
           <form onSubmit={handleEditSubmit} className="space-y-4">
             {/* Información de solo lectura */}
             <div className="space-y-3 rounded-lg bg-gray-100 dark:bg-[#143E29]/60 p-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <p className="text-xs font-medium uppercase tracking-wide text-gray-600 dark:text-gray-400 mb-1">
-                    Apellido
-                  </p>
-                  <p className="text-sm font-medium text-gray-900 dark:text-white">
-                    {repToEdit?.apellido}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-xs font-medium uppercase tracking-wide text-gray-600 dark:text-gray-400 mb-1">
-                    Email
-                  </p>
-                  <p className="text-sm font-medium text-gray-900 dark:text-white break-all">
-                    {repToEdit?.email}
-                  </p>
-                </div>
+              <div>
+                <p className="text-xs font-medium uppercase tracking-wide text-gray-600 dark:text-gray-400 mb-1">
+                  Email
+                </p>
+                <p className="text-sm font-medium text-gray-900 dark:text-white break-all">
+                  {repToEdit?.email}
+                </p>
               </div>
               {user?.is_superuser && repToEdit?.empresa_nombre && (
                 <div>
@@ -794,7 +788,7 @@ export default function Representantes() {
                   placeholder="Juan"
                   className={`${
                     editFormErrors.nombre ? "border-red-500" : ""
-                  } dark:bg-[#0f2f25] dark:border-[#68A243]/20 dark:text-white dark:placeholder-gray-500 dark:focus:!border-[#68A243] transition-colors duration-300`}
+                  } dark:bg-[#0f2f25] dark:border-[#68A243]/20 dark:text-white dark:placeholder-[#b8c0ca] dark:focus:!border-[#68A243] transition-colors duration-300`}
                   aria-invalid={!!editFormErrors.nombre}
                 />
                 {editFormErrors.nombre && (
@@ -805,44 +799,69 @@ export default function Representantes() {
               </div>
               <div className="space-y-1">
                 <Label
-                  htmlFor="edit-cargo"
+                  htmlFor="edit-apellido"
                   className="text-[#143E29] dark:text-white transition-colors duration-300"
                 >
-                  Cargo
+                  Apellido
                 </Label>
-                <Select
-                  value={editForm.cargo?.toString() || "0"}
-                  onValueChange={(value) => {
-                    setEditForm((prev) => ({
-                      ...prev,
-                      cargo: Number(value),
-                    }));
-                    setEditFormErrors((prev) => ({
-                      ...prev,
-                      cargo: undefined,
-                    }));
-                  }}
-                >
-                  <SelectTrigger
-                    className={`${
-                      editFormErrors.cargo ? "border-red-500" : ""
-                    } dark:bg-[#0f2f25] dark:border-[#68A243]/20 dark:text-white dark:focus:!border-[#68A243] transition-colors duration-300`}
-                    aria-invalid={!!editFormErrors.cargo}
-                  >
-                    <SelectValue placeholder="Seleccionar cargo" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {cargos.map((cargo) => (
-                      <SelectItem key={cargo.id} value={String(cargo.id)}>
-                        {cargo.nombre}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                {editFormErrors.cargo ? (
-                  <p className="text-red-600 text-xs">El cargo es requerido</p>
-                ) : null}
+                <Input
+                  id="edit-apellido"
+                  name="apellido"
+                  value={editForm.apellido}
+                  onChange={handleEditChange}
+                  placeholder="García"
+                  className={`${
+                    editFormErrors.apellido ? "border-red-500" : ""
+                  } dark:bg-[#0f2f25] dark:border-[#68A243]/20 dark:text-white dark:placeholder-[#b8c0ca] dark:focus:!border-[#68A243] transition-colors duration-300`}
+                  aria-invalid={!!editFormErrors.apellido}
+                />
+                {editFormErrors.apellido && (
+                  <p className="text-red-600 text-xs">
+                    {editFormErrors.apellido}
+                  </p>
+                )}
               </div>
+            </div>
+
+            <div className="space-y-1">
+              <Label
+                htmlFor="edit-cargo"
+                className="text-[#143E29] dark:text-white transition-colors duration-300"
+              >
+                Cargo
+              </Label>
+              <Select
+                value={editForm.cargo?.toString() || "0"}
+                onValueChange={(value) => {
+                  setEditForm((prev) => ({
+                    ...prev,
+                    cargo: Number(value),
+                  }));
+                  setEditFormErrors((prev) => ({
+                    ...prev,
+                    cargo: undefined,
+                  }));
+                }}
+              >
+                <SelectTrigger
+                  className={`w-full ${
+                    editFormErrors.cargo ? "border-red-500" : ""
+                  } dark:bg-[#0f2f25] dark:border-[#68A243]/20 dark:text-white dark:focus:!border-[#68A243] transition-colors duration-300`}
+                  aria-invalid={!!editFormErrors.cargo}
+                >
+                  <SelectValue placeholder="Seleccionar cargo" />
+                </SelectTrigger>
+                <SelectContent>
+                  {cargos.map((cargo) => (
+                    <SelectItem key={cargo.id} value={String(cargo.id)}>
+                      {cargo.nombre}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {editFormErrors.cargo ? (
+                <p className="text-red-600 text-xs">El cargo es requerido</p>
+              ) : null}
             </div>
 
             <div className="flex gap-2 justify-end pt-4">

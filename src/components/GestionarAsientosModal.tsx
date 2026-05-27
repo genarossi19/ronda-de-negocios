@@ -515,7 +515,13 @@ export default function GestionarAsientosModal({
   return (
     <>
       <Dialog open={isOpen} onOpenChange={handleClose} modal={!tourRefs}>
-        <DialogContent className="!w-[min(96vw,1680px)] !max-w-none !h-[min(90vh,1080px)] !grid !grid-rows-[auto_minmax(0,1fr)] !overflow-hidden !rounded-[28px] !border-gray-200 dark:!border-[#68A243]/20 !bg-white dark:!bg-[#11161d] !p-0 !gap-0">
+        <DialogContent
+          className="!w-[min(96vw,1680px)] !max-w-none !h-[min(90vh,1080px)] !grid !grid-rows-[auto_minmax(0,1fr)] !overflow-hidden !rounded-[28px] !border-gray-200 dark:!border-[#68A243]/20 !bg-white dark:!bg-[#11161d] !p-0 !gap-0"
+          onInteractOutside={tourRefs ? (e) => e.preventDefault() : undefined}
+          onPointerDownOutside={
+            tourRefs ? (e) => e.preventDefault() : undefined
+          }
+        >
           <DialogHeader className="!gap-0">
             <div className="!border-b !border-[#68A243]/10 !px-8 !py-6 dark:!border-[#68A243]/15">
               <div className="!flex !flex-col !gap-4 lg:!flex-row lg:!items-start lg:!justify-between">
@@ -952,7 +958,7 @@ export default function GestionarAsientosModal({
                                     <Command className="dark:bg-[#143E29]">
                                       <CommandInput
                                         placeholder="Buscar representante..."
-                                        className="dark:bg-[#0f2f25] dark:text-white dark:placeholder-gray-400 dark:border-[#68A243]/20 border-[#68A243]/20"
+                                        className="dark:bg-[#0f2f25] dark:text-white dark:placeholder-[#b8c0ca] dark:border-[#68A243]/20 border-[#68A243]/20"
                                       />
                                       <CommandList className="dark:bg-[#143E29]">
                                         <CommandEmpty className="dark:text-gray-400">

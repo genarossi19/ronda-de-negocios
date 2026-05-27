@@ -1221,7 +1221,29 @@ export default function Tables() {
         </div>
 
         <Dialog open={showConfirmDialog} onOpenChange={setShowConfirmDialog}>
-          <DialogContent className="sm:max-w-md bg-white dark:bg-[#0F141A] text-foreground dark:text-white border-[#669649] dark:border-[#1a5032]">
+          <DialogContent
+            className="sm:max-w-md bg-white dark:bg-[#0F141A] text-foreground dark:text-white border-[#669649] dark:border-[#1a5032]"
+            onKeyDown={(event) => {
+              if (event.key !== "Enter" || event.shiftKey) return;
+
+              const target = event.target as HTMLElement;
+              if (
+                target.closest(
+                  "[cmdk-root], [cmdk-input], [cmdk-item], [role='combobox']",
+                )
+              ) {
+                return;
+              }
+
+              if (target.tagName === "TEXTAREA") {
+                return;
+              }
+
+              event.preventDefault();
+              if (!selectedRepresentative || submittingBooking) return;
+              handleConfirmBooking();
+            }}
+          >
             <DialogHeader>
               <DialogTitle className="text-[#143E29] dark:text-white transition-colors duration-300">
                 Confirmar Reserva
@@ -1355,7 +1377,7 @@ export default function Tables() {
                         <Command className="dark:bg-[#143E29]">
                           <CommandInput
                             placeholder="Buscar representante..."
-                            className="h-9 dark:bg-[#0f2f25] dark:text-white dark:placeholder-gray-400 dark:border-[#68A243]/20"
+                            className="h-9 dark:bg-[#0f2f25] dark:text-white dark:placeholder-[#b8c0ca] dark:border-[#68A243]/20"
                           />
                           <CommandList className="dark:bg-[#143E29]">
                             <CommandEmpty className="dark:text-gray-400">
@@ -1448,7 +1470,7 @@ export default function Tables() {
                                   setOpenRepresentativeSearch(false);
                                 }}
                                 disabled={!!selectedRepresentative}
-                                className="w-full text-[#68A243] dark:text-[#68A243] hover:bg-[#68A243]/10 dark:hover:bg-[#68A243]/15 disabled:opacity-50 disabled:cursor-not-allowed justify-start text-xs h-8"
+                                className="w-full text-[#68A243] hover:text-[#3F6E20] dark:text-[#68A243] dark:hover:text-[#9FD27B] hover:bg-[#68A243]/10 dark:hover:bg-[#68A243]/15 disabled:opacity-50 disabled:cursor-not-allowed justify-start text-xs h-8"
                               >
                                 <Plus className="h-3 w-3 mr-2" />
                                 Cargar nuevo representante
@@ -1472,14 +1494,43 @@ export default function Tables() {
                   )}
                 </div>
               ) : (
-                <div className="text-sm text-[#F05826] dark:text-orange-400 bg-[#F05826]/10 dark:bg-orange-950/20 p-3 rounded-lg border border-[#F05826]/30 dark:border-orange-700/30 transition-colors duration-300">
-                  No tenés representantes agregados.
+                <div className="rounded-xl border border-slate-200 dark:border-[#68A243]/20 bg-slate-50 dark:bg-[#0f2f25] p-4 space-y-4 transition-colors duration-300">
+                  <div className="space-y-1">
+                    <p className="text-sm font-semibold text-[#143E29] dark:text-white">
+                      Aún no tenés representantes
+                    </p>
+                    <p className="text-xs text-gray-600 dark:text-gray-300">
+                      Agregá uno para poder reservar esta mesa.
+                    </p>
+                  </div>
+                  <div className="flex flex-col sm:flex-row gap-2">
+                    <Button
+                      type="button"
+                      onClick={() => setShowAddRepresentativeDialog(true)}
+                      className="sm:flex-1 bg-[#68A243] hover:bg-[#68A243]/90 text-white"
+                    >
+                      <Plus className="h-4 w-4" />
+                      Agregar nuevo
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => {
+                        setShowConfirmDialog(false);
+                        navigate("/representantes");
+                      }}
+                      className="sm:flex-1 dark:bg-[#143E29] dark:border-[#68A243]/20 dark:text-white dark:hover:bg-[#1a3f30]"
+                    >
+                      Ir a representantes
+                    </Button>
+                  </div>
                 </div>
               )}
             </div>
 
             <div className="flex gap-3 mt-4">
               <Button
+                type="button"
                 variant="outline"
                 onClick={() => {
                   setShowConfirmDialog(false);
@@ -1490,6 +1541,7 @@ export default function Tables() {
                 Cancelar
               </Button>
               <Button
+                type="button"
                 onClick={handleConfirmBooking}
                 className="flex-1 bg-[#68A243] hover:bg-[#68A243]/90 text-white"
                 disabled={!selectedRepresentative || submittingBooking}
@@ -1628,7 +1680,29 @@ export default function Tables() {
           open={showChangeRepDialog}
           onOpenChange={setShowChangeRepDialog}
         >
-          <DialogContent className="sm:max-w-md bg-white dark:bg-[#0F141A] text-foreground dark:text-white border-[#669649] dark:border-[#1a5032]">
+          <DialogContent
+            className="sm:max-w-md bg-white dark:bg-[#0F141A] text-foreground dark:text-white border-[#669649] dark:border-[#1a5032]"
+            onKeyDown={(event) => {
+              if (event.key !== "Enter" || event.shiftKey) return;
+
+              const target = event.target as HTMLElement;
+              if (
+                target.closest(
+                  "[cmdk-root], [cmdk-input], [cmdk-item], [role='combobox']",
+                )
+              ) {
+                return;
+              }
+
+              if (target.tagName === "TEXTAREA") {
+                return;
+              }
+
+              event.preventDefault();
+              if (!selectedRepresentative || submittingBooking) return;
+              handleChangeRepresentative();
+            }}
+          >
             <DialogHeader>
               <DialogTitle className="text-[#143E29] dark:text-white transition-colors duration-300">
                 Cambiar Representante
@@ -1772,7 +1846,7 @@ export default function Tables() {
                         <Command className="dark:bg-[#143E29]">
                           <CommandInput
                             placeholder="Buscar representante..."
-                            className="h-9 dark:bg-[#0f2f25] dark:text-white dark:placeholder-gray-400 dark:border-[#68A243]/20"
+                            className="h-9 dark:bg-[#0f2f25] dark:text-white dark:placeholder-[#b8c0ca] dark:border-[#68A243]/20"
                           />
                           <CommandList className="dark:bg-[#143E29]">
                             <CommandEmpty className="dark:text-gray-400">
@@ -1865,7 +1939,7 @@ export default function Tables() {
                                   setOpenRepresentativeSearch(false);
                                 }}
                                 disabled={!!selectedRepresentative}
-                                className="w-full text-[#ffb900] dark:text-[#ffb900] hover:bg-[#ffb900]/10 dark:hover:bg-[#ffb900]/15 disabled:opacity-50 disabled:cursor-not-allowed justify-start text-xs h-8"
+                                className="w-full text-[#ffb900] hover:text-[#a16b00] dark:text-[#ffb900] dark:hover:text-[#ffd978] hover:bg-[#ffb900]/10 dark:hover:bg-[#ffb900]/15 disabled:opacity-50 disabled:cursor-not-allowed justify-start text-xs h-8"
                               >
                                 <Plus className="h-3 w-3 mr-2" />
                                 Cargar nuevo representante
@@ -1889,14 +1963,43 @@ export default function Tables() {
                   )}
                 </div>
               ) : (
-                <div className="text-sm text-[#F05826] bg-[#F05826]/10 p-3 rounded-lg border border-[#F05826]/30">
-                  No tenés representantes agregados.
+                <div className="rounded-xl border border-slate-200 dark:border-[#68A243]/20 bg-slate-50 dark:bg-[#0f2f25] p-4 space-y-4 transition-colors duration-300">
+                  <div className="space-y-1">
+                    <p className="text-sm font-semibold text-[#143E29] dark:text-white">
+                      Aún no tenés representantes
+                    </p>
+                    <p className="text-xs text-gray-600 dark:text-gray-300">
+                      Agregá uno para poder asignar esta mesa.
+                    </p>
+                  </div>
+                  <div className="flex flex-col sm:flex-row gap-2">
+                    <Button
+                      type="button"
+                      onClick={() => setShowAddRepresentativeDialog(true)}
+                      className="sm:flex-1 bg-[#68A243] hover:bg-[#68A243]/90 text-white"
+                    >
+                      <Plus className="h-4 w-4" />
+                      Agregar nuevo
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => {
+                        setShowChangeRepDialog(false);
+                        navigate("/representantes");
+                      }}
+                      className="sm:flex-1 dark:bg-[#143E29] dark:border-[#68A243]/20 dark:text-white dark:hover:bg-[#1a3f30]"
+                    >
+                      Ir a representantes
+                    </Button>
+                  </div>
                 </div>
               )}
             </div>
 
             <div className="flex gap-3 mt-4">
               <Button
+                type="button"
                 variant="outline"
                 onClick={() => {
                   setShowChangeRepDialog(false);
@@ -1907,6 +2010,7 @@ export default function Tables() {
                 Cancelar
               </Button>
               <Button
+                type="button"
                 onClick={handleChangeRepresentative}
                 className="flex-1 bg-[#ffb900] hover:bg-[#ffb900]/90 text-white"
                 disabled={!selectedRepresentative || submittingBooking}
@@ -1950,7 +2054,20 @@ export default function Tables() {
             }
           }}
         >
-          <AlertDialogContent>
+          <AlertDialogContent
+            onKeyDown={(event) => {
+              if (event.key !== "Enter" || event.shiftKey) return;
+
+              const target = event.target as HTMLElement;
+              if (target.tagName === "TEXTAREA") {
+                return;
+              }
+
+              event.preventDefault();
+              if (submittingBooking || !pendingSeatAction) return;
+              handleConfirmSeatAction();
+            }}
+          >
             <AlertDialogHeader>
               <AlertDialogTitle>{seatActionLabel}</AlertDialogTitle>
               <AlertDialogDescription>
