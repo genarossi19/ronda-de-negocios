@@ -139,6 +139,9 @@ export default function TurnoFormModal({
         hora_inicio: turnoEnEdicion.hora_inicio,
         hora_fin: turnoEnEdicion.hora_fin,
         cant_mesas: String(turnoEnEdicion.cant_mesas),
+        mesas_max_empresa: turnoEnEdicion.mesas_max_empresa
+          ? String(turnoEnEdicion.mesas_max_empresa)
+          : "1",
         estado: turnoEnEdicion.estado === "cerrado" ? "cerrado" : "abierto",
       });
       setIsEndTimeManuallyEdited(true);
