@@ -42,6 +42,7 @@ import {
   DialogTitle,
 } from "../../components/ui/dialog";
 import { Input } from "../../components/ui/input";
+import { TimeInput } from "../../components/ui/time-input";
 import { Label } from "../../components/ui/label";
 import { ScrollArea } from "../../components/ui/scroll-area";
 import { Skeleton } from "../../components/ui/skeleton";
@@ -1185,15 +1186,14 @@ export default function GestionarRondas() {
                       <Label htmlFor="hora_inicio" className="dark:text-white">
                         Hora de inicio
                       </Label>
-                      <Input
+                      <TimeInput
                         id="hora_inicio"
-                        type="time"
                         value={formData.hora_inicio}
-                        onChange={(event) =>
-                          handleFormChange("hora_inicio", event.target.value)
+                        onChange={(value) =>
+                          handleFormChange("hora_inicio", value)
                         }
                         aria-invalid={!!formErrors.hora_inicio}
-                        className="border-[#68A243]/20 focus-visible:border-[#68A243] focus-visible:ring-[#68A243]/20 dark:bg-[#143E29] dark:border-[#68A243]/20 dark:text-white transition-colors [color-scheme:light] dark:[color-scheme:dark] aria-invalid:border-red-500 aria-invalid:ring-red-500/20"
+                        className="border-[#68A243]/20 focus-visible:border-[#68A243] focus-visible:ring-[#68A243]/20 dark:bg-[#143E29] dark:border-[#68A243]/20 dark:text-white transition-colors aria-invalid:border-red-500 aria-invalid:ring-red-500/20"
                       />
                       {formErrors.hora_inicio ? (
                         <p className="text-red-600 text-xs">

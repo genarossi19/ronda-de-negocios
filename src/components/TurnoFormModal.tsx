@@ -9,6 +9,7 @@ import {
   DialogTitle,
 } from "./ui/dialog";
 import { Input } from "./ui/input";
+import { TimeInput } from "./ui/time-input";
 import { Label } from "./ui/label";
 import { Button } from "./ui/button";
 import {
@@ -395,14 +396,11 @@ export default function TurnoFormModal({
                     <Label htmlFor="hora_inicio" className="dark:text-white">
                       Hora de inicio
                     </Label>
-                    <Input
+                    <TimeInput
                       id="hora_inicio"
-                      type="time"
                       value={formData.hora_inicio}
-                      onChange={(event) =>
-                        handleStartTimeChange(event.target.value)
-                      }
-                      className="border-[#68A243]/20 focus-visible:border-[#68A243] focus-visible:ring-[#68A243]/20 dark:bg-[#143E29] dark:border-[#68A243]/20 dark:text-white transition-colors [color-scheme:light] dark:[color-scheme:dark]"
+                      onChange={handleStartTimeChange}
+                      className="border-[#68A243]/20 focus-visible:border-[#68A243] focus-visible:ring-[#68A243]/20 dark:bg-[#143E29] dark:border-[#68A243]/20 dark:text-white transition-colors"
                     />
                   </div>
 
@@ -410,14 +408,11 @@ export default function TurnoFormModal({
                     <Label htmlFor="hora_fin" className="dark:text-white">
                       Hora de fin
                     </Label>
-                    <Input
+                    <TimeInput
                       id="hora_fin"
-                      type="time"
                       value={formData.hora_fin}
-                      onChange={(event) =>
-                        handleEndTimeChange(event.target.value)
-                      }
-                      className="border-[#68A243]/20 focus-visible:border-[#68A243] focus-visible:ring-[#68A243]/20 dark:bg-[#143E29] dark:border-[#68A243]/20 dark:text-white transition-colors [color-scheme:light] dark:[color-scheme:dark]"
+                      onChange={handleEndTimeChange}
+                      className="border-[#68A243]/20 focus-visible:border-[#68A243] focus-visible:ring-[#68A243]/20 dark:bg-[#143E29] dark:border-[#68A243]/20 dark:text-white transition-colors"
                     />
                   </div>
                 </div>

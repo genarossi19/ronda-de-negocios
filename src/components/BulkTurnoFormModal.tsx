@@ -25,6 +25,7 @@ import {
   AlertDialogTitle,
 } from "./ui/alert-dialog";
 import { Input } from "./ui/input";
+import { TimeInput } from "./ui/time-input";
 import { Label } from "./ui/label";
 import { Button } from "./ui/button";
 import { Badge } from "./ui/badge";
@@ -361,12 +362,11 @@ export default function BulkTurnoFormModal({
                   <Label htmlFor="bulk_hora_inicio" className="dark:text-white">
                     Hora inicio del primer turno
                   </Label>
-                  <Input
+                  <TimeInput
                     id="bulk_hora_inicio"
-                    type="time"
                     value={horaInicio}
-                    onChange={(e) => setHoraInicio(e.target.value)}
-                    className={`${INPUT_CLASS} [color-scheme:light] dark:[color-scheme:dark]`}
+                    onChange={setHoraInicio}
+                    className={INPUT_CLASS}
                   />
                 </div>
                 <div className="grid gap-2">
