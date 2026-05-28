@@ -114,6 +114,12 @@ export default function Representantes() {
   >({});
   const [editSubmitting, setEditSubmitting] = useState(false);
 
+  // Admin-only: sección activos / eliminados y filtro por empresa
+  const [activeSection, setActiveSection] = useState<"active" | "deleted">(
+    "active",
+  );
+  const [selectedEmpresa, setSelectedEmpresa] = useState<number | null>(null);
+
   const fetchRepresentantes = useCallback(async () => {
     try {
       setLoading(true);
@@ -302,6 +308,29 @@ export default function Representantes() {
 
   const filterRepresentantes = (reps: RepresentanteResponse[]) => {
     return reps.filter((rep) => {
+      // Para admin: separar activos (con empresa, no eliminados) de eliminados
+      if (user?.is_superuser) {
+        const isDeleted = rep.eliminado === true;
+        const hasEmpresa = !!(rep.empresa_id || rep.empresa);
+
+        if (activeSection === "active") {
+          // Mostrar solo activos con empresa asignada
+          if (isDeleted || !hasEmpresa) return false;
+        } else {
+          // Mostrar solo eliminados
+          if (!isDeleted) return false;
+        }
+
+        // Filtro por empresa (solo en sección activos)
+        if (
+          activeSection === "active" &&
+          selectedEmpresa !== null &&
+          (rep.empresa_id || rep.empresa) !== selectedEmpresa
+        ) {
+          return false;
+        }
+      }
+
       const matchesName =
         searchName === "" ||
         `${rep.nombre} ${rep.apellido}`
@@ -329,9 +358,20 @@ export default function Representantes() {
   const clearFilters = () => {
     setSearchName("");
     setSelectedCargos([]);
+    setSelectedEmpresa(null);
   };
 
   const filteredRepresentantes = filterRepresentantes(representantes);
+
+  // Conteos para admin (sin filtros de nombre/cargo aplicados)
+  const adminActiveCount = user?.is_superuser
+    ? representantes.filter(
+        (r) => !r.eliminado && !!(r.empresa_id || r.empresa),
+      ).length
+    : 0;
+  const adminDeletedCount = user?.is_superuser
+    ? representantes.filter((r) => r.eliminado === true).length
+    : 0;
 
   const confirmDelete = async () => {
     if (!repToDelete || !repToDelete.id) {
@@ -407,24 +447,9 @@ export default function Representantes() {
         {/* Content */}
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
           {/* Toolbar */}
-          <div className="flex justify-end mb-6">
-            <Dialog
-              open={dialogOpen}
-              onOpenChange={(open) => {
-                setDialogOpen(open);
-                if (!open) {
-                  setForm(EMPTY_FORM);
-                  setFormErrors({});
-                }
-              }}
-            >
-              <DialogTrigger asChild>
-                <Button className="bg-[#68A243] hover:bg-[#68A243]/90 text-white gap-2">
-                  <Plus className="h-4 w-4" />
-                  Agregar representante
-                </Button>
-              </DialogTrigger>
-              <AddRepresentativeModal
+          {!user?.is_superuser && (
+            <div className="flex justify-end mb-6">
+              <Dialog
                 open={dialogOpen}
                 onOpenChange={(open) => {
                   setDialogOpen(open);
@@ -433,18 +458,97 @@ export default function Representantes() {
                     setFormErrors({});
                   }
                 }}
-                form={form}
-                formErrors={formErrors}
-                submitting={submitting}
-                onChange={handleChange}
-                onSubmit={handleSubmit}
-                cargos={cargos}
-              />
-            </Dialog>
-          </div>
+              >
+                <DialogTrigger asChild>
+                  <Button className="bg-[#68A243] hover:bg-[#68A243]/90 text-white gap-2">
+                    <Plus className="h-4 w-4" />
+                    Agregar representante
+                  </Button>
+                </DialogTrigger>
+                <AddRepresentativeModal
+                  open={dialogOpen}
+                  onOpenChange={(open) => {
+                    setDialogOpen(open);
+                    if (!open) {
+                      setForm(EMPTY_FORM);
+                      setFormErrors({});
+                    }
+                  }}
+                  form={form}
+                  formErrors={formErrors}
+                  submitting={submitting}
+                  onChange={handleChange}
+                  onSubmit={handleSubmit}
+                  cargos={cargos}
+                />
+              </Dialog>
+            </div>
+          )}
 
           {/* Filters */}
           <div className="mb-8 space-y-4">
+            {/* Toggle activos / eliminados (solo admin) */}
+            {user?.is_superuser && (
+              <div className="flex gap-2 flex-wrap">
+                <Button
+                  variant={activeSection === "active" ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => {
+                    setActiveSection("active");
+                    setSearchName("");
+                    setSelectedCargos([]);
+                    setSelectedEmpresa(null);
+                  }}
+                  className={
+                    activeSection === "active"
+                      ? "bg-[#68A243] hover:bg-[#5a9038] text-white gap-2"
+                      : "border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-[#68A243]/8 hover:border-[#68A243]/50 hover:text-[#68A243] dark:hover:border-[#68A243]/50 dark:hover:text-[#68A243] gap-2"
+                  }
+                >
+                  <Users className="h-4 w-4" />
+                  Activos
+                  <Badge
+                    variant="secondary"
+                    className={
+                      activeSection === "active"
+                        ? "!bg-white/20 !text-white text-xs"
+                        : "!bg-gray-100 dark:!bg-gray-700 !text-gray-600 dark:!text-gray-300 text-xs"
+                    }
+                  >
+                    {adminActiveCount}
+                  </Badge>
+                </Button>
+                <Button
+                  variant={activeSection === "deleted" ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => {
+                    setActiveSection("deleted");
+                    setSearchName("");
+                    setSelectedCargos([]);
+                    setSelectedEmpresa(null);
+                  }}
+                  className={
+                    activeSection === "deleted"
+                      ? "bg-red-600 hover:bg-red-700 text-white gap-2"
+                      : "border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-red-50 dark:hover:bg-red-950/20 hover:border-red-400 dark:hover:border-red-500 hover:text-red-600 dark:hover:text-red-400 gap-2"
+                  }
+                >
+                  <Trash2 className="h-4 w-4" />
+                  Eliminados
+                  <Badge
+                    variant="secondary"
+                    className={
+                      activeSection === "deleted"
+                        ? "!bg-white/20 !text-white text-xs"
+                        : "!bg-gray-100 dark:!bg-gray-700 !text-gray-600 dark:!text-gray-300 text-xs"
+                    }
+                  >
+                    {adminDeletedCount}
+                  </Badge>
+                </Button>
+              </div>
+            )}
+
             <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-end">
               {/* Search by name */}
               <div className="w-full sm:flex-1 sm:max-w-2xl">
@@ -463,34 +567,65 @@ export default function Representantes() {
                 </div>
               </div>
 
-              {/* Filter by cargo */}
-              <div className="w-full sm:w-auto">
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Filtrar por cargo
-                </label>
-                <Select
-                  value=""
-                  onValueChange={(cargoId) => {
-                    addCargoFilter(Number(cargoId));
-                  }}
-                  disabled={selectedCargos.length >= 3}
-                >
-                  <SelectTrigger className="w-full sm:w-[240px] bg-white dark:bg-[#143E29] border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white hover:border-gray-400 dark:hover:border-[#68A243]/50 dark:hover:bg-[#1a4d35] transition-colors focus:ring-[#68A243]/50 dark:focus:ring-[#68A243]/50">
-                    <SelectValue placeholder="Seleccionar cargo" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {cargos.map((cargo) => (
-                      <SelectItem
-                        key={cargo.id}
-                        value={String(cargo.id)}
-                        disabled={selectedCargos.includes(cargo.id)}
-                      >
-                        {cargo.nombre}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+              {/* Filter by cargo (solo en sección activos para admin, siempre para empresa) */}
+              {(!user?.is_superuser || activeSection === "active") && (
+                <div className="w-full sm:w-auto">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Filtrar por cargo
+                  </label>
+                  <Select
+                    value=""
+                    onValueChange={(cargoId) => {
+                      addCargoFilter(Number(cargoId));
+                    }}
+                    disabled={selectedCargos.length >= 3}
+                  >
+                    <SelectTrigger className="w-full sm:w-[200px] bg-white dark:bg-[#143E29] border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white hover:border-gray-400 dark:hover:border-[#68A243]/50 dark:hover:bg-[#1a4d35] transition-colors focus:ring-[#68A243]/50 dark:focus:ring-[#68A243]/50">
+                      <SelectValue placeholder="Seleccionar cargo" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {cargos.map((cargo) => (
+                        <SelectItem
+                          key={cargo.id}
+                          value={String(cargo.id)}
+                          disabled={selectedCargos.includes(cargo.id)}
+                        >
+                          {cargo.nombre}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+
+              {/* Filter by empresa (solo admin, solo sección activos) */}
+              {user?.is_superuser && activeSection === "active" && (
+                <div className="w-full sm:w-auto">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Filtrar por empresa
+                  </label>
+                  <Select
+                    value={
+                      selectedEmpresa !== null ? String(selectedEmpresa) : "all"
+                    }
+                    onValueChange={(val) =>
+                      setSelectedEmpresa(val === "all" ? null : Number(val))
+                    }
+                  >
+                    <SelectTrigger className="w-full sm:w-[220px] bg-white dark:bg-[#143E29] border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white hover:border-gray-400 dark:hover:border-[#68A243]/50 dark:hover:bg-[#1a4d35] transition-colors focus:ring-[#68A243]/50 dark:focus:ring-[#68A243]/50">
+                      <SelectValue placeholder="Todas las empresas" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Todas las empresas</SelectItem>
+                      {empresas.map((emp) => (
+                        <SelectItem key={emp.id} value={String(emp.id)}>
+                          {emp.razon_social}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
 
               {/* Clear filters button */}
               <Button
@@ -498,7 +633,9 @@ export default function Representantes() {
                 size="sm"
                 onClick={clearFilters}
                 className={`text-gray-700 dark:text-gray-300 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/20 gap-2 transition-all ${
-                  searchName || selectedCargos.length > 0
+                  searchName ||
+                  selectedCargos.length > 0 ||
+                  selectedEmpresa !== null
                     ? "visible opacity-100"
                     : "invisible opacity-0"
                 }`}
@@ -586,106 +723,172 @@ export default function Representantes() {
             <Card className="text-center py-12 dark:bg-[#143E29]/40 dark:border-gray-700/50 transition-colors duration-300">
               <CardHeader>
                 <div className="flex justify-center mb-2">
-                  <Users className="h-12 w-12 text-gray-300" />
+                  {user?.is_superuser && activeSection === "deleted" ? (
+                    <Trash2 className="h-12 w-12 text-gray-300" />
+                  ) : (
+                    <Users className="h-12 w-12 text-gray-300" />
+                  )}
                 </div>
                 <CardTitle className="text-gray-500 dark:text-gray-400 transition-colors duration-300">
-                  {searchName || selectedCargos.length > 0
+                  {searchName ||
+                  selectedCargos.length > 0 ||
+                  selectedEmpresa !== null
                     ? "No se encontraron representantes"
-                    : "Sin representantes"}
+                    : user?.is_superuser && activeSection === "deleted"
+                      ? "Sin representantes eliminados"
+                      : "Sin representantes"}
                 </CardTitle>
                 <CardDescription className="dark:text-gray-500">
-                  {searchName || selectedCargos.length > 0
+                  {searchName ||
+                  selectedCargos.length > 0 ||
+                  selectedEmpresa !== null
                     ? "Intenta con otros filtros"
-                    : user?.is_superuser
-                      ? "No hay representantes disponibles"
-                      : "Todavía no hay representantes registrados para tu empresa."}
+                    : user?.is_superuser && activeSection === "deleted"
+                      ? "No hay representantes eliminados en el sistema"
+                      : user?.is_superuser
+                        ? "No hay representantes activos disponibles"
+                        : "Todavía no hay representantes registrados para tu empresa."}
                 </CardDescription>
               </CardHeader>
             </Card>
           ) : (
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {filteredRepresentantes.map((rep, i) => (
-                <Card
-                  key={i}
-                  className="relative group hover:shadow-md transition-shadow border-2 hover:border-[#68A243]/30 dark:bg-[#143E29]/40 dark:border-gray-700/50 dark:hover:border-[#68A243]/30 dark:hover:shadow-lg dark:hover:shadow-[#68A243]/10"
-                >
-                  <div className="absolute top-3 right-3 flex gap-2 opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => handleEdit(rep)}
-                      className="h-8 w-8 lg:w-auto p-0 lg:px-2 text-[#68A243] hover:text-[#5a9038] hover:bg-[#68A243]/10 dark:text-[#9FD27B] dark:hover:text-[#68A243] dark:hover:bg-[#68A243]/20 gap-1 transition-colors"
-                      title="Editar representante"
-                    >
-                      <Pencil className="h-4 w-4" />
-                      <span className="hidden lg:inline text-xs">Editar</span>
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => handleDelete(rep)}
-                      className="h-8 w-8 lg:w-auto p-0 lg:px-2 text-red-500 hover:text-red-700 hover:bg-red-50 dark:text-red-400 dark:hover:text-red-300 dark:hover:bg-red-950/30 gap-1"
-                      title="Eliminar representante"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                      <span className="hidden lg:inline text-xs">Eliminar</span>
-                    </Button>
-                  </div>
-                  <CardHeader className="pb-3">
-                    <div className="flex items-start gap-3">
-                      <div className="bg-[#143E29]/10 dark:bg-[#68A243]/20 rounded-full p-2 shrink-0">
-                        <User className="h-5 w-5 text-[#143E29] dark:text-[#68A243]" />
-                      </div>
-                      <div className="flex-1">
-                        <CardTitle className="text-base text-[#143E29] dark:text-white">
-                          {rep.nombre} {rep.apellido}
-                        </CardTitle>
-                        {user?.is_superuser && (
-                          <Badge
-                            variant="outline"
-                            className="text-xs mt-0.5 dark:text-gray-300 dark:border-[#68A243]/30"
-                          >
-                            <Building2 className="h-3 w-3 mr-1" />
-                            {rep.empresa_nombre || "Sin empresa"}
-                          </Badge>
-                        )}
-                        {!user?.is_superuser && (
-                          <Badge
-                            variant="secondary"
-                            className="text-xs mt-0.5 dark:bg-[#1a5032] dark:text-[#68A243]"
-                          >
-                            {typeof rep.cargo === "number"
-                              ? "Sin cargo"
-                              : rep.cargo?.nombre || "Sin cargo"}
-                          </Badge>
-                        )}
-                      </div>
-                    </div>
-                  </CardHeader>
-                  <CardContent className="space-y-2 text-sm text-gray-600 dark:text-gray-400">
-                    <div className="flex items-center gap-2">
-                      <Mail className="h-4 w-4 text-[#68A243] shrink-0" />
-                      <span className="truncate">{rep.email}</span>
-                      {!rep.email_confirmado && (
-                        <TooltipProvider>
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <AlertCircle className="h-4 w-4 text-orange-500 dark:text-orange-400 shrink-0 cursor-help" />
-                            </TooltipTrigger>
-                            <TooltipContent>Email sin confirmar</TooltipContent>
-                          </Tooltip>
-                        </TooltipProvider>
-                      )}
-                    </div>
-                    {rep.telefono && (
-                      <div className="flex items-center gap-2">
-                        <Phone className="h-4 w-4 text-[#68A243] shrink-0" />
-                        <span>{rep.telefono}</span>
+              {filteredRepresentantes.map((rep, i) => {
+                const isDeleted = rep.eliminado === true;
+                return (
+                  <Card
+                    key={i}
+                    className={`relative group transition-shadow border-2 dark:border-gray-700/50 ${
+                      isDeleted
+                        ? "opacity-80 bg-gray-50 dark:bg-[#1c2a24]/70 border-gray-200 dark:border-red-900/30"
+                        : "hover:shadow-md hover:border-[#68A243]/30 dark:bg-[#143E29]/40 dark:hover:border-[#68A243]/30 dark:hover:shadow-lg dark:hover:shadow-[#68A243]/10"
+                    }`}
+                  >
+                    {/* Botones edit/delete: solo en activos */}
+                    {!isDeleted && (
+                      <div className="absolute top-3 right-3 flex gap-1 opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleEdit(rep)}
+                          className="h-7 w-7 lg:w-auto p-0 lg:px-2 text-[#68A243] hover:text-[#5a9038] hover:bg-[#68A243]/10 dark:text-[#9FD27B] dark:hover:text-[#68A243] dark:hover:bg-[#68A243]/20 gap-1 transition-colors"
+                          title="Editar representante"
+                        >
+                          <Pencil className="h-3.5 w-3.5" />
+                          <span className="hidden lg:inline text-xs">
+                            Editar
+                          </span>
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleDelete(rep)}
+                          className="h-7 w-7 lg:w-auto p-0 lg:px-2 text-red-500 hover:text-red-700 hover:bg-red-50 dark:text-red-400 dark:hover:text-red-300 dark:hover:bg-red-950/30 gap-1"
+                          title="Eliminar representante"
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                          <span className="hidden lg:inline text-xs">
+                            Eliminar
+                          </span>
+                        </Button>
                       </div>
                     )}
-                  </CardContent>
-                </Card>
-              ))}
+
+                    <CardHeader
+                      className={`pb-3 ${!isDeleted ? "lg:group-hover:pr-48" : ""}`}
+                    >
+                      <div className="flex items-start gap-3">
+                        <div
+                          className={`rounded-full p-2 shrink-0 ${
+                            isDeleted
+                              ? "bg-gray-200 dark:bg-red-900/30"
+                              : "bg-[#143E29]/10 dark:bg-[#68A243]/20"
+                          }`}
+                        >
+                          <User
+                            className={`h-5 w-5 ${
+                              isDeleted
+                                ? "text-gray-400 dark:text-red-400/70"
+                                : "text-[#143E29] dark:text-[#68A243]"
+                            }`}
+                          />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <CardTitle
+                            className={`truncate text-base ${
+                              isDeleted
+                                ? "text-gray-400 dark:text-gray-300/60 line-through"
+                                : "text-[#143E29] dark:text-white"
+                            }`}
+                          >
+                            {rep.nombre} {rep.apellido}
+                          </CardTitle>
+                          <div className="flex flex-wrap gap-1 mt-0.5">
+                            {isDeleted && (
+                              <Badge
+                                variant="outline"
+                                className="text-xs border-red-300 text-red-600 dark:border-red-600/60 dark:text-red-300 bg-red-50 dark:bg-red-900/25"
+                              >
+                                <Trash2 className="h-3 w-3 mr-1" />
+                                Eliminado
+                              </Badge>
+                            )}
+                            {user?.is_superuser && (
+                              <Badge
+                                variant="outline"
+                                className="text-xs mt-0.5 dark:text-gray-300 dark:border-[#68A243]/30"
+                              >
+                                <Building2 className="h-3 w-3 mr-1" />
+                                {rep.empresa_nombre || "Sin empresa"}
+                              </Badge>
+                            )}
+                            {!user?.is_superuser && (
+                              <Badge
+                                variant="secondary"
+                                className="text-xs mt-0.5 dark:bg-[#1a5032] dark:text-[#68A243]"
+                              >
+                                {typeof rep.cargo === "number"
+                                  ? "Sin cargo"
+                                  : rep.cargo?.nombre || "Sin cargo"}
+                              </Badge>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    </CardHeader>
+                    <CardContent
+                      className={`space-y-2 text-sm ${isDeleted ? "text-gray-500 dark:text-gray-400" : "text-gray-600 dark:text-gray-400"}`}
+                    >
+                      <div className="flex items-center gap-2">
+                        <Mail
+                          className={`h-4 w-4 shrink-0 ${isDeleted ? "text-gray-400 dark:text-gray-500" : "text-[#68A243]"}`}
+                        />
+                        <span className="truncate">{rep.email}</span>
+                        {!rep.email_confirmado && !isDeleted && (
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <AlertCircle className="h-4 w-4 text-orange-500 dark:text-orange-400 shrink-0 cursor-help" />
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                Email sin confirmar
+                              </TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
+                        )}
+                      </div>
+                      {rep.telefono && (
+                        <div className="flex items-center gap-2">
+                          <Phone
+                            className={`h-4 w-4 shrink-0 ${isDeleted ? "text-gray-400 dark:text-gray-500" : "text-[#68A243]"}`}
+                          />
+                          <span>{rep.telefono}</span>
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                );
+              })}
             </div>
           )}
         </div>
