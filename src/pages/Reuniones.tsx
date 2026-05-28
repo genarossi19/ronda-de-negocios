@@ -38,6 +38,7 @@ import {
   Building2,
   Calendar,
   CalendarCheck,
+  Check,
   Clock,
   Handshake,
   History,
@@ -48,6 +49,7 @@ import {
   Search,
   TableProperties,
   User,
+  X,
 } from "lucide-react";
 import { useCurrentUser } from "../hooks/useCurrentUser";
 import { getEventos } from "../api/EventoService";
@@ -127,6 +129,14 @@ const ESTADO_BADGE: Record<string, { cls: string; label: string }> = {
     cls: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300 border-yellow-200 dark:border-yellow-800/40",
     label: "Pendiente",
   },
+  asistio: {
+    cls: "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300 border-green-200 dark:border-green-800/40",
+    label: "Presente",
+  },
+  ausente: {
+    cls: "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300 border-red-200 dark:border-red-800/40",
+    label: "Ausente",
+  },
 };
 
 function estadoBadge(estado: string) {
@@ -143,6 +153,30 @@ function rolBadge(isAnfitriona: boolean) {
   return isAnfitriona
     ? "bg-[#143E29] text-white dark:bg-[#1a5032]"
     : "bg-[#68A243]/15 text-[#143E29] dark:bg-[#68A243]/20 dark:text-[#b8e39c]";
+}
+
+// ─── Attendance icon with tooltip ────────────────────────────────────────────
+
+function AttendanceIcon({
+  estado,
+  tooltipText,
+}: {
+  estado: string;
+  tooltipText: string;
+}) {
+  if (estado !== "asistio" && estado !== "ausente") return null;
+  return (
+    <span className="relative group inline-flex items-center cursor-default">
+      {estado === "asistio" ? (
+        <Check className="h-3.5 w-3.5 text-green-600 dark:text-green-400" />
+      ) : (
+        <X className="h-3.5 w-3.5 text-red-600 dark:text-red-400" />
+      )}
+      <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1.5 whitespace-nowrap rounded-lg bg-gray-900 dark:bg-gray-700 px-2 py-1 text-xs text-white opacity-0 group-hover:opacity-100 transition-opacity duration-150 pointer-events-none z-50 shadow-md">
+        {tooltipText}
+      </span>
+    </span>
+  );
 }
 
 // ─── Filter badge button ─────────────────────────────────────────────────────
@@ -184,7 +218,6 @@ function MeetingTableRow({
   const other = getOtherParticipant(item, myEmpresaNombre);
   const mine = getMyParticipant(item, myEmpresaNombre);
   const isAnf = amIAnfitriona(item, myEmpresaNombre);
-  const { cls, label } = estadoBadge(item.estado);
 
   return (
     <TableRow className="dark:border-[#68A243]/15 even:bg-gray-100/90 dark:even:bg-[#68A243]/[0.04]">
@@ -208,9 +241,21 @@ function MeetingTableRow({
         </Badge>
       </TableCell>
       <TableCell className="min-w-[180px] text-sm text-muted-foreground dark:text-gray-300">
-        {mine
-          ? `${mine.representante_nombre} ${mine.representante_apellido}`.trim()
-          : "—"}
+        {mine ? (
+          <span className="inline-flex items-center gap-1.5">
+            {`${mine.representante_nombre} ${mine.representante_apellido}`.trim()}
+            <AttendanceIcon
+              estado={mine.estado}
+              tooltipText={
+                mine.estado === "asistio"
+                  ? "Tu empresa asistió"
+                  : "Tu empresa no asistió"
+              }
+            />
+          </span>
+        ) : (
+          "—"
+        )}
       </TableCell>
       <TableCell className="min-w-[180px] font-semibold text-[#143E29] dark:text-white">
         {other?.empresa_nombre ?? (
@@ -220,15 +265,29 @@ function MeetingTableRow({
         )}
       </TableCell>
       <TableCell className="min-w-[180px] text-sm text-muted-foreground dark:text-gray-300">
-        {other
-          ? `${other.representante_nombre} ${other.representante_apellido}`.trim()
-          : "—"}
+        {other ? (
+          <span className="inline-flex items-center gap-1.5">
+            {`${other.representante_nombre} ${other.representante_apellido}`.trim()}
+            <AttendanceIcon
+              estado={other.estado}
+              tooltipText={
+                other.estado === "asistio"
+                  ? `${other.empresa_nombre} asistió`
+                  : `${other.empresa_nombre} no asistió`
+              }
+            />
+          </span>
+        ) : (
+          "—"
+        )}
       </TableCell>
-      <TableCell className="min-w-[200px] text-sm text-muted-foreground dark:text-gray-300">
+      <TableCell className="min-w-[180px] text-sm text-muted-foreground dark:text-gray-300">
         {other?.representante_email ?? "—"}
       </TableCell>
-      <TableCell className="min-w-[90px]">
-        <Badge className={`text-xs ${cls}`}>{label}</Badge>
+      <TableCell className="min-w-[120px]">
+        <Badge className={`text-xs ${estadoBadge(item.estado).cls}`}>
+          {estadoBadge(item.estado).label}
+        </Badge>
       </TableCell>
     </TableRow>
   );
@@ -244,8 +303,8 @@ function MeetingCard({
   myEmpresaNombre: string;
 }) {
   const other = getOtherParticipant(item, myEmpresaNombre);
+  const mine = getMyParticipant(item, myEmpresaNombre);
   const isAnf = amIAnfitriona(item, myEmpresaNombre);
-  const { cls, label } = estadoBadge(item.estado);
 
   return (
     <Card className="border border-gray-200 dark:border-[#68A243]/20 dark:bg-[#143E29] hover:shadow-md transition-shadow duration-200">
@@ -284,8 +343,16 @@ function MeetingCard({
             </div>
             <div className="flex items-center gap-2">
               <User className="h-4 w-4 text-gray-400 flex-shrink-0" />
-              <span className="text-sm text-gray-700 dark:text-gray-300">
+              <span className="text-sm text-gray-700 dark:text-gray-300 inline-flex items-center gap-1.5">
                 {other.representante_nombre} {other.representante_apellido}
+                <AttendanceIcon
+                  estado={other.estado}
+                  tooltipText={
+                    other.estado === "asistio"
+                      ? `${other.empresa_nombre} asistió`
+                      : `${other.empresa_nombre} no asistió`
+                  }
+                />
               </span>
             </div>
             <div className="flex items-center gap-2">
@@ -300,26 +367,31 @@ function MeetingCard({
             Lugar reservado — aún sin empresa asignada
           </p>
         )}
-        {(() => {
-          const mine = item.participantes.find(
-            (p) => p.empresa_nombre === myEmpresaNombre,
-          );
-          return mine ? (
-            <div className="pt-2 mt-1 border-t border-gray-100 dark:border-[#68A243]/15 space-y-1">
-              <p className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                Mi representante
-              </p>
-              <div className="flex items-center gap-2">
-                <User className="h-4 w-4 text-[#68A243] flex-shrink-0" />
-                <span className="text-sm text-gray-700 dark:text-gray-300">
-                  {mine.representante_nombre} {mine.representante_apellido}
-                </span>
-              </div>
+        {mine && (
+          <div className="pt-2 mt-1 border-t border-gray-100 dark:border-[#68A243]/15 space-y-1">
+            <p className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+              Mi representante
+            </p>
+            <div className="flex items-center gap-2">
+              <User className="h-4 w-4 text-[#68A243] flex-shrink-0" />
+              <span className="text-sm text-gray-700 dark:text-gray-300 inline-flex items-center gap-1.5">
+                {mine.representante_nombre} {mine.representante_apellido}
+                <AttendanceIcon
+                  estado={mine.estado}
+                  tooltipText={
+                    mine.estado === "asistio"
+                      ? "Tu empresa asistió"
+                      : "Tu empresa no asistió"
+                  }
+                />
+              </span>
             </div>
-          ) : null;
-        })()}
+          </div>
+        )}
         <div className="pt-2 border-t border-gray-100 dark:border-[#68A243]/15">
-          <Badge className={`text-xs ${cls}`}>{label}</Badge>
+          <Badge className={`text-xs ${estadoBadge(item.estado).cls}`}>
+            {estadoBadge(item.estado).label}
+          </Badge>
         </div>
       </CardContent>
     </Card>
@@ -870,7 +942,7 @@ export default function Reuniones() {
                                     Email representante
                                   </TableHead>
                                   <TableHead className="dark:text-gray-300">
-                                    Estado
+                                    Tu Estado
                                   </TableHead>
                                 </TableRow>
                               </TableHeader>

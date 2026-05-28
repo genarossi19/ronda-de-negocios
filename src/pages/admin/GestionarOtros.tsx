@@ -69,6 +69,7 @@ import type { LocalidadResponse } from "../../types/Localidad";
 
 interface GenericTabProps {
   title: string;
+  singular?: string;
   items: GenericType[];
   loading: boolean;
   onAdd: (nombre: string) => Promise<void>;
@@ -78,13 +79,14 @@ interface GenericTabProps {
 
 function GenericTab({
   title,
+  singular,
   items,
   loading,
   onAdd,
   onEdit,
   onDelete,
 }: GenericTabProps) {
-  const singularTitle = title.toLowerCase().slice(0, -1);
+  const singularTitle = singular ?? title.toLowerCase().slice(0, -1);
   const [newNombre, setNewNombre] = useState("");
   const [editingId, setEditingId] = useState<number | null>(null);
   const [editingNombre, setEditingNombre] = useState("");
@@ -827,6 +829,7 @@ export default function GestionarOtros() {
               <TabsContent value="sectores">
                 <GenericTab
                   title="Sectores"
+                  singular="sector"
                   items={sectores}
                   loading={loadingSectores}
                   onAdd={handleAddSector}

@@ -865,216 +865,229 @@ export default function GestionarAsientosModal({
                       })}
 
                       {mesaDisplayAsientos.length < 2 ? (
-                        <Card className="!gap-4 !py-5 !border-[#68A243]/20 dark:!bg-[#143E29] dark:!border-[#68A243]/20">
-                          <CardHeader className="!px-5 !pb-0">
-                            <CardTitle className="!text-lg !text-[#143E29] dark:!text-white !flex !items-center !gap-2">
-                              <UserPlus className="h-4 w-4 text-[#68A243]" />
-                              Agregar representante al asiento disponible
-                            </CardTitle>
-                          </CardHeader>
-                          <CardContent className="!space-y-4 !px-5 !pt-0">
-                            {loadingCompanies || loadingRepresentantes ? (
-                              <div className="!space-y-3">
-                                <Skeleton className="!h-10 !w-full dark:!bg-[#0f2f25]" />
-                                <Skeleton className="!h-10 !w-full dark:!bg-[#0f2f25]" />
-                              </div>
-                            ) : availableCompanies.length > 0 ? (
-                              <>
-                                <div className="!space-y-2">
-                                  <Label className="dark:!text-white">
-                                    Empresa
-                                  </Label>
-                                  <Select
-                                    value={selectedCompanyId}
-                                    onValueChange={(value) => {
-                                      setSelectedCompanyId(value);
-                                      setSelectedRepresentativeId("");
-                                      setOpenRepresentativeSearch(false);
-                                      // Cargar representantes de la empresa seleccionada
-                                      void loadRepresentativesByCompany(
-                                        Number(value),
-                                      );
-                                    }}
-                                  >
-                                    <SelectTrigger className="w-full border-[#68A243]/20 focus-visible:border-[#68A243] focus-visible:ring-[#68A243]/20 bg-white dark:bg-[#143E29] dark:border-[#68A243]/20 dark:text-white transition-colors h-10">
-                                      <SelectValue placeholder="Seleccioná una empresa" />
-                                    </SelectTrigger>
-                                    <SelectContent className="dark:bg-[#143E29] dark:border-[#68A243]/20">
-                                      {availableCompanies.map((company) => (
-                                        <SelectItem
-                                          key={company.id}
-                                          value={company.id.toString()}
-                                        >
-                                          {company.razon_social}
-                                        </SelectItem>
-                                      ))}
-                                    </SelectContent>
-                                  </Select>
+                        turnoGestionado?.estado === "cerrado" ? (
+                          <div className="!rounded-xl !border !border-amber-200/60 !bg-amber-50/50 !p-4 dark:!border-amber-800/40 dark:!bg-amber-950/20">
+                            <p className="!text-sm !font-semibold !text-amber-800 dark:!text-amber-300">
+                              Turno cerrado
+                            </p>
+                            <p className="!text-sm !text-amber-700 dark:!text-amber-400 !mt-0.5">
+                              No se pueden asignar asientos a un turno cerrado.
+                            </p>
+                          </div>
+                        ) : (
+                          <Card className="!gap-4 !py-5 !border-[#68A243]/20 dark:!bg-[#143E29] dark:!border-[#68A243]/20">
+                            <CardHeader className="!px-5 !pb-0">
+                              <CardTitle className="!text-lg !text-[#143E29] dark:!text-white !flex !items-center !gap-2">
+                                <UserPlus className="h-4 w-4 text-[#68A243]" />
+                                Agregar representante al asiento disponible
+                              </CardTitle>
+                            </CardHeader>
+                            <CardContent className="!space-y-4 !px-5 !pt-0">
+                              {loadingCompanies || loadingRepresentantes ? (
+                                <div className="!space-y-3">
+                                  <Skeleton className="!h-10 !w-full dark:!bg-[#0f2f25]" />
+                                  <Skeleton className="!h-10 !w-full dark:!bg-[#0f2f25]" />
                                 </div>
-
-                                <Popover
-                                  open={openRepresentativeSearch}
-                                  onOpenChange={setOpenRepresentativeSearch}
-                                >
-                                  <PopoverTrigger asChild>
-                                    <Button
-                                      variant="outline"
-                                      role="combobox"
-                                      aria-expanded={openRepresentativeSearch}
-                                      className="w-full justify-between h-10 border-[#68A243]/20 text-[#143E29] hover:bg-slate-50 hover:text-[#143E29] focus-visible:border-[#68A243] focus-visible:ring-[#68A243]/20 dark:bg-[#143E29] dark:border-[#68A243]/20 dark:text-white dark:hover:bg-[#1a3f30] dark:hover:text-white transition-colors"
-                                      disabled={loadingRepresentantes}
+                              ) : availableCompanies.length > 0 ? (
+                                <>
+                                  <div className="!space-y-2">
+                                    <Label className="dark:!text-white">
+                                      Empresa
+                                    </Label>
+                                    <Select
+                                      value={selectedCompanyId}
+                                      onValueChange={(value) => {
+                                        setSelectedCompanyId(value);
+                                        setSelectedRepresentativeId("");
+                                        setOpenRepresentativeSearch(false);
+                                        // Cargar representantes de la empresa seleccionada
+                                        void loadRepresentativesByCompany(
+                                          Number(value),
+                                        );
+                                      }}
                                     >
-                                      {loadingRepresentantes ? (
-                                        <span className="text-gray-400">
-                                          Cargando representantes...
-                                        </span>
-                                      ) : selectedRepresentativeId ? (
-                                        (() => {
-                                          const selectedRepresentative =
-                                            representativesForSelectedCompany.find(
-                                              (representative) =>
-                                                representative.id.toString() ===
-                                                selectedRepresentativeId,
-                                            );
+                                      <SelectTrigger className="w-full border-[#68A243]/20 focus-visible:border-[#68A243] focus-visible:ring-[#68A243]/20 bg-white dark:bg-[#143E29] dark:border-[#68A243]/20 dark:text-white transition-colors h-10">
+                                        <SelectValue placeholder="Seleccioná una empresa" />
+                                      </SelectTrigger>
+                                      <SelectContent className="dark:bg-[#143E29] dark:border-[#68A243]/20">
+                                        {availableCompanies.map((company) => (
+                                          <SelectItem
+                                            key={company.id}
+                                            value={company.id.toString()}
+                                          >
+                                            {company.razon_social}
+                                          </SelectItem>
+                                        ))}
+                                      </SelectContent>
+                                    </Select>
+                                  </div>
 
-                                          if (!selectedRepresentative) {
-                                            return "Seleccioná un representante";
-                                          }
-
-                                          return `${selectedRepresentative.nombre} ${selectedRepresentative.apellido}${selectedRepresentative.email ? ` - ${selectedRepresentative.email}` : ""}`;
-                                        })()
-                                      ) : selectedCompanyId ? (
-                                        "Buscá y seleccioná un representante"
-                                      ) : (
-                                        "Seleccioná primero una empresa"
-                                      )}
-                                      <Search className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                                    </Button>
-                                  </PopoverTrigger>
-                                  <PopoverContent
-                                    className="w-[380px] p-0 dark:bg-[#143E29] dark:border-[#68A243]/20"
-                                    align="start"
+                                  <Popover
+                                    open={openRepresentativeSearch}
+                                    onOpenChange={setOpenRepresentativeSearch}
                                   >
-                                    <Command className="dark:bg-[#143E29]">
-                                      <CommandInput
-                                        placeholder="Buscar representante..."
-                                        className="dark:bg-[#0f2f25] dark:text-white dark:placeholder-[#b8c0ca] dark:border-[#68A243]/20 border-[#68A243]/20"
-                                      />
-                                      <CommandList className="dark:bg-[#143E29]">
-                                        <CommandEmpty className="dark:text-gray-400">
-                                          {loadingRepresentantes
-                                            ? "Cargando representantes..."
-                                            : representativesForSelectedCompany.length ===
-                                                0
-                                              ? "Esta empresa no tiene representantes cargados"
-                                              : "No se encontró ningún representante"}
-                                        </CommandEmpty>
-                                        <CommandGroup className="dark:text-white">
-                                          {representativesForSelectedCompany.map(
-                                            (representative) => {
-                                              return (
-                                                <CommandItem
-                                                  key={representative.id}
-                                                  value={`${representative.nombre} ${representative.apellido} ${representative.email ?? ""} ${representative.empresa_nombre ?? ""}`}
-                                                  onSelect={() => {
-                                                    setSelectedRepresentativeId(
-                                                      representative.id.toString(),
-                                                    );
-                                                    setOpenRepresentativeSearch(
-                                                      false,
-                                                    );
-                                                  }}
-                                                  className="cursor-pointer"
-                                                >
-                                                  <div className="flex items-center gap-3 flex-1">
-                                                    <div className="h-8 w-8 rounded-full bg-[#68A243] text-white text-xs font-semibold flex items-center justify-center">
-                                                      {`${representative.nombre[0] ?? "R"}${representative.apellido[0] ?? ""}`.toUpperCase()}
-                                                    </div>
-                                                    <div className="flex-1 min-w-0">
-                                                      <p className="font-medium truncate">
-                                                        {representative.nombre}{" "}
-                                                        {
-                                                          representative.apellido
-                                                        }
-                                                      </p>
-                                                      <div className="flex flex-col gap-0.5">
-                                                        {representative.email && (
-                                                          <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
-                                                            {
-                                                              representative.email
-                                                            }
-                                                          </p>
-                                                        )}
-                                                        <p
-                                                          className={cn(
-                                                            "text-xs truncate",
-                                                            representative.telefono &&
-                                                              representative.telefono !==
-                                                                ""
-                                                              ? "text-gray-600 dark:text-gray-300"
-                                                              : "italic text-gray-400 dark:text-gray-500",
-                                                          )}
-                                                        >
-                                                          {representative.telefono &&
-                                                          representative.telefono !==
-                                                            ""
-                                                            ? representative.telefono
-                                                            : "Sin teléfono"}
+                                    <PopoverTrigger asChild>
+                                      <Button
+                                        variant="outline"
+                                        role="combobox"
+                                        aria-expanded={openRepresentativeSearch}
+                                        className="w-full justify-between h-10 border-[#68A243]/20 text-[#143E29] hover:bg-slate-50 hover:text-[#143E29] focus-visible:border-[#68A243] focus-visible:ring-[#68A243]/20 dark:bg-[#143E29] dark:border-[#68A243]/20 dark:text-white dark:hover:bg-[#1a3f30] dark:hover:text-white transition-colors"
+                                        disabled={loadingRepresentantes}
+                                      >
+                                        {loadingRepresentantes ? (
+                                          <span className="text-gray-400">
+                                            Cargando representantes...
+                                          </span>
+                                        ) : selectedRepresentativeId ? (
+                                          (() => {
+                                            const selectedRepresentative =
+                                              representativesForSelectedCompany.find(
+                                                (representative) =>
+                                                  representative.id.toString() ===
+                                                  selectedRepresentativeId,
+                                              );
+
+                                            if (!selectedRepresentative) {
+                                              return "Seleccioná un representante";
+                                            }
+
+                                            return `${selectedRepresentative.nombre} ${selectedRepresentative.apellido}${selectedRepresentative.email ? ` - ${selectedRepresentative.email}` : ""}`;
+                                          })()
+                                        ) : selectedCompanyId ? (
+                                          "Buscá y seleccioná un representante"
+                                        ) : (
+                                          "Seleccioná primero una empresa"
+                                        )}
+                                        <Search className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                                      </Button>
+                                    </PopoverTrigger>
+                                    <PopoverContent
+                                      className="w-[380px] p-0 dark:bg-[#143E29] dark:border-[#68A243]/20"
+                                      align="start"
+                                    >
+                                      <Command className="dark:bg-[#143E29]">
+                                        <CommandInput
+                                          placeholder="Buscar representante..."
+                                          className="dark:bg-[#0f2f25] dark:text-white dark:placeholder-[#b8c0ca] dark:border-[#68A243]/20 border-[#68A243]/20"
+                                        />
+                                        <CommandList className="dark:bg-[#143E29]">
+                                          <CommandEmpty className="dark:text-gray-400">
+                                            {loadingRepresentantes
+                                              ? "Cargando representantes..."
+                                              : representativesForSelectedCompany.length ===
+                                                  0
+                                                ? "Esta empresa no tiene representantes cargados"
+                                                : "No se encontró ningún representante"}
+                                          </CommandEmpty>
+                                          <CommandGroup className="dark:text-white">
+                                            {representativesForSelectedCompany.map(
+                                              (representative) => {
+                                                return (
+                                                  <CommandItem
+                                                    key={representative.id}
+                                                    value={`${representative.nombre} ${representative.apellido} ${representative.email ?? ""} ${representative.empresa_nombre ?? ""}`}
+                                                    onSelect={() => {
+                                                      setSelectedRepresentativeId(
+                                                        representative.id.toString(),
+                                                      );
+                                                      setOpenRepresentativeSearch(
+                                                        false,
+                                                      );
+                                                    }}
+                                                    className="cursor-pointer"
+                                                  >
+                                                    <div className="flex items-center gap-3 flex-1">
+                                                      <div className="h-8 w-8 rounded-full bg-[#68A243] text-white text-xs font-semibold flex items-center justify-center">
+                                                        {`${representative.nombre[0] ?? "R"}${representative.apellido[0] ?? ""}`.toUpperCase()}
+                                                      </div>
+                                                      <div className="flex-1 min-w-0">
+                                                        <p className="font-medium truncate">
+                                                          {
+                                                            representative.nombre
+                                                          }{" "}
+                                                          {
+                                                            representative.apellido
+                                                          }
                                                         </p>
+                                                        <div className="flex flex-col gap-0.5">
+                                                          {representative.email && (
+                                                            <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
+                                                              {
+                                                                representative.email
+                                                              }
+                                                            </p>
+                                                          )}
+                                                          <p
+                                                            className={cn(
+                                                              "text-xs truncate",
+                                                              representative.telefono &&
+                                                                representative.telefono !==
+                                                                  ""
+                                                                ? "text-gray-600 dark:text-gray-300"
+                                                                : "italic text-gray-400 dark:text-gray-500",
+                                                            )}
+                                                          >
+                                                            {representative.telefono &&
+                                                            representative.telefono !==
+                                                              ""
+                                                              ? representative.telefono
+                                                              : "Sin teléfono"}
+                                                          </p>
+                                                        </div>
                                                       </div>
                                                     </div>
-                                                  </div>
-                                                  <Check
-                                                    className={cn(
-                                                      "ml-auto h-4 w-4 text-[#68A243]",
-                                                      selectedRepresentativeId ===
-                                                        representative.id.toString()
-                                                        ? "opacity-100"
-                                                        : "opacity-0",
-                                                    )}
-                                                  />
-                                                </CommandItem>
-                                              );
-                                            },
-                                          )}
-                                        </CommandGroup>
-                                      </CommandList>
-                                    </Command>
-                                  </PopoverContent>
-                                </Popover>
+                                                    <Check
+                                                      className={cn(
+                                                        "ml-auto h-4 w-4 text-[#68A243]",
+                                                        selectedRepresentativeId ===
+                                                          representative.id.toString()
+                                                          ? "opacity-100"
+                                                          : "opacity-0",
+                                                      )}
+                                                    />
+                                                  </CommandItem>
+                                                );
+                                              },
+                                            )}
+                                          </CommandGroup>
+                                        </CommandList>
+                                      </Command>
+                                    </PopoverContent>
+                                  </Popover>
 
-                                <Button
-                                  onClick={handleCreateSeat}
-                                  disabled={
-                                    !selectedCompanyId ||
-                                    !selectedRepresentativeId ||
-                                    isCreatingSeat ||
-                                    loadingRepresentantes
-                                  }
-                                  className="!w-full !h-11 !bg-[#68A243] hover:!bg-[#5a9038] !text-white disabled:!opacity-50 disabled:!cursor-not-allowed"
-                                >
-                                  {isCreatingSeat ? (
-                                    <>
-                                      <Loader2 className="h-4 w-4 animate-spin" />
-                                      Asignando...
-                                    </>
-                                  ) : loadingRepresentantes ? (
-                                    "Cargando..."
-                                  ) : (
-                                    "Agregar representante al asiento"
-                                  )}
-                                </Button>
-                              </>
-                            ) : (
-                              <div className="!rounded-xl !border !border-dashed !border-[#68A243]/25 !bg-[#68A243]/5 !p-4">
-                                <p className="!text-sm !text-gray-600 dark:!text-gray-300">
-                                  No hay empresas disponibles para asignar
-                                  representantes.
-                                </p>
-                              </div>
-                            )}
-                          </CardContent>
-                        </Card>
+                                  <Button
+                                    onClick={handleCreateSeat}
+                                    disabled={
+                                      !selectedCompanyId ||
+                                      !selectedRepresentativeId ||
+                                      isCreatingSeat ||
+                                      loadingRepresentantes
+                                    }
+                                    className="!w-full !h-11 !bg-[#68A243] hover:!bg-[#5a9038] !text-white disabled:!opacity-50 disabled:!cursor-not-allowed"
+                                  >
+                                    {isCreatingSeat ? (
+                                      <>
+                                        <Loader2 className="h-4 w-4 animate-spin" />
+                                        Asignando...
+                                      </>
+                                    ) : loadingRepresentantes ? (
+                                      "Cargando..."
+                                    ) : (
+                                      "Agregar representante al asiento"
+                                    )}
+                                  </Button>
+                                </>
+                              ) : (
+                                <div className="!rounded-xl !border !border-dashed !border-[#68A243]/25 !bg-[#68A243]/5 !p-4">
+                                  <p className="!text-sm !text-gray-600 dark:!text-gray-300">
+                                    No hay empresas disponibles para asignar
+                                    representantes.
+                                  </p>
+                                </div>
+                              )}
+                            </CardContent>
+                          </Card>
+                        )
                       ) : (
                         <div className="!rounded-xl !border !border-[#143E29]/10 !bg-[#143E29]/5 !p-4 dark:!border-[#68A243]/20 dark:!bg-[#143E29]/40">
                           <p className="!text-sm !text-gray-600 dark:!text-gray-300">

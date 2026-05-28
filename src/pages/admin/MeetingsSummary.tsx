@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { useNavigate } from "react-router";
+import { useNavigate, useSearchParams } from "react-router";
 import {
   ArrowLeft,
   Check,
@@ -447,12 +447,20 @@ function MeetingCardSkeleton() {
 
 export default function MeetingsSummary() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [eventos, setEventos] = useState<EventoResponse[]>([]);
-  const [selectedEventId, setSelectedEventId] = useState<string>("");
-  const [turnoFilter, setTurnoFilter] = useState<string>("all");
+  const [selectedEventId, setSelectedEventId] = useState<string>(
+    searchParams.get("evento") ?? "",
+  );
+  const [turnoFilter, setTurnoFilter] = useState<string>(
+    searchParams.get("turno") ?? "all",
+  );
   const [estadoMesaFilter, setEstadoMesaFilter] = useState<
     "all" | "libre" | "parcial" | "completa"
   >("all");
+  const [turnoEstadoFilter, setTurnoEstadoFilter] = useState<"all" | "cerrado">(
+    "all",
+  );
   const [eventSearchTerm, setEventSearchTerm] = useState("");
   const [turnoSearchTerm, setTurnoSearchTerm] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
@@ -475,6 +483,7 @@ export default function MeetingsSummary() {
   const [mesaEdicion, setMesaEdicion] = useState<{
     mesaNumero: number;
     turnoHorario: string;
+    turnoEstado: TurnoResponse["estado"];
     participantes: Array<{
       asientoId: number;
       empresaNombre: string;
@@ -559,7 +568,6 @@ export default function MeetingsSummary() {
     const fetchSummary = async () => {
       try {
         setIsLoadingSummary(true);
-        setTurnoFilter("all");
         setEstadoMesaFilter("all");
         setSelectedTableSummary(null);
 
@@ -663,6 +671,22 @@ export default function MeetingsSummary() {
             });
         });
 
+        // Pre-cargar estados de asistencia desde el campo `estado` de cada asiento
+        const nextAsientoEstados: Record<number, "asistio" | "ausente"> = {};
+        mesasByTurno.forEach(({ mesas }) => {
+          mesas.forEach((mesa) => {
+            mesa.asientos.forEach((asiento) => {
+              if (
+                asiento.estado === "asistio" ||
+                asiento.estado === "ausente"
+              ) {
+                nextAsientoEstados[asiento.id] = asiento.estado;
+              }
+            });
+          });
+        });
+        setAsientoEstados(nextAsientoEstados);
+
         setSummaryRows(nextRows);
         setTableSummaries(nextTableSummaries);
       } catch (error) {
@@ -765,9 +789,12 @@ export default function MeetingsSummary() {
       const estadoMatches =
         estadoMesaFilter === "all" ||
         tableSummary.estadoMesa === estadoMesaFilter;
-      return hasKey && estadoMatches;
+      const turnoEstadoMatches =
+        turnoEstadoFilter === "all" ||
+        tableSummary.turnoEstado === turnoEstadoFilter;
+      return hasKey && estadoMatches && turnoEstadoMatches;
     });
-  }, [filteredRows, tableSummaries, estadoMesaFilter]);
+  }, [filteredRows, tableSummaries, estadoMesaFilter, turnoEstadoFilter]);
 
   const availableTurnos = useMemo(() => {
     const turnosMap = new Map<
@@ -865,7 +892,10 @@ export default function MeetingsSummary() {
   };
 
   const hasActiveFilters =
-    turnoFilter !== "all" || searchTerm.trim().length > 0;
+    turnoFilter !== "all" ||
+    estadoMesaFilter !== "all" ||
+    turnoEstadoFilter !== "all" ||
+    searchTerm.trim().length > 0;
 
   const isLoading = isLoadingEvents || isLoadingSummary;
 
@@ -984,7 +1014,12 @@ export default function MeetingsSummary() {
                     </span>
                     <Select
                       value={selectedEventId || undefined}
-                      onValueChange={setSelectedEventId}
+                      onValueChange={(value) => {
+                        setSelectedEventId(value);
+                        setTurnoFilter("all");
+                        setEstadoMesaFilter("all");
+                        setTurnoEstadoFilter("all");
+                      }}
                       onOpenChange={(open) => {
                         if (!open) {
                           setEventSearchTerm("");
@@ -1111,6 +1146,7 @@ export default function MeetingsSummary() {
                     setTurnoFilter("all");
                     setSearchTerm("");
                     setEstadoMesaFilter("all");
+                    setTurnoEstadoFilter("all");
                   }}
                   disabled={!hasActiveFilters}
                   className="h-10 justify-start border-[#68A243]/20 bg-white px-3 text-[#3F6E20] hover:bg-[#68A243]/10 hover:text-[#3F6E20] disabled:opacity-40 disabled:hover:bg-white dark:border-[#68A243]/20 dark:bg-[#143E29] dark:text-[#9FD27B] dark:hover:bg-[#68A243]/10 dark:hover:text-[#9FD27B]"
@@ -1309,17 +1345,17 @@ export default function MeetingsSummary() {
                         Una fila por mesa.
                       </CardDescription>
                     </div>
-                    <div className="flex gap-2">
+                    <div className="flex flex-wrap items-center gap-2">
                       {(["all", "libre", "parcial", "completa"] as const).map(
                         (estado) => (
                           <button
                             key={estado}
-                            onClick={() => setEstadoMesaFilter(estado)}
                             className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
                               estadoMesaFilter === estado
                                 ? "bg-[#68A243] text-white"
                                 : "bg-white dark:bg-[#143E29] text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-[#68A243]/20 hover:border-[#68A243]/50"
                             }`}
+                            onClick={() => setEstadoMesaFilter(estado)}
                           >
                             {estado === "all" && "Todas"}
                             {estado === "libre" && "Vacías"}
@@ -1328,6 +1364,21 @@ export default function MeetingsSummary() {
                           </button>
                         ),
                       )}
+                      <div className="w-px h-5 bg-gray-200 dark:bg-[#68A243]/20 mx-1" />
+                      <button
+                        onClick={() =>
+                          setTurnoEstadoFilter(
+                            turnoEstadoFilter === "cerrado" ? "all" : "cerrado",
+                          )
+                        }
+                        className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+                          turnoEstadoFilter === "cerrado"
+                            ? "bg-[#143E29] text-white dark:bg-white/15 dark:text-white border border-[#143E29] dark:border-white/20"
+                            : "bg-white dark:bg-[#143E29] text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-[#68A243]/20 hover:border-[#68A243]/50"
+                        }`}
+                      >
+                        Cerradas
+                      </button>
                     </div>
                   </CardHeader>
                   <CardContent className="p-0">
@@ -1435,11 +1486,22 @@ export default function MeetingsSummary() {
                                     <Button
                                       size="sm"
                                       variant="ghost"
+                                      disabled={
+                                        tableSummary.turnoEstado !==
+                                          "cerrado" ||
+                                        tableSummary.participantes.length === 0
+                                      }
+                                      title={
+                                        tableSummary.turnoEstado !== "cerrado"
+                                          ? "El turno debe estar cerrado para registrar asistencias"
+                                          : undefined
+                                      }
                                       onClick={() =>
                                         setMesaEdicion({
                                           mesaNumero: tableSummary.mesaNumero,
                                           turnoHorario:
                                             tableSummary.turnoHorario,
+                                          turnoEstado: tableSummary.turnoEstado,
                                           participantes:
                                             tableSummary.participantes.map(
                                               (p) => ({
@@ -1452,7 +1514,7 @@ export default function MeetingsSummary() {
                                             ),
                                         })
                                       }
-                                      className="text-[#68A243] hover:text-[#5a9038] hover:bg-[#68A243]/10"
+                                      className="text-[#68A243] hover:text-[#5a9038] hover:bg-[#68A243]/10 disabled:opacity-40 disabled:cursor-not-allowed"
                                     >
                                       <Edit2 className="h-4 w-4" />
                                     </Button>
@@ -1623,6 +1685,13 @@ export default function MeetingsSummary() {
             </DialogDescription>
           </DialogHeader>
 
+          {mesaEdicion?.turnoEstado !== "cerrado" && (
+            <div className="rounded-xl border border-amber-200 bg-amber-50 dark:bg-amber-950/30 dark:border-amber-800/50 px-4 py-3 text-sm text-amber-800 dark:text-amber-300">
+              El turno debe estar <strong>cerrado</strong> para registrar
+              asistencias.
+            </div>
+          )}
+
           <div className="space-y-3">
             {mesaEdicion?.participantes.map((participante) => (
               <div
@@ -1649,7 +1718,10 @@ export default function MeetingsSummary() {
                     onClick={() =>
                       handleAsistenciaChange(participante.asientoId, "asistio")
                     }
-                    disabled={updatingAsientos.has(participante.asientoId)}
+                    disabled={
+                      mesaEdicion?.turnoEstado !== "cerrado" ||
+                      updatingAsientos.has(participante.asientoId)
+                    }
                     className={
                       asientoEstados[participante.asientoId] === "asistio"
                         ? "bg-[#68A243] text-white hover:bg-[#5a9038]"
@@ -1669,7 +1741,10 @@ export default function MeetingsSummary() {
                     onClick={() =>
                       handleAsistenciaChange(participante.asientoId, "ausente")
                     }
-                    disabled={updatingAsientos.has(participante.asientoId)}
+                    disabled={
+                      mesaEdicion?.turnoEstado !== "cerrado" ||
+                      updatingAsientos.has(participante.asientoId)
+                    }
                   >
                     <X className="h-4 w-4 mr-1" />
                     No asistió

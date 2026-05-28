@@ -26,6 +26,7 @@ export interface AsientoResponse {
   representante_apellido?: string;
   representante_email?: string;
   anfitriona?: boolean;
+  estado?: "reservado" | "asistio" | "ausente";
   readOnly?: boolean;
 }
 

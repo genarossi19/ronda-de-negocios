@@ -5,6 +5,7 @@ import {
   CalendarDays,
   CheckCircle2,
   Clock3,
+  Handshake,
   LayoutGrid,
   LockKeyhole,
   Loader2,
@@ -795,7 +796,9 @@ export default function GestionarTurnos() {
                           >
                             <div className="space-y-5">
                               <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
-                                <div className="flex flex-wrap items-center gap-2">
+                                <div
+                                  className={`flex flex-wrap items-center gap-2 ${turno.estado === "cerrado" ? "opacity-50" : ""}`}
+                                >
                                   <h3 className="text-xl font-semibold text-[#143E29] dark:text-white">
                                     Turno {turnoNumberMap.get(turno.id)}
                                   </h3>
@@ -813,22 +816,40 @@ export default function GestionarTurnos() {
                                     <Pencil className="h-4 w-4" />
                                     Editar turno
                                   </Button>
-                                  <Button
-                                    ref={
-                                      turnosOrdenados.indexOf(turno) === 0
-                                        ? gestionarAsientosBtnRef
-                                        : undefined
-                                    }
-                                    onClick={() => handleOpenSeatManager(turno)}
-                                    className="bg-[#143E29] hover:bg-[#0f2f25] text-white dark:bg-[#68A243] dark:hover:bg-[#5a9038]"
-                                  >
-                                    <LayoutGrid className="h-4 w-4" />
-                                    Gestionar asientos
-                                  </Button>
+                                  {turno.estado === "cerrado" ? (
+                                    <Button
+                                      onClick={() =>
+                                        navigate(
+                                          `/panel-administrador/reuniones?evento=${eventoId}&turno=${turno.id}`,
+                                        )
+                                      }
+                                      className="bg-[#143E29] hover:bg-[#0f2f25] text-white dark:bg-[#68A243] dark:hover:bg-[#5a9038]"
+                                    >
+                                      <Handshake className="h-4 w-4" />
+                                      Ver Reuniones
+                                    </Button>
+                                  ) : (
+                                    <Button
+                                      ref={
+                                        turnosOrdenados.indexOf(turno) === 0
+                                          ? gestionarAsientosBtnRef
+                                          : undefined
+                                      }
+                                      onClick={() =>
+                                        handleOpenSeatManager(turno)
+                                      }
+                                      className="bg-[#143E29] hover:bg-[#0f2f25] text-white dark:bg-[#68A243] dark:hover:bg-[#5a9038]"
+                                    >
+                                      <LayoutGrid className="h-4 w-4" />
+                                      Gestionar asientos
+                                    </Button>
+                                  )}
                                 </div>
                               </div>
 
-                              <div className="space-y-4">
+                              <div
+                                className={`space-y-4 ${turno.estado === "cerrado" ? "opacity-50" : ""}`}
+                              >
                                 <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3 text-sm text-gray-700 dark:text-gray-200">
                                   <div className="rounded-xl border border-[#68A243]/15 bg-[#68A243]/5 dark:bg-[#0f2f25]/70 p-3">
                                     <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground dark:text-gray-300 mb-1">
