@@ -508,18 +508,22 @@ export default function Navbar() {
                         </div>
                       )}
                     </div>
-                    <DropdownMenuSeparator className="bg-[#669649]/30 dark:bg-[#1a5032]" />
-                    <DropdownMenuGroup>
-                      <DropdownMenuLabel className="text-xs font-semibold text-gray-500 dark:text-gray-400 px-2 py-1.5">
-                        Mi Perfil
-                      </DropdownMenuLabel>
-                      <Link to="/representantes">
-                        <DropdownMenuItem className="cursor-pointer transition-colors duration-200">
-                          <User2Icon className="mr-2 h-4 w-4" />
-                          <span className="text-sm">Representantes</span>
-                        </DropdownMenuItem>
-                      </Link>
-                    </DropdownMenuGroup>
+                    {!user?.is_superuser && (
+                      <>
+                        <DropdownMenuSeparator className="bg-[#669649]/30 dark:bg-[#1a5032]" />
+                        <DropdownMenuGroup>
+                          <DropdownMenuLabel className="text-xs font-semibold text-gray-500 dark:text-gray-400 px-2 py-1.5">
+                            Mi Perfil
+                          </DropdownMenuLabel>
+                          <Link to="/representantes">
+                            <DropdownMenuItem className="cursor-pointer transition-colors duration-200">
+                              <User2Icon className="mr-2 h-4 w-4" />
+                              <span className="text-sm">Representantes</span>
+                            </DropdownMenuItem>
+                          </Link>
+                        </DropdownMenuGroup>
+                      </>
+                    )}
                     <DropdownMenuSeparator className="bg-[#669649]/30 dark:bg-[#1a5032]" />
                     <DropdownMenuGroup>
                       <DropdownMenuLabel className="text-xs font-semibold text-gray-500 dark:text-gray-400 px-2 py-1.5">
