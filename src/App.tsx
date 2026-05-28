@@ -1,6 +1,4 @@
-import { CompanyProvider } from "../src/context/CompanyContext";
 import { Routes, Route, useLocation, useNavigate } from "react-router";
-import { BookingProvider } from "./context/BookingContext";
 import { AuthProvider } from "./context/AuthContext";
 import { ThemeProvider } from "./context/ThemeContext";
 import { MotionPreferencesProvider } from "./context/MotionPreferencesContext";
@@ -17,7 +15,7 @@ const Register = lazy(() => import("./pages/RegisterStep"));
 const Shifts = lazy(() => import("./pages/Shifts"));
 const Login = lazy(() => import("./pages/Login"));
 const Tables = lazy(() => import("./pages/Tables"));
-const Test = lazy(() => import("./pages/Test"));
+const GestionarOtros = lazy(() => import("./pages/admin/GestionarOtros"));
 const Dashboard = lazy(() => import("./pages/admin/Dashboard"));
 const CompaniesManagement = lazy(
   () => import("./pages/admin/CompaniesManagement"),
@@ -25,7 +23,6 @@ const CompaniesManagement = lazy(
 const GestionarRondas = lazy(() => import("./pages/admin/GestionarRondas"));
 const GestionarTurnos = lazy(() => import("./pages/admin/GestionarTurnos"));
 const MeetingsSummary = lazy(() => import("./pages/admin/MeetingsSummary"));
-const GestionarOtros = lazy(() => import("./pages/admin/GestionarOtros"));
 const Representantes = lazy(() => import("./pages/Representantes"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 const ValidarEmail = lazy(() => import("./pages/ValidarEmail"));
@@ -191,7 +188,6 @@ function AppRoutes() {
               </ProtectedRoute>
             }
           />
-          <Route path="/test" element={<Test />} />
           <Route
             path="/representantes"
             element={
@@ -218,19 +214,15 @@ function AppRoutes() {
 export default function App() {
   return (
     <AuthProvider>
-      <BookingProvider>
-        <CompanyProvider>
-          <MotionPreferencesProvider>
-            {/* Quitamos el bg-background de aquí si ya lo pusiste en el CSS del body.
+      <MotionPreferencesProvider>
+        {/* Quitamos el bg-background de aquí si ya lo pusiste en el CSS del body.
                Si lo dejas aquí, el padding del body siempre mostrará el color de "atrás".
             */}
-            <div className="min-h-screen">
-              <AppRoutes />
-            </div>
-            <Toaster richColors position="top-right" closeButton />
-          </MotionPreferencesProvider>
-        </CompanyProvider>
-      </BookingProvider>
+        <div className="min-h-screen">
+          <AppRoutes />
+        </div>
+        <Toaster richColors position="top-right" closeButton />
+      </MotionPreferencesProvider>
     </AuthProvider>
   );
 }
