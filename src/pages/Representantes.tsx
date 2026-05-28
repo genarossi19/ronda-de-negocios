@@ -225,6 +225,7 @@ export default function Representantes() {
     setFormErrors((prev) => ({ ...prev, [name]: undefined }));
   };
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const handleDelete = async (rep: RepresentanteResponse) => {
     if (!rep.id) {
       toast.error("Error: El representante no tiene un ID válido.");
