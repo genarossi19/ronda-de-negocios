@@ -779,7 +779,7 @@ export default function Representantes() {
                             Editar
                           </span>
                         </Button>
-                        <Button
+                        {/* <Button
                           variant="ghost"
                           size="sm"
                           onClick={() => handleDelete(rep)}
@@ -790,7 +790,7 @@ export default function Representantes() {
                           <span className="hidden lg:inline text-xs">
                             Eliminar
                           </span>
-                        </Button>
+                        </Button> */}
                       </div>
                     )}
 
