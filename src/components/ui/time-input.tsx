@@ -10,6 +10,21 @@ interface TimeInputProps {
   "aria-invalid"?: boolean;
 }
 
+// Construye el string de display a partir de 0-4 dígitos.
+// Ejemplos:
+//   ""     → ""          (muestra placeholder)
+//   "1"    → "1"
+//   "19"   → "19:"       (el : aparece al completar los 2 dígitos de hora)
+//   "193"  → "19:3"
+//   "1930" → "19:30"
+function buildDisplay(digits: string): string {
+  if (digits.length === 0) return "";
+  if (digits.length === 1) return digits;
+  if (digits.length === 2) return `${digits}:`;
+  if (digits.length === 3) return `${digits.slice(0, 2)}:${digits[2]}`;
+  return `${digits.slice(0, 2)}:${digits.slice(2)}`;
+}
+
 export function TimeInput({
   id,
   value,
@@ -18,116 +33,127 @@ export function TimeInput({
   disabled,
   "aria-invalid": ariaInvalid,
 }: TimeInputProps) {
-  const [hh, setHh] = useState("");
-  const [mm, setMm] = useState("");
-  const mmRef = useRef<HTMLInputElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+  // digits: hasta 4 caracteres numéricos, sin el ":"
+  const [digits, setDigits] = useState("");
+  // Si hay un valor cargado y el usuario empieza a escribir, limpia primero
+  const pendingClear = useRef(false);
 
+  // Sincronizar valor externo → dígitos internos
   useEffect(() => {
-    if (value) {
-      const [h = "", m = ""] = value.split(":");
-      setHh(h);
-      setMm(m);
+    if (value && /^\d{2}:\d{2}$/.test(value)) {
+      setDigits(value.replace(":", ""));
     } else {
-      setHh("");
-      setMm("");
+      setDigits("");
     }
   }, [value]);
 
-  const tryEmit = (h: string, m: string) => {
-    const hNum = parseInt(h, 10);
-    const mNum = parseInt(m, 10);
-    if (
-      h.length > 0 &&
-      m.length > 0 &&
-      !Number.isNaN(hNum) &&
-      !Number.isNaN(mNum) &&
-      hNum >= 0 &&
-      hNum <= 23 &&
-      mNum >= 0 &&
-      mNum <= 59
-    ) {
-      onChange(
-        `${hNum.toString().padStart(2, "0")}:${mNum.toString().padStart(2, "0")}`,
-      );
+  const emitIfComplete = (d: string) => {
+    if (d.length === 4) {
+      const h = parseInt(d.slice(0, 2), 10);
+      const m = parseInt(d.slice(2, 4), 10);
+      if (h >= 0 && h <= 23 && m >= 0 && m <= 59) {
+        onChange(`${d.slice(0, 2)}:${d.slice(2, 4)}`);
+        return;
+      }
+    }
+    if (d.length === 0) {
+      onChange("");
     }
   };
 
-  // --- Horas ---
-  const handleHhChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const raw = e.target.value.replace(/\D/g, "").slice(0, 2);
-    setHh(raw);
-    // Auto-avanzar: dígito único 3-9 (imposible que sea decena válida) o dos dígitos
-    if (raw.length === 2 || (raw.length === 1 && parseInt(raw, 10) >= 3)) {
-      mmRef.current?.focus();
-      mmRef.current?.select();
-    }
-    tryEmit(raw, mm);
-  };
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (disabled) return;
 
-  const handleHhBlur = () => {
-    if (!hh) return;
-    const h = parseInt(hh, 10);
-    if (!Number.isNaN(h) && h >= 0 && h <= 23) {
-      const fmt = h.toString().padStart(2, "0");
-      setHh(fmt);
-      tryEmit(fmt, mm);
-    }
-  };
-
-  const handleHhKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "ArrowUp" || e.key === "ArrowDown") {
+    if (e.key >= "0" && e.key <= "9") {
       e.preventDefault();
-      const next =
-        e.key === "ArrowUp"
-          ? (parseInt(hh || "0", 10) + 1) % 24
-          : (parseInt(hh || "0", 10) - 1 + 24) % 24;
-      const fmt = next.toString().padStart(2, "0");
-      setHh(fmt);
-      tryEmit(fmt, mm);
-    } else if (e.key === ":") {
+
+      // Si el usuario empieza a escribir con un valor previo cargado, lo borra primero
+      const base = pendingClear.current ? "" : digits;
+      pendingClear.current = false;
+
+      if (base.length >= 4) return;
+
+      const digit = e.key;
+      let next = base + digit;
+
+      // Primer dígito de hora > 2: imposible en 24h → auto-completar como "0X"
+      // Ej: teclear "8" → next = "08", display pasa a "08:" de inmediato
+      if (next.length === 1 && parseInt(digit, 10) > 2) {
+        next = "0" + digit;
+      }
+
+      // Segundo dígito de hora: valida que HH <= 23
+      if (next.length === 2) {
+        const h = parseInt(next, 10);
+        if (h > 23) return;
+      }
+
+      // Primer dígito de minutos: no puede ser > 5 en formato MM
+      if (next.length === 3 && parseInt(digit, 10) > 5) return;
+
+      // Segundo dígito de minutos: valida que MM <= 59
+      if (next.length === 4) {
+        const m = parseInt(next.slice(2), 10);
+        if (m > 59) return;
+      }
+
+      setDigits(next);
+      emitIfComplete(next);
+    } else if (e.key === "Backspace") {
       e.preventDefault();
-      mmRef.current?.focus();
-      mmRef.current?.select();
-    }
-  };
-
-  // --- Minutos ---
-  const handleMmChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const raw = e.target.value.replace(/\D/g, "").slice(0, 2);
-    setMm(raw);
-    tryEmit(hh, raw);
-  };
-
-  const handleMmBlur = () => {
-    if (!mm) return;
-    const m = parseInt(mm, 10);
-    if (!Number.isNaN(m) && m >= 0 && m <= 59) {
-      const fmt = m.toString().padStart(2, "0");
-      setMm(fmt);
-      tryEmit(hh, fmt);
-    }
-  };
-
-  const handleMmKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "ArrowUp" || e.key === "ArrowDown") {
+      pendingClear.current = false;
+      const next = digits.slice(0, -1);
+      setDigits(next);
+      if (next.length === 0) onChange("");
+    } else if (e.key === "ArrowUp" || e.key === "ArrowDown") {
       e.preventDefault();
-      const next =
-        e.key === "ArrowUp"
-          ? (parseInt(mm || "0", 10) + 1) % 60
-          : (parseInt(mm || "0", 10) - 1 + 60) % 60;
-      const fmt = next.toString().padStart(2, "0");
-      setMm(fmt);
-      tryEmit(hh, fmt);
+      pendingClear.current = false;
+      if (digits.length < 4) return;
+      const h = parseInt(digits.slice(0, 2), 10);
+      const m = parseInt(digits.slice(2, 4), 10);
+      let newH = h;
+      let newM = m;
+      if (e.key === "ArrowUp") {
+        newM = (m + 1) % 60;
+        if (newM === 0) newH = (h + 1) % 24;
+      } else {
+        newM = (m - 1 + 60) % 60;
+        if (newM === 59) newH = (h - 1 + 24) % 24;
+      }
+      const hStr = newH.toString().padStart(2, "0");
+      const mStr = newM.toString().padStart(2, "0");
+      setDigits(hStr + mStr);
+      onChange(`${hStr}:${mStr}`);
     }
   };
 
-  const segmentClass =
-    "w-7 bg-transparent border-0 p-0 text-center outline-none ring-0 text-sm tabular-nums placeholder:text-muted-foreground focus:outline-none focus:ring-0 disabled:cursor-not-allowed";
+  const handleFocus = () => {
+    // Si al hacer foco ya hay un valor, el próximo dígito lo reemplaza
+    if (digits.length > 0) {
+      pendingClear.current = true;
+    }
+  };
+
+  const handleBlur = () => {
+    pendingClear.current = false;
+
+    // Completar con ceros a la derecha hasta 4 dígitos, o forzar "00:00" si vacío
+    const raw = digits.length === 0 ? "0000" : digits.padEnd(4, "0");
+    if (raw === digits && digits.length === 4) return; // ya completo, nada que hacer
+
+    const h = parseInt(raw.slice(0, 2), 10);
+    const m = parseInt(raw.slice(2, 4), 10);
+    if (h <= 23 && m <= 59) {
+      setDigits(raw);
+      onChange(`${raw.slice(0, 2)}:${raw.slice(2, 4)}`);
+    }
+  };
 
   return (
     <div
       className={cn(
-        "flex h-9 w-full items-center rounded-lg border px-3 py-2 text-sm transition-colors",
+        "flex h-9 w-full items-center rounded-lg border px-3 py-2 text-sm transition-colors cursor-text",
         "focus-within:ring-2",
         ariaInvalid
           ? "focus-within:border-red-500 focus-within:ring-red-500/20"
@@ -135,33 +161,21 @@ export function TimeInput({
         className,
       )}
       aria-invalid={ariaInvalid}
+      onClick={() => inputRef.current?.focus()}
     >
       <input
+        ref={inputRef}
         id={id}
         type="text"
         inputMode="numeric"
-        maxLength={2}
-        placeholder="HH"
-        value={hh}
-        onChange={handleHhChange}
-        onBlur={handleHhBlur}
-        onKeyDown={handleHhKeyDown}
+        readOnly
+        value={buildDisplay(digits)}
+        placeholder="HH:MM"
+        onKeyDown={handleKeyDown}
+        onFocus={handleFocus}
+        onBlur={handleBlur}
         disabled={disabled}
-        className={segmentClass}
-      />
-      <span className="select-none text-muted-foreground">:</span>
-      <input
-        ref={mmRef}
-        type="text"
-        inputMode="numeric"
-        maxLength={2}
-        placeholder="MM"
-        value={mm}
-        onChange={handleMmChange}
-        onBlur={handleMmBlur}
-        onKeyDown={handleMmKeyDown}
-        disabled={disabled}
-        className={segmentClass}
+        className="w-full bg-transparent border-0 p-0 outline-none ring-0 text-sm tabular-nums placeholder:text-muted-foreground focus:outline-none focus:ring-0 disabled:cursor-not-allowed"
       />
     </div>
   );
