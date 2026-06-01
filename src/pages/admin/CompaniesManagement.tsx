@@ -643,6 +643,102 @@ function FiltersSkeleton() {
   );
 }
 
+function printNamesAsPdf(companies: EmpresaResponse[]) {
+  const names = companies
+    .filter((c) => c.aprobada && c.participa_evento)
+    .map((c) => c.razon_social);
+
+  if (names.length === 0) return false;
+
+  // Tamaño inicial basado en la palabra más larga: evita wraps mid-word
+  const getFontSize = (name: string): string => {
+    const words = name.trim().split(/\s+/);
+    const longest = Math.max(...words.map((w) => w.length));
+    const total = name.length;
+    if (longest <= 5 && total <= 10) return "44pt";
+    if (longest <= 8 && total <= 16) return "34pt";
+    if (longest <= 11 && total <= 22) return "26pt";
+    if (longest <= 15) return "20pt";
+    return "15pt";
+  };
+
+  const safe = (s: string) =>
+    s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+
+  const cells = names
+    .map(
+      (name) =>
+        `<div class="cell"><span style="font-size:${getFontSize(name)}">${safe(name)}</span></div>`,
+    )
+    .join("");
+
+  const html = `<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8"/>
+  <title>Inscriptos</title>
+  <style>
+    @page { margin: 0; size: A4 portrait; }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+      background: #fff;
+      padding: 10mm 10mm 0 10mm;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 3mm;
+    }
+    .cell {
+      height: 32mm;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 4mm 10mm;
+      overflow: hidden;
+      border: 1.5px dotted #aaa;
+      border-radius: 4mm;
+    }
+    .cell span {
+      font-weight: 800;
+      color: #000;
+      line-height: 1.1;
+      word-break: normal;
+      overflow-wrap: break-word;
+      display: block;
+      width: 100%;
+    }
+  </style>
+</head>
+<body>
+  <div class="grid">${cells}</div>
+  <script>
+    window.addEventListener('load', function () {
+      document.querySelectorAll('.cell').forEach(function (cell) {
+        var span = cell.querySelector('span');
+        var cellH = cell.clientHeight;
+        var size = parseFloat(window.getComputedStyle(span).fontSize);
+        // Achica de a 1px hasta que el contenido entre en la celda
+        while (span.scrollHeight > cellH && size > 8) {
+          size -= 1;
+          span.style.fontSize = size + 'px';
+        }
+      });
+      setTimeout(function () { window.print(); }, 120);
+    });
+  </script>
+</body>
+</html>`;
+
+  const win = window.open("", "_blank");
+  if (!win) return false;
+  win.document.write(html);
+  win.document.close();
+  return true;
+}
+
 function escapeCsvValue(value: string | number | boolean) {
   return `"${String(value).replace(/"/g, '""')}"`;
 }
@@ -1421,6 +1517,21 @@ export default function CompaniesManagement() {
                 >
                   <Users className="h-4 w-4" />
                   Ver Representantes
+                </Button>
+                <Button
+                  variant="ghost"
+                  onClick={() => {
+                    const printed = printNamesAsPdf(companies);
+                    if (!printed) {
+                      toast.info(
+                        "No hay empresas aprobadas y participando para imprimir",
+                      );
+                    }
+                  }}
+                  className="h-10 px-4 text-white/80 hover:bg-white/10 hover:text-white font-medium gap-2"
+                >
+                  <FileText className="h-4 w-4" />
+                  Imprimir Nombres
                 </Button>
                 <Button
                   ref={csvBtnRef}
