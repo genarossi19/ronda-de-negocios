@@ -14,6 +14,7 @@ import {
   Users,
   ArrowUp,
   ArrowDown,
+  Radio,
 } from "lucide-react";
 import Navbar from "../../components/Navbar";
 import Footer from "../../layout/Footer";
@@ -556,6 +557,16 @@ export default function GestionarTurnos() {
               </div>
 
               <div className="flex flex-col sm:flex-row gap-3">
+                <Button
+                  variant="outline"
+                  onClick={() =>
+                    navigate(`/panel-administrador/sala-en-vivo/${eventoId}`)
+                  }
+                  className="bg-white/10 border-white/30 text-white hover:bg-white/20 hover:text-white hover:border-white/50"
+                >
+                  <Radio className="h-4 w-4" />
+                  Sala en vivo
+                </Button>
                 <CreateTurnoButton
                   evento={evento}
                   lastTurno={lastTurno}

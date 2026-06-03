@@ -23,6 +23,7 @@ const CompaniesManagement = lazy(
 const GestionarRondas = lazy(() => import("./pages/admin/GestionarRondas"));
 const GestionarTurnos = lazy(() => import("./pages/admin/GestionarTurnos"));
 const MeetingsSummary = lazy(() => import("./pages/admin/MeetingsSummary"));
+const SalaEnVivo = lazy(() => import("./pages/admin/SalaEnVivo"));
 const Representantes = lazy(() => import("./pages/Representantes"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 const ValidarEmail = lazy(() => import("./pages/ValidarEmail"));
@@ -169,6 +170,14 @@ function AppRoutes() {
             element={
               <ProtectedRoute requiredAdmin>
                 <GestionarTurnos />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/panel-administrador/sala-en-vivo/:eventoId"
+            element={
+              <ProtectedRoute requiredAdmin>
+                <SalaEnVivo />
               </ProtectedRoute>
             }
           />
