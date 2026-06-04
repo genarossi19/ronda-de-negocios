@@ -9,6 +9,15 @@ export interface MesaResponse {
   readOnly?: boolean;
 }
 
+export interface MesaEmpresaResponse {
+  id: number;
+  num_mesa: number;
+}
+
+export interface MesasEmpresaListResponse {
+  mesas: MesaEmpresaResponse[];
+}
+
 export type MesaWrite = Omit<
   MesaResponse,
   "id" | "asientos" | "fecha" | "hora" | "readOnly"
