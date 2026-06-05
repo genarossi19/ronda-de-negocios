@@ -38,9 +38,10 @@ import {
   ChevronDown,
   Clock,
   Loader2,
-  Search,
   TableProperties,
   Users,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 
 interface BookMesaModalProps {
@@ -48,6 +49,8 @@ interface BookMesaModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
+
+const ITEMS_PER_PAGE = 8;
 
 export default function BookMesaModal({
   company,
@@ -70,6 +73,9 @@ export default function BookMesaModal({
   const [bookingError, setBookingError] = useState<string | null>(null);
   const [submittingBooking, setSubmittingBooking] = useState(false);
 
+  // Estado para la paginación local de las mesas
+  const [currentPage, setCurrentPage] = useState(1);
+
   const selectedMesa = useMemo(
     () => mesasDisponibles.find((mesa) => mesa.id === selectedMesaId) ?? null,
     [mesasDisponibles, selectedMesaId],
@@ -86,7 +92,6 @@ export default function BookMesaModal({
 
   const canBookMesa = useMemo(() => {
     if (!company) return false;
-
     return Boolean(
       user?.aprobada && user?.empresa_id && user.empresa_id !== company.id,
     );
@@ -94,18 +99,21 @@ export default function BookMesaModal({
 
   const bookingAccessMessage = useMemo(() => {
     if (!company) return null;
-    if (!user?.aprobada) {
+    if (!user?.aprobada)
       return "Tu empresa todavía está pendiente de aprobación.";
-    }
-    if (!user?.empresa_id) {
-      return "No pudimos identificar tu empresa.";
-    }
+    if (!user?.empresa_id) return "No pudimos identificar tu empresa.";
     if (company.id === user.empresa_id) {
-      return "Esta es tu propia empresa. Abrí otra empresa participante para anotarte en una mesa.";
+      return "Esta es tu propia empresa. Abrí otra para anotarte en una mesa.";
     }
-
     return null;
   }, [company, user?.aprobada, user?.empresa_id]);
+
+  // Cálculo de paginación
+  const totalPages = Math.ceil(mesasDisponibles.length / ITEMS_PER_PAGE);
+  const paginatedMesas = useMemo(() => {
+    const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+    return mesasDisponibles.slice(startIndex, startIndex + ITEMS_PER_PAGE);
+  }, [mesasDisponibles, currentPage]);
 
   const loadBookingData = useCallback(async () => {
     if (!company || !canBookMesa || !user?.empresa_id) {
@@ -133,14 +141,16 @@ export default function BookMesaModal({
 
       const representantesValidos = representativesResponse
         .filter((representante) => typeof representante.id === "number")
-        .sort((a, b) => {
-          const nombreA = `${a.nombre} ${a.apellido}`.trim();
-          const nombreB = `${b.nombre} ${b.apellido}`.trim();
-          return nombreA.localeCompare(nombreB);
-        });
+        .sort((a, b) =>
+          `${a.nombre} ${a.apellido}`.localeCompare(
+            `${b.nombre} ${b.apellido}`,
+          ),
+        );
 
       setMesasDisponibles(mesasOrdenadas);
       setRepresentantes(representantesValidos);
+      setCurrentPage(1); // Resetear a la primera página al cargar datos nuevos
+
       setSelectedMesaId((currentSelectedMesaId) =>
         mesasOrdenadas.some((mesa) => mesa.id === currentSelectedMesaId)
           ? currentSelectedMesaId
@@ -173,32 +183,18 @@ export default function BookMesaModal({
       setLoadingBookingData(false);
       return;
     }
-
     void loadBookingData();
   }, [company, loadBookingData, open]);
 
   const handleBookMesa = async () => {
-    if (!company) return;
-
-    if (!canBookMesa) {
-      toast.error(bookingAccessMessage ?? "No tenés permisos para anotarte.");
+    if (
+      !company ||
+      !canBookMesa ||
+      !selectedMesa ||
+      !selectedRepresentative ||
+      !user?.empresa_id
+    )
       return;
-    }
-
-    if (!selectedMesa) {
-      toast.error("Seleccioná una mesa disponible.");
-      return;
-    }
-
-    if (!selectedRepresentative) {
-      toast.error("Seleccioná un representante.");
-      return;
-    }
-
-    if (!user?.empresa_id) {
-      toast.error("No se encontró tu empresa. Iniciá sesión nuevamente.");
-      return;
-    }
 
     setSubmittingBooking(true);
 
@@ -217,10 +213,7 @@ export default function BookMesaModal({
         error,
         "No se pudo completar la inscripción en la mesa.",
       );
-
-      if (message) {
-        toast.error(message);
-      }
+      if (message) toast.error(message);
     } finally {
       setSubmittingBooking(false);
     }
@@ -230,241 +223,247 @@ export default function BookMesaModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto transition-colors bg-white dark:bg-[#0F141A] text-foreground dark:text-white border-[#669649] dark:border-[#1a5032]">
-        <DialogHeader>
-          <div className="flex flex-col items-center text-center space-y-4 pb-4">
-            <div>
-              <DialogTitle className="text-2xl font-bold text-[#143E29] dark:text-white mb-2 transition-colors">
-                Mesas libres en {company.razon_social}
-              </DialogTitle>
-              <DialogDescription className="text-base dark:text-gray-300 transition-colors">
-                Selecciona una mesa y un representante para confirmarte
-              </DialogDescription>
-            </div>
-          </div>
+      <DialogContent className="!max-w-[500px] sm:!max-w-[500px] w-[min(95vw,500px)] max-h-[90vh] overflow-y-auto bg-white dark:bg-[#0F141A] text-foreground dark:text-white border-[#669649] dark:border-[#1a5032] p-6">
+        <DialogHeader className="text-center sm:text-center pb-2">
+          <DialogTitle className="text-xl font-bold text-[#143E29] dark:text-white mb-1">
+            Mesas en {company.razon_social}
+          </DialogTitle>
+          <DialogDescription className="text-sm dark:text-gray-300">
+            Elegí una mesa libre y tu representante para confirmar
+          </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-6">
-          <div className="space-y-3 rounded-xl border border-[#68A243]/15 bg-[#68A243]/5 dark:bg-[#68A243]/10 p-4 transition-colors">
-            <div className="flex items-start justify-between gap-3">
-              <div>
-                <div className="flex items-center gap-2 text-[#143E29] dark:text-white transition-colors">
-                  <Users className="h-4 w-4 text-[#68A243]" />
-                  <h3 className="font-semibold">Mesas libres</h3>
-                </div>
-                <p className="mt-1 text-sm text-muted-foreground dark:text-gray-300 transition-colors">
-                  Selecciona una mesa disponible para reservar tu lugar
-                </p>
-              </div>
-
-              <Badge className="bg-[#68A243] hover:bg-[#68A243]/90 text-white whitespace-nowrap">
-                <TableProperties className="mr-1 h-3 w-3" />
-                {mesasDisponibles.length} disponibles
-              </Badge>
+        <div className="space-y-5">
+          {/* Alertas de Acceso o Error */}
+          {!canBookMesa && (
+            <div className="rounded-lg border border-dashed border-[#68A243]/30 bg-[#68A243]/5 p-3.5 text-sm text-center text-muted-foreground dark:text-gray-300">
+              {bookingAccessMessage}
             </div>
+          )}
 
-            {!canBookMesa ? (
-              <div className="rounded-lg border border-dashed border-[#68A243]/20 bg-white/70 dark:bg-[#0f141a] p-4 text-sm text-muted-foreground dark:text-gray-300 transition-colors">
-                {bookingAccessMessage}
-              </div>
-            ) : loadingBookingData ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                {[...Array(4)].map((_, index) => (
-                  <div
-                    key={index}
-                    className="rounded-lg border border-[#68A243]/15 bg-white dark:bg-[#11161d] p-4"
+          {bookingError && (
+            <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-800 dark:border-red-950/40 dark:bg-red-950/20 dark:text-red-300">
+              <div className="flex gap-2">
+                <Clock className="h-4 w-4 shrink-0 mt-0.5" />
+                <div className="space-y-2 flex-1">
+                  <p>{bookingError}</p>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => void loadBookingData()}
+                    className="border-red-200 bg-white dark:bg-transparent"
                   >
-                    <Skeleton className="h-4 w-24 mb-3" />
-                    <Skeleton className="h-6 w-20 mb-2" />
-                    <Skeleton className="h-4 w-full" />
-                  </div>
-                ))}
+                    Reintentar
+                  </Button>
+                </div>
               </div>
-            ) : bookingError ? (
-              <div className="rounded-lg border border-red-200 bg-red-50 dark:border-red-950/40 dark:bg-red-950/20 p-4 text-sm text-red-800 dark:text-red-300 transition-colors">
-                <div className="flex items-start gap-2">
-                  <Clock className="mt-0.5 h-4 w-4 flex-shrink-0" />
-                  <div className="space-y-3">
-                    <p>{bookingError}</p>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={() => void loadBookingData()}
-                      className="border-red-200 bg-white text-red-800 hover:bg-red-100 dark:border-red-900/40 dark:bg-transparent dark:text-red-300 dark:hover:bg-red-950/30"
+            </div>
+          )}
+
+          {/* Estado de carga */}
+          {loadingBookingData && (
+            <div className="grid grid-cols-4 gap-2 py-4">
+              {[...Array(4)].map((_, idx) => (
+                <Skeleton
+                  key={idx}
+                  className="aspect-square w-full rounded-lg dark:bg-slate-800"
+                />
+              ))}
+            </div>
+          )}
+
+          {/* Grid de mesas libres sin recuadros extra */}
+          {canBookMesa && !loadingBookingData && !bookingError && (
+            <>
+              {mesasDisponibles.length === 0 ? (
+                <div className="rounded-lg border border-dashed border-gray-200 p-6 text-center text-sm text-muted-foreground">
+                  No hay mesas libres disponibles en este momento. <br />
+                  Inscribete a un turno o espera a que{" "}
+                  <span className="text-[#68A243]">
+                    {company.razon_social}
+                  </span>{" "}
+                  se inscriba.
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between text-xs text-muted-foreground uppercase tracking-wider font-semibold">
+                    <span className="flex items-center gap-1.5">
+                      <TableProperties className="h-3.5 w-3.5 text-[#68A243]" />
+                      Seleccionar Mesa
+                    </span>
+                    <Badge
+                      variant="secondary"
+                      className="font-normal normal-case"
                     >
-                      <Search className="mr-2 h-4 w-4" />
-                      Reintentar
-                    </Button>
-                  </div>
-                </div>
-              </div>
-            ) : mesasDisponibles.length === 0 ? (
-              <div className="rounded-lg border border-dashed border-[#68A243]/20 bg-white/80 dark:bg-[#11161d] p-4 text-sm text-muted-foreground dark:text-gray-300 transition-colors">
-                Esta empresa no tiene mesas libres para anotarte en este
-                momento.
-              </div>
-            ) : (
-              <div className="space-y-4">
-                <div className="grid grid-cols-3 gap-3">
-                  {mesasDisponibles.map((mesa) => {
-                    const isSelected = mesa.id === selectedMesaId;
-
-                    return (
-                      <button
-                        key={mesa.id}
-                        type="button"
-                        onClick={() => setSelectedMesaId(mesa.id)}
-                        className={cn(
-                          "relative aspect-square rounded-lg border-2 p-3 transition-all duration-200 flex flex-col items-center justify-center text-center",
-                          isSelected
-                            ? "border-[#68A243] bg-[#68A243]/10 shadow-sm dark:bg-[#68A243]/15"
-                            : "border-gray-300 bg-white hover:border-[#68A243] hover:scale-105 hover:shadow-lg dark:border-gray-600 dark:bg-[#0f141a] dark:hover:border-[#68A243]",
-                        )}
-                      >
-                        {isSelected && (
-                          <div className="absolute top-2 right-2 rounded-full bg-[#68A243] text-white p-1">
-                            <Check className="h-3.5 w-3.5" />
-                          </div>
-                        )}
-                        <span className="text-xs uppercase tracking-[0.2em] text-muted-foreground dark:text-gray-400">
-                          Mesa
-                        </span>
-                        <span className="mt-2 text-3xl font-bold text-[#143E29] dark:text-white">
-                          {mesa.num_mesa}
-                        </span>
-                        <span className="mt-2 text-[11px] uppercase tracking-[0.2em] text-[#68A243] dark:text-[#a7d198]">
-                          Libre
-                        </span>
-                      </button>
-                    );
-                  })}
-                </div>
-
-                <div className="rounded-lg border border-[#68A243]/15 bg-white dark:bg-[#11161d] p-4 transition-colors">
-                  <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                    <div>
-                      <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground dark:text-gray-400">
-                        Confirmación
-                      </p>
-                      <h4 className="mt-1 text-base font-semibold text-[#143E29] dark:text-white">
-                        {selectedMesa
-                          ? `Mesa ${selectedMesa.num_mesa}`
-                          : "Elegí una mesa"}
-                      </h4>
-                    </div>
-                    <Badge className="bg-[#68A243]/10 text-[#143E29] hover:bg-[#68A243]/10 dark:bg-[#68A243]/20 dark:text-[#d7efc8]">
-                      {representantes.length} representantes
+                      {mesasDisponibles.length} disponibles
                     </Badge>
                   </div>
 
-                  <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end">
-                    <div className="space-y-2">
-                      <Label className="text-sm font-medium text-[#143E29] dark:text-white">
-                        Representante
-                      </Label>
+                  {/* Rediseño de cuadraditos en 4 columnas compactas */}
+                  <div className="grid grid-cols-4 gap-2.5">
+                    {paginatedMesas.map((mesa) => {
+                      const isSelected = mesa.id === selectedMesaId;
+                      return (
+                        <button
+                          key={mesa.id}
+                          type="button"
+                          onClick={() => setSelectedMesaId(mesa.id)}
+                          className={cn(
+                            "relative aspect-square rounded-xl border-2 flex flex-col items-center justify-center transition-all duration-150",
+                            isSelected
+                              ? "border-[#68A243] bg-[#68A243]/10 dark:bg-[#68A243]/20 font-bold"
+                              : "border-slate-200 bg-white hover:border-[#68A243] dark:border-slate-800 dark:bg-[#0f141a]",
+                          )}
+                        >
+                          <span className="text-[10px] uppercase tracking-wider text-muted-foreground dark:text-gray-400">
+                            Mesa
+                          </span>
+                          <span className="text-2xl font-bold text-[#143E29] dark:text-white mt-0.5">
+                            {mesa.num_mesa}
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
 
-                      <Popover
-                        open={openRepresentativeSearch}
-                        onOpenChange={setOpenRepresentativeSearch}
+                  {/* Controles de Paginación Local */}
+                  {totalPages > 1 && (
+                    <div className="flex items-center justify-between pt-1">
+                      <span className="text-xs text-muted-foreground">
+                        Página {currentPage} de {totalPages}
+                      </span>
+                      <div className="flex gap-1">
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          className="h-7 w-7"
+                          disabled={currentPage === 1}
+                          onClick={() => setCurrentPage((prev) => prev - 1)}
+                        >
+                          <ChevronLeft className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          className="h-7 w-7"
+                          disabled={currentPage === totalPages}
+                          onClick={() => setCurrentPage((prev) => prev + 1)}
+                        >
+                          <ChevronRight className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Formulario de Representante (Integrado limpiamente) */}
+              {mesasDisponibles.length > 0 && (
+                <div className="pt-3 border-t border-slate-100 dark:border-slate-800 space-y-3">
+                  <div className="space-y-1.5">
+                    <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                      Asignar Representante
+                    </Label>
+                    <Popover
+                      open={openRepresentativeSearch}
+                      onOpenChange={setOpenRepresentativeSearch}
+                    >
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant="outline"
+                          role="combobox"
+                          className="w-full justify-between h-10 border-slate-200 bg-white font-normal dark:border-slate-800 dark:bg-[#0f141a]"
+                        >
+                          <span className="truncate text-sm">
+                            {selectedRepresentative
+                              ? `${selectedRepresentative.nombre} ${selectedRepresentative.apellido}`.trim()
+                              : "Elegí un representante..."}
+                          </span>
+                          <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent
+                        className="w-[360px] sm:w-[450px] p-0"
+                        align="start"
                       >
-                        <PopoverTrigger asChild>
-                          <Button
-                            variant="outline"
-                            role="combobox"
-                            className="w-full justify-between border-[#68A243]/20 bg-white text-left font-normal dark:border-[#68A243]/15 dark:bg-[#0f141a] dark:text-white"
-                          >
-                            <span className="truncate">
-                              {selectedRepresentative
-                                ? `${selectedRepresentative.nombre} ${selectedRepresentative.apellido}`.trim()
-                                : "Elegí un representante"}
-                            </span>
-                            <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                          </Button>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-[320px] p-0" align="start">
-                          <Command>
-                            <CommandInput placeholder="Buscar representante..." />
-                            <CommandList>
-                              <CommandEmpty>
-                                No se encontraron representantes.
-                              </CommandEmpty>
-                              <CommandGroup>
-                                {representantes.map((representante) => {
-                                  const label =
-                                    `${representante.nombre} ${representante.apellido}`.trim();
+                        <Command>
+                          <CommandInput placeholder="Buscar representante por nombre..." />
+                          <CommandList>
+                            <CommandEmpty>
+                              No se encontraron representantes.
+                            </CommandEmpty>
+                            <CommandGroup>
+                              {representantes.map((rep) => {
+                                const label =
+                                  `${rep.nombre} ${rep.apellido}`.trim();
+                                return (
+                                  <CommandItem
+                                    key={rep.id}
+                                    value={label}
+                                    onSelect={() => {
+                                      setSelectedRepresentativeId(
+                                        rep.id.toString(),
+                                      );
+                                      setOpenRepresentativeSearch(false);
+                                    }}
+                                  >
+                                    <Check
+                                      className={cn(
+                                        "mr-2 h-4 w-4 shrink-0",
+                                        selectedRepresentativeId ===
+                                          rep.id.toString()
+                                          ? "opacity-100"
+                                          : "opacity-0",
+                                      )}
+                                    />
+                                    <div className="flex flex-col min-w-0">
+                                      <span className="text-sm font-medium">
+                                        {label}
+                                      </span>
+                                      <span className="text-xs text-muted-foreground truncate">
+                                        {rep.email}
+                                      </span>
+                                    </div>
+                                  </CommandItem>
+                                );
+                              })}
+                            </CommandGroup>
+                          </CommandList>
+                        </Command>
+                      </PopoverContent>
+                    </Popover>
+                  </div>
 
-                                  return (
-                                    <CommandItem
-                                      key={representante.id}
-                                      value={label}
-                                      onSelect={() => {
-                                        setSelectedRepresentativeId(
-                                          representante.id.toString(),
-                                        );
-                                        setOpenRepresentativeSearch(false);
-                                      }}
-                                    >
-                                      <Check
-                                        className={cn(
-                                          "mr-2 h-4 w-4",
-                                          selectedRepresentativeId ===
-                                            representante.id.toString()
-                                            ? "opacity-100"
-                                            : "opacity-0",
-                                        )}
-                                      />
-                                      <div className="flex flex-col">
-                                        <span>{label}</span>
-                                        <span className="text-xs text-muted-foreground">
-                                          {representante.email}
-                                        </span>
-                                      </div>
-                                    </CommandItem>
-                                  );
-                                })}
-                              </CommandGroup>
-                            </CommandList>
-                          </Command>
-                        </PopoverContent>
-                      </Popover>
-
-                      {representantes.length === 0 && (
-                        <p className="text-xs text-muted-foreground dark:text-gray-400">
-                          No tenés representantes cargados. Desde la sección de
-                          representantes podés crear uno para anotarte.
-                        </p>
+                  {/* Botón único de confirmación de acción */}
+                  <div className="pt-2">
+                    <Button
+                      type="button"
+                      onClick={() => void handleBookMesa()}
+                      disabled={
+                        submittingBooking ||
+                        !selectedMesa ||
+                        !selectedRepresentative
+                      }
+                      className="w-full h-11 bg-[#68A243] text-white hover:bg-[#143E29] transition-colors text-sm font-semibold shadow-sm"
+                    >
+                      {submittingBooking ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Confirmando reserva...
+                        </>
+                      ) : (
+                        <>
+                          <Users className="mr-2 h-4 w-4" />
+                          Confirmar en Mesa {selectedMesa?.num_mesa}
+                        </>
                       )}
-                    </div>
-
-                    <div className="flex gap-2 sm:justify-end">
-                      <Button
-                        type="button"
-                        onClick={() => void handleBookMesa()}
-                        disabled={
-                          submittingBooking ||
-                          !selectedMesa ||
-                          !selectedRepresentative
-                        }
-                        className="bg-[#68A243] text-white hover:bg-[#143E29] dark:hover:bg-[#68A243]/80"
-                      >
-                        {submittingBooking ? (
-                          <>
-                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                            Anotando...
-                          </>
-                        ) : (
-                          <>
-                            <Users className="mr-2 h-4 w-4" />
-                            Anotarme en la mesa
-                          </>
-                        )}
-                      </Button>
-                    </div>
+                    </Button>
                   </div>
                 </div>
-              </div>
-            )}
-          </div>
+              )}
+            </>
+          )}
         </div>
       </DialogContent>
     </Dialog>

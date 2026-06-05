@@ -90,180 +90,189 @@ export default function CompanyModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="!max-w-[900px] sm:!max-w-[900px] w-[min(95vw,900px)] max-h-[calc(100vh-3rem)] overflow-y-auto transition-colors bg-white dark:bg-[#0F141A] text-foreground dark:text-white border-[#669649] dark:border-[#1a5032]">
-        <DialogHeader>
-          <div className="flex flex-col items-center text-center space-y-3 pb-3">
-            <div className="h-24 w-24 rounded-xl overflow-hidden flex items-center justify-center relative">
-              {company.logo && !imageError ? (
-                <img
-                  src={company.logo}
-                  alt={company.razon_social}
-                  onError={() => setImageError(true)}
-                  className="absolute inset-0 w-full h-full object-cover object-center rounded-xl"
-                />
-              ) : (
-                <div
-                  aria-label={company.razon_social}
-                  className="absolute inset-0 flex items-center justify-center bg-[#68A243]/20 dark:bg-[#68A243]/35 text-[#143E29] dark:text-[#d7efc8]"
-                >
-                  <span className="text-3xl font-bold tracking-wide">
-                    {companyInitials || "?"}
+      <DialogContent className="!max-w-[650px] sm:!max-w-[650px] w-[min(95vw,650px)] max-h-[calc(100vh-4rem)] overflow-y-auto bg-white dark:bg-[#0F141A] text-foreground dark:text-white border-[#669649] dark:border-[#1a5032] p-0 flex flex-col">
+        {/* Contenido con scroll independiente para no romper el footer */}
+        <div className="p-6 space-y-6 overflow-y-auto flex-1">
+          <DialogHeader>
+            <div className="flex flex-col items-center text-center space-y-3 pb-2 border-b border-gray-100 dark:border-gray-800">
+              <div className="h-20 w-20 rounded-xl overflow-hidden flex items-center justify-center relative shadow-sm">
+                {company.logo && !imageError ? (
+                  <img
+                    src={company.logo}
+                    alt={company.razon_social}
+                    onError={() => setImageError(true)}
+                    className="absolute inset-0 w-full h-full object-cover object-center rounded-xl"
+                  />
+                ) : (
+                  <div
+                    aria-label={company.razon_social}
+                    className="absolute inset-0 flex items-center justify-center bg-[#68A243]/20 dark:bg-[#68A243]/35 text-[#143E29] dark:text-[#d7efc8]"
+                  >
+                    <span className="text-2xl font-bold tracking-wide">
+                      {companyInitials || "?"}
+                    </span>
+                  </div>
+                )}
+              </div>
+              <div>
+                <DialogTitle className="text-xl font-bold text-[#143E29] dark:text-white mb-1 transition-colors">
+                  {company.razon_social}
+                </DialogTitle>
+                <DialogDescription className="text-sm dark:text-gray-300 transition-colors">
+                  Información de la empresa
+                </DialogDescription>
+              </div>
+
+              {/* Sector dentro del header para limpiar espacio */}
+              <div className="flex justify-center gap-2 flex-wrap pt-1">
+                <Badge className="bg-[#68A243] hover:bg-[#68A243]/90 text-white text-xs px-2.5 py-0.5">
+                  <Building2 className="h-3 w-3 mr-1" />
+                  {company.sector.nombre}
+                </Badge>
+                {isAdmin && (
+                  <Badge
+                    className={`text-xs px-2.5 py-0.5 ${
+                      emailConfirmado
+                        ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-950/30 dark:text-emerald-400"
+                        : "bg-amber-100 text-amber-800 dark:bg-amber-950/30 dark:text-amber-400"
+                    }`}
+                  >
+                    {emailConfirmado ? "Email validado" : "Email sin validar"}
+                  </Badge>
+                )}
+              </div>
+            </div>
+          </DialogHeader>
+
+          {/* Grilla principal de Información */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 pt-2">
+            {/* Description */}
+            <div className="space-y-2 sm:col-span-2">
+              <div className="flex items-center gap-2 text-[#143E29] dark:text-white transition-colors">
+                <FileText className="h-4 w-4 text-[#68A243]" />
+                <h3 className="font-semibold text-sm">Descripción</h3>
+              </div>
+              <div className="pl-6">
+                <p className="text-sm text-muted-foreground dark:text-gray-300 leading-relaxed transition-colors">
+                  {companyDescription ? (
+                    <>
+                      {displayedDescription}
+                      {isDescriptionLong && (
+                        <button
+                          type="button"
+                          className="ml-1 inline text-xs font-medium text-[#68A243] hover:text-[#143E29] dark:text-[#d7efc8] transition-colors"
+                          onClick={() =>
+                            setDescriptionExpanded((prev) => !prev)
+                          }
+                        >
+                          {descriptionExpanded ? "Ver menos" : "Ver más"}
+                        </button>
+                      )}
+                    </>
+                  ) : (
+                    <span className="italic text-gray-400 dark:text-gray-500">
+                      Sin descripción disponible
+                    </span>
+                  )}
+                </p>
+              </div>
+            </div>
+
+            {/* Location */}
+            <div className="space-y-2 sm:col-span-2">
+              <div className="flex items-center gap-2 text-[#143E29] dark:text-white transition-colors">
+                <MapPin className="h-4 w-4 text-[#68A243]" />
+                <h3 className="font-semibold text-sm">Ubicación</h3>
+              </div>
+              <div className="pl-6 grid grid-cols-2 gap-4">
+                <div className="flex flex-col">
+                  <span className="text-xs text-muted-foreground dark:text-gray-400">
+                    Provincia
+                  </span>
+                  <span className="text-sm font-medium dark:text-gray-200">
+                    {company.localidad.provincia.nombre}
                   </span>
                 </div>
-              )}
-            </div>
-            <div>
-              <DialogTitle className="text-2xl font-bold text-[#143E29] dark:text-white mb-2 transition-colors">
-                {company.razon_social}
-              </DialogTitle>
-              <DialogDescription className="text-base dark:text-gray-300 transition-colors">
-                Información de la empresa
-              </DialogDescription>
-            </div>
-          </div>
-        </DialogHeader>
-
-        <div className="space-y-5 pb-20">
-          {/* Sector */}
-          <div className="flex justify-center gap-2 flex-wrap">
-            <Badge className="bg-[#68A243] hover:bg-[#68A243]/90 text-white">
-              <Building2 className="h-3 w-3 mr-1" />
-              {company.sector.nombre}
-            </Badge>
-            {isAdmin && (
-              <Badge
-                className={
-                  emailConfirmado
-                    ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-950/30 dark:text-emerald-400"
-                    : "bg-amber-100 text-amber-800 dark:bg-amber-950/30 dark:text-amber-400"
-                }
-              >
-                {emailConfirmado ? "Email validado" : "Email sin validar"}
-              </Badge>
-            )}
-          </div>
-
-          {/* Description */}
-          <div className="space-y-2">
-            <div className="flex items-center gap-2 text-[#143E29] dark:text-white transition-colors">
-              <FileText className="h-4 w-4 text-[#68A243]" />
-              <h3 className="font-semibold">Descripción</h3>
-            </div>
-            <div className="space-y-2 pl-6">
-              <p className="text-muted-foreground dark:text-gray-300 leading-relaxed transition-colors">
-                {companyDescription ? (
-                  <>
-                    {displayedDescription}
-                    {isDescriptionLong && (
-                      <button
-                        type="button"
-                        className="ml-1 inline text-sm font-medium text-[#68A243] hover:text-[#143E29] dark:text-[#d7efc8] transition-colors"
-                        onClick={() => setDescriptionExpanded((prev) => !prev)}
-                      >
-                        {descriptionExpanded ? "Ver menos" : "Ver más"}
-                      </button>
-                    )}
-                  </>
-                ) : (
-                  "Sin descripción"
-                )}
-              </p>
-            </div>
-          </div>
-
-          {/* Location */}
-          <div className="space-y-2">
-            <div className="flex items-center gap-2 text-[#143E29] dark:text-white transition-colors">
-              <MapPin className="h-4 w-4 text-[#68A243]" />
-              <h3 className="font-semibold">Ubicación</h3>
-            </div>
-            <div className="pl-6 space-y-1">
-              <div className="flex items-center gap-2">
-                <span className="text-sm text-muted-foreground dark:text-gray-400 transition-colors">
-                  Provincia:
-                </span>
-                <span className="text-sm font-medium dark:text-gray-200 transition-colors">
-                  {company.localidad.provincia.nombre}
-                </span>
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="text-sm text-muted-foreground dark:text-gray-400 transition-colors">
-                  Localidad:
-                </span>
-                <span className="text-sm font-medium dark:text-gray-200 transition-colors">
-                  {company.localidad.nombre}
-                </span>
+                <div className="flex flex-col">
+                  <span className="text-xs text-muted-foreground dark:text-gray-400">
+                    Localidad
+                  </span>
+                  <span className="text-sm font-medium dark:text-gray-200">
+                    {company.localidad.nombre}
+                  </span>
+                </div>
               </div>
             </div>
           </div>
 
-          {/* Contact Information - Only for authenticated users */}
+          {/* Contact Information */}
           {showContactInformation && (
-            <>
-              <div className="space-y-2">
-                <div className="flex items-center gap-2 text-[#143E29] dark:text-white transition-colors">
-                  <Contact className="h-4 w-4 text-[#68A243]" />
-                  <h3 className="font-semibold">Información de contacto</h3>
-                </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pl-6">
-                  <div className="flex items-start gap-3 p-3 rounded-lg bg-muted/30 !dark:bg-[#1a1f2e] transition-colors">
-                    <Mail className="h-4 w-4 text-[#68A243] mt-0.5 flex-shrink-0" />
-                    <div className="flex-1 min-w-0">
-                      <p className="text-xs text-muted-foreground dark:text-gray-400 mb-1 transition-colors">
-                        Email
+            <div className="space-y-3 pt-2 border-t border-gray-100 dark:border-gray-800">
+              <div className="flex items-center gap-2 text-[#143E29] dark:text-white transition-colors">
+                <Contact className="h-4 w-4 text-[#68A243]" />
+                <h3 className="font-semibold text-sm">
+                  Información de contacto
+                </h3>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pl-6">
+                <div className="flex items-start gap-3 p-3 rounded-xl bg-slate-50 dark:bg-slate-900/40 border border-slate-100 dark:border-slate-800/50">
+                  <Mail className="h-4 w-4 text-[#68A243] mt-0.5 shrink-0" />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[11px] uppercase tracking-wider text-muted-foreground dark:text-gray-400 mb-0.5">
+                      Email
+                    </p>
+                    {company.email ? (
+                      <a
+                        href={`mailto:${company.email}`}
+                        className="text-sm text-[#68A243] hover:text-[#143E29] dark:hover:text-[#68A243]/70 font-medium break-all block"
+                      >
+                        {company.email}
+                      </a>
+                    ) : (
+                      <p className="text-sm font-medium text-gray-400">
+                        Sin especificar
                       </p>
-                      {company.email ? (
-                        <a
-                          href={`mailto:${company.email}`}
-                          className="text-sm text-[#68A243] hover:text-[#143E29] dark:hover:text-[#68A243]/70 font-medium break-all transition-colors"
-                        >
-                          {company.email}
-                        </a>
-                      ) : (
-                        <p className="text-sm font-medium dark:text-gray-200 transition-colors">
-                          Sin email
-                        </p>
-                      )}
-                      {isAdmin && (
-                        <p className="text-xs text-muted-foreground dark:text-gray-400 mt-1 transition-colors">
-                          Estado: {emailConfirmado ? "validado" : "sin validar"}
-                        </p>
-                      )}
-                    </div>
+                    )}
                   </div>
+                </div>
 
-                  <div className="flex items-start gap-3 p-3 rounded-lg bg-muted/30 !dark:bg-[#1a1f2e] transition-colors">
-                    <Phone className="h-4 w-4 text-[#68A243] mt-0.5 flex-shrink-0" />
-                    <div className="flex-1">
-                      <p className="text-xs text-muted-foreground dark:text-gray-400 mb-1 transition-colors">
-                        Teléfono
+                <div className="flex items-start gap-3 p-3 rounded-xl bg-slate-50 dark:bg-slate-900/40 border border-slate-100 dark:border-slate-800/50">
+                  <Phone className="h-4 w-4 text-[#68A243] mt-0.5 shrink-0" />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[11px] uppercase tracking-wider text-muted-foreground dark:text-gray-400 mb-0.5">
+                      Teléfono
+                    </p>
+                    {company.telefono_contacto ? (
+                      <a
+                        href={`tel:${company.telefono_contacto}`}
+                        className="text-sm text-[#68A243] hover:text-[#143E29] dark:hover:text-[#68A243]/70 font-medium block"
+                      >
+                        {company.telefono_contacto}
+                      </a>
+                    ) : (
+                      <p className="text-sm font-medium text-gray-400">
+                        Sin especificar
                       </p>
-                      {company.telefono_contacto ? (
-                        <a
-                          href={`tel:${company.telefono_contacto}`}
-                          className="text-sm text-[#68A243] hover:text-[#143E29] dark:hover:text-[#68A243]/70 font-medium transition-colors"
-                        >
-                          {company.telefono_contacto}
-                        </a>
-                      ) : (
-                        <p className="text-sm font-medium dark:text-gray-200 transition-colors">
-                          Sin teléfono
-                        </p>
-                      )}
-                    </div>
+                    )}
                   </div>
                 </div>
               </div>
-            </>
+            </div>
           )}
         </div>
-        <DialogFooter className="sticky bottom-0 left-0 right-0 z-10 mt-2 border-t border-[#68A243]/15 bg-white/95 p-3 backdrop-blur dark:bg-[#0F141A]/95">
-          <div className="flex flex-col gap-3 w-full sm:flex-row sm:items-center">
-            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3 sm:ml-auto">
+
+        <DialogFooter className="p-4 bg-slate-50 dark:bg-slate-900/60 border-t border-gray-100 dark:border-gray-800 shrink-0">
+          <div className="flex flex-col sm:flex-row gap-2 w-full justify-end items-center">
+            {bookingInfoMessage && (
+              <p className="text-xs text-muted-foreground dark:text-gray-400 sm:mr-auto text-center sm:text-left mb-2 sm:mb-0">
+                {bookingInfoMessage}
+              </p>
+            )}
+            <div className="flex gap-2 w-full sm:w-auto">
               {company.email && (
                 <a
                   href={`mailto:${company.email}`}
-                  className="inline-flex w-full items-center justify-center rounded-lg border border-[#68A243] bg-transparent px-4 py-3 text-sm font-medium text-[#143E29] transition-colors hover:bg-[#68A243]/10 dark:border-[#68A243]/50 dark:text-white dark:hover:bg-[#68A243]/10 sm:w-auto"
+                  className="inline-flex w-full sm:w-auto items-center justify-center rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 px-4 py-2 text-sm font-medium text-slate-700 dark:text-slate-200 transition-colors hover:bg-slate-50 dark:hover:bg-slate-700/50"
                 >
                   <Mail className="mr-2 h-4 w-4" />
                   Enviar email
@@ -271,20 +280,14 @@ export default function CompanyModal({
               )}
               {canBookMesa && (
                 <Button
-                  className="w-full bg-[#68A243] hover:bg-[#143E29] text-white transition-colors sm:w-auto"
+                  className="w-full sm:w-auto bg-[#68A243] hover:bg-[#578937] text-white transition-colors"
                   onClick={() => onBookMesa(company)}
                 >
                   <Users className="mr-2 h-4 w-4" />
-                  Anotarse con {company.razon_social}
+                  Anotarse
                 </Button>
               )}
             </div>
-
-            {bookingInfoMessage && (
-              <p className="text-sm text-muted-foreground dark:text-gray-400 sm:ml-auto">
-                {bookingInfoMessage}
-              </p>
-            )}
           </div>
         </DialogFooter>
       </DialogContent>

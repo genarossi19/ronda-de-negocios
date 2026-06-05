@@ -127,7 +127,10 @@ export default function Shifts() {
           return;
         }
 
-        if (apiMessage?.includes("permiso para ver los turnos")) {
+        if (
+          apiMessage?.includes("permiso para ver los turnos") ||
+          apiMessage?.includes("no participa del evento activo")
+        ) {
           setNoParticipation(true);
           setError(null);
           return;
