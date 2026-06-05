@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router";
 import {
   ArrowLeft,
+  Building2,
   CalendarDays,
   Clock3,
   Coffee,
@@ -322,24 +323,24 @@ function CountdownDisplay({
             />
           </svg>
           <div className="absolute inset-0 flex flex-col items-center justify-center gap-1">
-            <span
-              className={`text-[clamp(3rem,12vw,7rem)] font-mono font-bold tabular-nums leading-none transition-colors duration-700 ${textColorClass}`}
-            >
-              {formatCountdown(secondsLeft)}
-            </span>
-            {isRunning && !isFinished && (
+            {/* {isRunning && !isFinished && (
               <span
                 className="text-[clamp(0.6rem,1.5vw,0.875rem)] font-semibold animate-pulse uppercase tracking-widest"
                 style={{ color: ringColor }}
               >
                 {variant === "entretiempo" ? "Entretiempo" : "En curso"}
               </span>
-            )}
+            )} */}
             {isFinished && (
               <span className="text-[clamp(0.6rem,1.5vw,0.875rem)] font-semibold uppercase tracking-widest text-red-500 dark:text-red-400">
                 Finalizado
               </span>
             )}
+            <span
+              className={`text-[clamp(3rem,12vw,7rem)] font-mono font-bold tabular-nums leading-none transition-colors duration-700 ${textColorClass}`}
+            >
+              {formatCountdown(secondsLeft)}
+            </span>
           </div>
         </div>
       </div>
@@ -356,7 +357,96 @@ function CountdownDisplay({
     </div>
   );
 }
+// ─── Componente SponsorCarousel Aislado con Loop Infinito Protegido ───────────
 
+interface SponsorCarouselProps {
+  logos: string[];
+}
+
+interface ImageErrors {
+  [key: string]: boolean;
+}
+
+function SponsorCarousel({ logos }: SponsorCarouselProps) {
+  const [imageErrors, setImageErrors] = useState<ImageErrors>({});
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  // Memorizamos el array de logos para que NO cambie su referencia con cada segundo del cronómetro
+  const duplicatedLogos = useMemo(() => {
+    if (!logos.length) return [];
+
+    // Multiplicamos el array lo suficiente para que no queden huecos
+    return [...logos, ...logos, ...logos, ...logos];
+  }, [logos]);
+
+  // Hilo de ejecución del scroll totalmente aislado del componente padre
+  useEffect(() => {
+    const scrollContainer = scrollRef.current;
+    if (!scrollContainer || !duplicatedLogos.length) return;
+
+    const scrollStep = 1;
+    let scrollAmount = scrollContainer.scrollTop;
+
+    const scroll = () => {
+      scrollAmount += scrollStep;
+      scrollContainer.scrollTop = scrollAmount;
+
+      // Si llegó a la mitad del contenido, reseteamos a 0 de forma imperceptible
+      if (scrollAmount >= scrollContainer.scrollHeight / 2) {
+        scrollAmount = 0;
+        scrollContainer.scrollTop = 0;
+      }
+    };
+
+    const interval = setInterval(scroll, 25);
+    return () => clearInterval(interval);
+  }, [duplicatedLogos]);
+
+  if (!logos.length) return null;
+
+  return (
+    <div className="w-full h-full overflow-hidden relative">
+      <div
+        ref={scrollRef}
+        className="w-full h-full overflow-y-hidden flex flex-col gap-6 px-2"
+        style={{ scrollBehavior: "auto" }}
+      >
+        {duplicatedLogos.map((src, i) => {
+          const imageKey = `${src}-${i}`;
+          const isBroken = imageErrors[imageKey];
+
+          return (
+            <div
+              key={imageKey}
+              className="h-24 w-full bg-transparent flex items-center justify-center p-1 shrink-0"
+            >
+              {!isBroken ? (
+                <img
+                  src={src}
+                  alt={`Sponsor logo ${i + 1}`}
+                  onError={() => {
+                    setImageErrors((prev) => ({
+                      ...prev,
+                      [imageKey]: true,
+                    }));
+                  }}
+                  className="max-h-full max-w-full object-contain opacity-85 dark:brightness-110"
+                />
+              ) : (
+                <div
+                  aria-label="Logo no disponible"
+                  className="h-16 w-16 rounded-xl bg-slate-200/50 dark:bg-[#143E29]/40 border border-slate-300/30 flex items-center justify-center text-slate-400 dark:text-[#68A243]/60"
+                >
+                  <Building2 className="h-8 w-8" />
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
 // ─── Main component ───────────────────────────────────────────────────────────
 
 export default function SalaEnVivo() {
@@ -717,12 +807,11 @@ export default function SalaEnVivo() {
               value="cronometro"
               className="flex-1 min-h-0 mt-0 data-[state=inactive]:hidden"
             >
-              <div className="h-full grid grid-cols-[300px_1fr] gap-5 items-stretch">
+              <div className="h-full grid grid-cols-[300px_1fr_120px] gap-4 items-stretch">
                 {/* Left: settings + controls */}
                 <div className="flex flex-col justify-center gap-3 overflow-y-auto">
                   {/* Settings card */}
                   <div className="rounded-2xl border border-[#68A243]/25 bg-white dark:bg-[#0f2f25] shadow-sm p-4 space-y-3">
-                    {/* Turno selector — oculto en entretiempo */}
                     {timerMode === "turno" && (
                       <div className="space-y-1.5">
                         <Label className="text-xs font-semibold uppercase tracking-wider text-[#68A243]">
@@ -749,8 +838,6 @@ export default function SalaEnVivo() {
                         </Select>
                       </div>
                     )}
-
-                    {/* Duración turno */}
                     {timerMode === "turno" && (
                       <div className="space-y-1.5">
                         <Label
@@ -773,8 +860,6 @@ export default function SalaEnVivo() {
                         />
                       </div>
                     )}
-
-                    {/* Duración entretiempo */}
                     <div className="space-y-1.5">
                       <Label
                         htmlFor="break-minutes"
@@ -805,8 +890,7 @@ export default function SalaEnVivo() {
                         placeholder="5"
                       />
                     </div>
-
-                    {/* Auto-avance */}
+                    {/* Auto-avance con Tooltip restaurado */}
                     {nextTurno && (
                       <div className="flex items-center gap-2.5 pt-1 pb-0.5">
                         <Checkbox
@@ -817,26 +901,25 @@ export default function SalaEnVivo() {
                         />
                         <Label
                           htmlFor="auto-advance"
-                          className="text-xs text-gray-700 dark:text-gray-300 cursor-pointer leading-tight"
+                          className="text-xs text-gray-700 dark:text-gray-300 cursor-pointer leading-tight flex items-center gap-2"
                         >
                           Avance automático
+                          <TooltipProvider delayDuration={200}>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Info className="h-3.5 w-3.5 text-muted-foreground dark:text-gray-500 cursor-help" />
+                              </TooltipTrigger>
+                              <TooltipContent
+                                side="right"
+                                className="max-w-56 text-xs leading-snug"
+                              >
+                                Al terminar cada turno, el entretiempo arranca
+                                solo. Al terminar el entretiempo, el siguiente
+                                turno arranca solo. Sin intervención manual.
+                              </TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
                         </Label>
-                        <TooltipProvider delayDuration={200}>
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <Info className="h-3.5 w-3.5 text-muted-foreground dark:text-gray-500 cursor-help shrink-0" />
-                            </TooltipTrigger>
-                            <TooltipContent
-                              side="right"
-                              className="max-w-56 text-xs leading-snug"
-                            >
-                              Al terminar cada turno, el entretiempo arranca
-                              solo. Al terminar el entretiempo, el siguiente
-                              turno arranca solo. Todo corre sin intervención
-                              manual.
-                            </TooltipContent>
-                          </Tooltip>
-                        </TooltipProvider>
                       </div>
                     )}
                   </div>
@@ -851,8 +934,7 @@ export default function SalaEnVivo() {
                           size="lg"
                           className="w-full bg-[#143E29] hover:bg-[#0f2f25] text-white dark:bg-[#68A243] dark:hover:bg-[#5a9038] gap-2 text-base"
                         >
-                          <Play className="h-5 w-5" />
-                          Iniciar turno
+                          <Play className="h-5 w-5" /> Iniciar turno
                         </Button>
                       ) : (
                         <Button
@@ -861,8 +943,7 @@ export default function SalaEnVivo() {
                           variant="outline"
                           className="w-full border-[#143E29] text-[#143E29] dark:border-[#68A243] dark:text-[#68A243] hover:bg-[#143E29] hover:text-white dark:hover:bg-[#68A243] dark:hover:text-white gap-2 text-base"
                         >
-                          <Pause className="h-5 w-5" />
-                          Pausar
+                          <Pause className="h-5 w-5" /> Pausar
                         </Button>
                       )}
                       {nextTurno && (
@@ -872,10 +953,11 @@ export default function SalaEnVivo() {
                           size="lg"
                           className="w-full border-[#143E29]/40 text-[#143E29]/80 dark:border-[#68A243]/40 dark:text-[#68A243]/70 hover:border-[#143E29] hover:text-[#143E29] dark:hover:border-[#68A243] dark:hover:text-[#68A243] hover:bg-transparent dark:hover:bg-transparent gap-2 text-base"
                         >
-                          <SkipForward className="h-5 w-5" />
-                          Saltar a entretiempo
+                          <SkipForward className="h-5 w-5" /> Saltar a
+                          entretiempo
                         </Button>
                       )}
+                      {/* Botón de reinicio recuperado */}
                       <Button
                         onClick={handleReset}
                         variant="ghost"
@@ -883,50 +965,33 @@ export default function SalaEnVivo() {
                         className="w-full text-muted-foreground hover:text-[#143E29] hover:bg-transparent dark:hover:text-[#9FD27B] dark:hover:bg-transparent gap-2"
                       >
                         <RotateCcw className="h-4 w-4" />
-                        Reiniciar
+                        Reiniciar turno
                       </Button>
                     </div>
                   )}
-
-                  {/* Controls — turno FINALIZADO */}
-                  {selectedTurno && timerMode === "turno" && isFinished && (
-                    <div className="flex flex-col gap-2">
-                      {nextTurno && (
-                        <>
-                          <Button
-                            onClick={startEntretiempo}
-                            size="lg"
-                            className="w-full bg-[#3F6E20] hover:bg-[#143E29] dark:bg-[#3F6E20] dark:hover:bg-[#143E29] text-white gap-2 text-base"
-                          >
-                            <Coffee className="h-5 w-5" />
-                            Iniciar entretiempo ({breakMinutes} min)
-                          </Button>
-                          <Button
-                            onClick={skipToNextTurno}
-                            variant="outline"
-                            size="lg"
-                            className="w-full border-[#143E29] text-[#143E29] dark:border-[#68A243] dark:text-[#68A243] hover:bg-[#143E29] hover:text-white dark:hover:bg-[#68A243] dark:hover:text-white gap-2 text-base"
-                          >
-                            <SkipForward className="h-5 w-5" />
-                            Saltear entretiempo → Turno{" "}
-                            {turnoNumberMap.get(nextTurno.id)}
-                          </Button>
-                        </>
-                      )}
-
-                      <Button
-                        onClick={handleReset}
-                        variant="ghost"
-                        size="sm"
-                        className="w-full text-muted-foreground hover:text-[#143E29] hover:bg-transparent dark:hover:text-[#9FD27B] dark:hover:bg-transparent gap-2"
-                      >
-                        <RotateCcw className="h-4 w-4" />
-                        Reiniciar mismo turno
-                      </Button>
-                    </div>
-                  )}
-
-                  {/* Controls — ENTRETIEMPO corriendo o en pausa */}
+                  {selectedTurno &&
+                    timerMode === "turno" &&
+                    isFinished &&
+                    nextTurno && (
+                      <div className="flex flex-col gap-2">
+                        <Button
+                          onClick={startEntretiempo}
+                          size="lg"
+                          className="w-full bg-[#3F6E20] hover:bg-[#143E29] dark:bg-[#3F6E20] dark:hover:bg-[#143E29] text-white gap-2 text-base"
+                        >
+                          <Coffee className="h-5 w-5" /> Iniciar entretiempo
+                        </Button>
+                        <Button
+                          onClick={skipToNextTurno}
+                          variant="outline"
+                          size="lg"
+                          className="w-full border-[#143E29] text-[#143E29] dark:border-[#68A243] dark:text-[#68A243] hover:bg-[#143E29] hover:text-white dark:hover:bg-[#68A243] dark:hover:text-white gap-2 text-base"
+                        >
+                          <SkipForward className="h-5 w-5" /> Saltear → Turno{" "}
+                          {turnoNumberMap.get(nextTurno.id)}
+                        </Button>
+                      </div>
+                    )}
                   {timerMode === "entretiempo" && !isFinished && (
                     <div className="flex flex-col gap-2">
                       {!isRunning ? (
@@ -935,8 +1000,7 @@ export default function SalaEnVivo() {
                           size="lg"
                           className="w-full bg-[#3F6E20] hover:bg-[#143E29] text-white gap-2 text-base"
                         >
-                          <Play className="h-5 w-5" />
-                          Reanudar
+                          <Play className="h-5 w-5" /> Reanudar
                         </Button>
                       ) : (
                         <Button
@@ -945,11 +1009,9 @@ export default function SalaEnVivo() {
                           variant="outline"
                           className="w-full border-[#3F6E20] text-[#3F6E20] dark:border-[#9FD27B] dark:text-[#9FD27B] hover:bg-[#3F6E20] hover:text-white dark:hover:bg-[#3F6E20] dark:hover:text-white gap-2 text-base"
                         >
-                          <Pause className="h-5 w-5" />
-                          Pausar
+                          <Pause className="h-5 w-5" /> Pausar
                         </Button>
                       )}
-
                       {nextTurno && (
                         <Button
                           onClick={skipToNextTurno}
@@ -957,11 +1019,11 @@ export default function SalaEnVivo() {
                           size="lg"
                           className="w-full border-[#3F6E20]/40 text-[#3F6E20]/80 dark:border-[#9FD27B]/40 dark:text-[#9FD27B]/70 hover:border-[#3F6E20] hover:text-[#3F6E20] dark:hover:border-[#9FD27B] dark:hover:text-[#9FD27B] hover:bg-transparent dark:hover:bg-transparent gap-2 text-base"
                         >
-                          <SkipForward className="h-5 w-5" />
-                          Saltear → Turno {turnoNumberMap.get(nextTurno.id)}
+                          <SkipForward className="h-5 w-5" /> Saltear → Turno{" "}
+                          {turnoNumberMap.get(nextTurno.id)}
                         </Button>
                       )}
-
+                      {/* Botón Reiniciar Entretiempo */}
                       <Button
                         onClick={handleReset}
                         variant="ghost"
@@ -973,35 +1035,21 @@ export default function SalaEnVivo() {
                       </Button>
                     </div>
                   )}
-
-                  {/* Controls — ENTRETIEMPO FINALIZADO */}
-                  {timerMode === "entretiempo" && isFinished && (
+                  {timerMode === "entretiempo" && isFinished && nextTurno && (
                     <div className="flex flex-col gap-2">
-                      {nextTurno && (
-                        <Button
-                          onClick={advanceToNextTurno}
-                          size="lg"
-                          className="w-full bg-[#143E29] hover:bg-[#0f2f25] text-white dark:bg-[#68A243] dark:hover:bg-[#5a9038] gap-2 text-base"
-                        >
-                          <Play className="h-5 w-5" />
-                          Iniciar Turno {turnoNumberMap.get(nextTurno.id)}
-                        </Button>
-                      )}
-
                       <Button
-                        onClick={handleReset}
-                        variant="ghost"
-                        size="sm"
-                        className="w-full text-muted-foreground hover:text-[#3F6E20] hover:bg-transparent dark:hover:text-[#9FD27B] dark:hover:bg-transparent gap-2"
+                        onClick={advanceToNextTurno}
+                        size="lg"
+                        className="w-full bg-[#143E29] hover:bg-[#0f2f25] text-white dark:bg-[#68A243] dark:hover:bg-[#5a9038] gap-2 text-base"
                       >
-                        <RotateCcw className="h-4 w-4" />
-                        Reiniciar entretiempo
+                        <Play className="h-5 w-5" /> Iniciar Turno{" "}
+                        {turnoNumberMap.get(nextTurno.id)}
                       </Button>
                     </div>
                   )}
                 </div>
 
-                {/* Right: big timer centered */}
+                {/* Center: big timer */}
                 <div className="flex items-center justify-center min-h-0 h-full p-2">
                   {selectedTurno ? (
                     <CountdownDisplay
@@ -1031,6 +1079,13 @@ export default function SalaEnVivo() {
                       </p>
                     </div>
                   )}
+                </div>
+
+                {/* Right: Vertical Sponsor Carousel Continuous Loop */}
+                <div className="py-4 overflow-hidden">
+                  <SponsorCarousel
+                    logos={["/logo1.png", "/logo2.png", "/logo3.png"]}
+                  />
                 </div>
               </div>
             </TabsContent>
