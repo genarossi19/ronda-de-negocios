@@ -63,7 +63,8 @@ export default function Shifts() {
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
   const [isConfirming, setIsConfirming] = useState(false);
   const [fetchKey, setFetchKey] = useState(0);
-  const { isAuthenticated, isAdmin, isPendingApproval } = useCurrentUser();
+  const { isAuthenticated, isAdmin, isPendingApproval, isApprovedCompany } =
+    useCurrentUser();
 
   useEffect(() => {
     const fetchTurno = async () => {
@@ -110,9 +111,18 @@ export default function Shifts() {
             "You do not have permission to perform this action",
           )
         ) {
-          setError(null);
-          setApprovalNotice(
-            "Tu empresa todavía no fue aprobada por el equipo administrador. Cuando eso ocurra vas a poder inscribirte a los turnos y recibirás un mail de confirmación.",
+          // Solo mostrar el mensaje de aprobación pendiente si la empresa NO está aprobada
+          if (!isApprovedCompany) {
+            setError(null);
+            setApprovalNotice(
+              "Tu empresa todavía no fue aprobada por el equipo administrador. Cuando eso ocurra vas a poder inscribirte a los turnos y recibirás un mail de confirmación.",
+            );
+            return;
+          }
+          // Si está aprobada pero aún recibe error de permiso, mostrar como error genérico
+          setError(
+            apiMessage ??
+              "No se pudieron cargar los turnos. Intentá de nuevo más tarde.",
           );
           return;
         }

@@ -3,6 +3,7 @@ import Navbar from "../components/Navbar";
 import Footer from "../layout/Footer";
 import CompanyCard from "../components/CompanyCard";
 import CompanyModal from "../components/CompanyModal";
+import BookMesaModal from "../components/BookMesaModal";
 import { useUserStore } from "../store/userStore";
 
 import { Button } from "../components/ui/button";
@@ -53,6 +54,10 @@ export default function Companies() {
     useState<EmpresaResponse | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
 
+  const [selectedCompanyForBooking, setSelectedCompanyForBooking] =
+    useState<EmpresaResponse | null>(null);
+  const [bookMesaModalOpen, setBookMesaModalOpen] = useState(false);
+
   useEffect(() => {
     const fetchCompanies = async () => {
       try {
@@ -77,6 +82,11 @@ export default function Companies() {
   const handleCompanyClick = (company: EmpresaResponse) => {
     setSelectedCompany(company);
     setModalOpen(true);
+  };
+
+  const handleBookMesa = (company: EmpresaResponse) => {
+    setSelectedCompanyForBooking(company);
+    setBookMesaModalOpen(true);
   };
 
   return (
@@ -225,6 +235,13 @@ export default function Companies() {
         onOpenChange={setModalOpen}
         isAuthenticated={isAuthenticated}
         isAdmin={isAdmin}
+        onBookMesa={handleBookMesa}
+      />
+
+      <BookMesaModal
+        company={selectedCompanyForBooking}
+        open={bookMesaModalOpen}
+        onOpenChange={setBookMesaModalOpen}
       />
 
       <Footer />
