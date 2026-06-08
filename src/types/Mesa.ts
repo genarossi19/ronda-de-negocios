@@ -12,6 +12,9 @@ export interface MesaResponse {
 export interface MesaEmpresaResponse {
   id: number;
   num_mesa: number;
+  turno_id: number;
+  turno__hora_inicio: string;
+  turno__hora_fin: string;
 }
 
 export interface MesasEmpresaListResponse {

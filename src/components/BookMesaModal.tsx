@@ -304,23 +304,31 @@ export default function BookMesaModal({
                   <div className="grid grid-cols-4 gap-2.5">
                     {paginatedMesas.map((mesa) => {
                       const isSelected = mesa.id === selectedMesaId;
+                      // Formateamos el horario (ej: "18:50" - "19:05")
+                      const horaInicio =
+                        mesa.turno__hora_inicio?.slice(0, 5) || "";
+                      const horaFin = mesa.turno__hora_fin?.slice(0, 5) || "";
+
                       return (
                         <button
                           key={mesa.id}
                           type="button"
                           onClick={() => setSelectedMesaId(mesa.id)}
                           className={cn(
-                            "relative aspect-square rounded-xl border-2 flex flex-col items-center justify-center transition-all duration-150",
+                            "relative aspect-square rounded-xl border-2 flex flex-col items-center justify-center transition-all duration-150 p-1",
                             isSelected
-                              ? "border-[#68A243] bg-[#68A243]/10 dark:bg-[#68A243]/20 font-bold"
+                              ? "border-[#68A243] bg-[#68A243]/10 dark:bg-[#68A243]/20"
                               : "border-slate-200 bg-white hover:border-[#68A243] dark:border-slate-800 dark:bg-[#0f141a]",
                           )}
                         >
                           <span className="text-[10px] uppercase tracking-wider text-muted-foreground dark:text-gray-400">
-                            Mesa
+                            Mesa {mesa.num_mesa}
                           </span>
-                          <span className="text-2xl font-bold text-[#143E29] dark:text-white mt-0.5">
-                            {mesa.num_mesa}
+                          <span className="text-xs font-bold text-[#143E29] dark:text-white mt-0.5">
+                            {horaInicio}
+                          </span>
+                          <span className="text-[10px] text-[#68A243] font-medium">
+                            a {horaFin}
                           </span>
                         </button>
                       );
