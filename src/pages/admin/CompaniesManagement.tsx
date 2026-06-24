@@ -48,6 +48,7 @@ import {
 } from "../../components/ui/dialog";
 import { Input } from "../../components/ui/input";
 import { Skeleton } from "../../components/ui/skeleton";
+import { Textarea } from "../../components/ui/textarea";
 import Navbar from "../../components/Navbar";
 import Footer from "../../layout/Footer";
 import { toast } from "sonner";
@@ -643,99 +644,205 @@ function FiltersSkeleton() {
   );
 }
 
-function printNamesAsPdf(companies: EmpresaResponse[]) {
-  const names = companies
+const LABELS_PER_ROW = 2;
+const ROWS_PER_PAGE = 7;
+const LABELS_PER_PAGE = LABELS_PER_ROW * ROWS_PER_PAGE;
+
+function getPrintableCompanyNames(companies: EmpresaResponse[]) {
+  return companies
     .filter((c) => c.aprobada && c.participa_evento)
     .map((c) => c.razon_social);
+}
 
-  if (names.length === 0) return false;
+function getPrintLabelPages(names: string[]) {
+  return Array.from(
+    { length: Math.ceil(names.length / LABELS_PER_PAGE) },
+    (_, pageIndex) =>
+      names.slice(
+        pageIndex * LABELS_PER_PAGE,
+        (pageIndex + 1) * LABELS_PER_PAGE,
+      ),
+  );
+}
 
-  // Tamaño inicial basado en la palabra más larga: evita wraps mid-word
-  const getFontSize = (name: string): string => {
-    const words = name.trim().split(/\s+/);
-    const longest = Math.max(...words.map((w) => w.length));
-    const total = name.length;
-    if (longest <= 5 && total <= 10) return "44pt";
-    if (longest <= 8 && total <= 16) return "34pt";
-    if (longest <= 11 && total <= 22) return "26pt";
-    if (longest <= 15) return "20pt";
-    return "15pt";
-  };
+function getInitialPrintLabelFontSize(name: string): number {
+  const words = name.trim().split(/\s+/);
+  const longest = Math.max(...words.map((word) => word.length));
+  const total = name.trim().length;
 
+  if (longest <= 8 && total <= 18) return 24;
+  if (longest <= 12 && total <= 26) return 20;
+  if (longest <= 16 && total <= 34) return 18;
+  return 16;
+}
+
+function buildPrintableLabelsHtml(names: string[]) {
   const safe = (s: string) =>
     s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 
-  const cells = names
-    .map(
-      (name) =>
-        `<div class="cell"><span style="font-size:${getFontSize(name)}">${safe(name)}</span></div>`,
-    )
+  const pageMarkup = getPrintLabelPages(names)
+    .map((pageNames, pageIndex, allPages) => {
+      const cells = pageNames
+        .map(
+          (name) =>
+            `<div class="label"><div class="label-content" style="font-size:${getInitialPrintLabelFontSize(name)}pt">${safe(name)}</div></div>`,
+        )
+        .join("");
+
+      return `<section class="sheet${pageIndex < allPages.length - 1 ? " page-break" : ""}"><div class="grid">${cells}</div></section>`;
+    })
     .join("");
 
-  const html = `<!DOCTYPE html>
+  return `<!DOCTYPE html>
 <html lang="es">
 <head>
   <meta charset="utf-8"/>
   <title>Inscriptos</title>
   <style>
-    @page { margin: 0; size: A4 portrait; }
+    @page {
+      size: A4 portrait;
+      margin: 0;
+    }
+
     * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html, body {
+      width: 210mm;
+      min-height: 297mm;
+      background: #fff;
+    }
+
     body {
       font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
-      background: #fff;
-      padding: 10mm 10mm 0 10mm;
     }
+
+    .sheet {
+      width: 210mm;
+      min-height: 297mm;
+      padding: 14mm 33mm;
+      overflow: hidden;
+    }
+
+    .page-break {
+      page-break-after: always;
+      break-after: page;
+    }
+
     .grid {
       display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 3mm;
+      grid-template-columns: repeat(2, 70mm);
+      grid-auto-rows: 35mm;
+      column-gap: 4mm;
+      row-gap: 4mm;
     }
-    .cell {
-      height: 32mm;
+
+    .label {
+      width: 70mm;
+      height: 35mm;
       display: flex;
       align-items: center;
       justify-content: center;
       text-align: center;
-      padding: 4mm 10mm;
+      padding: 3.5mm 5mm;
       overflow: hidden;
-      border: 1.5px dotted #aaa;
-      border-radius: 4mm;
+      border: 1.2px dotted #8f8f8f;
+      border-radius: 3mm;
+      break-inside: avoid;
+      page-break-inside: avoid;
     }
-    .cell span {
+
+    .label-content {
       font-weight: 800;
       color: #000;
       line-height: 1.1;
-      word-break: normal;
+      word-break: break-word;
       overflow-wrap: break-word;
       display: block;
       width: 100%;
+      max-height: 100%;
+    }
+
+    @media print {
+      body {
+        print-color-adjust: exact;
+        -webkit-print-color-adjust: exact;
+      }
     }
   </style>
 </head>
 <body>
-  <div class="grid">${cells}</div>
+  ${pageMarkup}
   <script>
-    window.addEventListener('load', function () {
-      document.querySelectorAll('.cell').forEach(function (cell) {
-        var span = cell.querySelector('span');
-        var cellH = cell.clientHeight;
-        var size = parseFloat(window.getComputedStyle(span).fontSize);
-        // Achica de a 1px hasta que el contenido entre en la celda
-        while (span.scrollHeight > cellH && size > 8) {
+    function fitLabels() {
+      document.querySelectorAll('.label').forEach(function (label) {
+        var content = label.querySelector('.label-content');
+        if (!content) return;
+
+        var maxHeight = label.clientHeight - 2;
+        var maxWidth = label.clientWidth - 2;
+        var size = parseFloat(window.getComputedStyle(content).fontSize);
+
+        while (
+          (content.scrollHeight > maxHeight || content.scrollWidth > maxWidth) &&
+          size > 9
+        ) {
           size -= 1;
-          span.style.fontSize = size + 'px';
+          content.style.fontSize = size + 'px';
         }
       });
-      setTimeout(function () { window.print(); }, 120);
+    }
+
+    window.addEventListener('load', function () {
+      window.requestAnimationFrame(function () {
+        fitLabels();
+      });
     });
   </script>
 </body>
 </html>`;
+}
 
-  const win = window.open("", "_blank");
-  if (!win) return false;
-  win.document.write(html);
-  win.document.close();
+function printNamesAsPdf(names: string[]) {
+  if (names.length === 0) return false;
+
+  const iframe = document.createElement("iframe");
+  iframe.style.position = "fixed";
+  iframe.style.width = "0";
+  iframe.style.height = "0";
+  iframe.style.border = "0";
+  iframe.style.right = "0";
+  iframe.style.bottom = "0";
+  iframe.setAttribute("aria-hidden", "true");
+  iframe.srcdoc = buildPrintableLabelsHtml(names);
+
+  const cleanup = () => {
+    setTimeout(() => {
+      if (iframe.parentNode) {
+        iframe.parentNode.removeChild(iframe);
+      }
+    }, 1000);
+  };
+
+  let didPrint = false;
+
+  iframe.onload = () => {
+    if (didPrint) return;
+
+    const frameWindow = iframe.contentWindow;
+    if (!frameWindow) {
+      cleanup();
+      return;
+    }
+
+    didPrint = true;
+    frameWindow.onafterprint = cleanup;
+    frameWindow.focus();
+    setTimeout(() => {
+      frameWindow.print();
+    }, 180);
+  };
+
+  document.body.appendChild(iframe);
   return true;
 }
 
@@ -894,6 +1001,9 @@ export default function CompaniesManagement() {
     failed: { name: string; error: string }[];
   } | null>(null);
   const [isResultsOpen, setIsResultsOpen] = useState(false);
+  const [isPrintPreviewOpen, setIsPrintPreviewOpen] = useState(false);
+  const [printLabelNames, setPrintLabelNames] = useState<string[]>([]);
+  const [isPrintingLabels, setIsPrintingLabels] = useState(false);
   const [isFooterVisible, setIsFooterVisible] = useState(false);
   const footerRef = useRef<HTMLDivElement | null>(null);
   const [animatingCompanies, setAnimatingCompanies] = useState<
@@ -1015,6 +1125,11 @@ export default function CompaniesManagement() {
     if (tourMockActive && companies.length === 0) return [MOCK_COMPANY];
     return [];
   }, [filteredCompanies, tourMockActive, companies.length]);
+
+  const printPreviewPages = useMemo(
+    () => getPrintLabelPages(printLabelNames),
+    [printLabelNames],
+  );
 
   // Tour: definición de steps
   const tourSteps: TourStep[] = [
@@ -1324,6 +1439,47 @@ export default function CompaniesManagement() {
     setSelectedCompanies(new Set());
   };
 
+  const handleOpenPrintPreview = () => {
+    const names = getPrintableCompanyNames(companies);
+
+    if (names.length === 0) {
+      toast.info("No hay empresas aprobadas y participando para imprimir");
+      return;
+    }
+
+    setPrintLabelNames(names);
+    setIsPrintPreviewOpen(true);
+  };
+
+  const handlePrintLabelChange = (index: number, value: string) => {
+    setPrintLabelNames((prev) =>
+      prev.map((name, currentIndex) =>
+        currentIndex === index ? value : name,
+      ),
+    );
+  };
+
+  const handleConfirmPrint = () => {
+    const normalizedNames = printLabelNames.map((name) => name.trim());
+
+    if (normalizedNames.some((name) => name.length === 0)) {
+      toast.error("Todos los carteles deben tener un nombre antes de imprimir");
+      return;
+    }
+
+    setIsPrintingLabels(true);
+    const printed = printNamesAsPdf(normalizedNames);
+    setIsPrintingLabels(false);
+
+    if (!printed) {
+      toast.error("No se pudo abrir la impresión");
+      return;
+    }
+
+    setPrintLabelNames(normalizedNames);
+    setIsPrintPreviewOpen(false);
+  };
+
   const handleSelectAll = () => {
     if (selectedCompanies.size === displayedCompanies.length) {
       // Si todas están seleccionadas, deseleccionar todas
@@ -1520,14 +1676,7 @@ export default function CompaniesManagement() {
                 </Button>
                 <Button
                   variant="ghost"
-                  onClick={() => {
-                    const printed = printNamesAsPdf(companies);
-                    if (!printed) {
-                      toast.info(
-                        "No hay empresas aprobadas y participando para imprimir",
-                      );
-                    }
-                  }}
+                  onClick={handleOpenPrintPreview}
                   className="h-10 px-4 text-white/80 hover:bg-white/10 hover:text-white font-medium gap-2"
                 >
                   <FileText className="h-4 w-4" />
@@ -1954,6 +2103,136 @@ export default function CompaniesManagement() {
           <Footer />
         </div>
       </div>
+
+      <Dialog
+        open={isPrintPreviewOpen}
+        onOpenChange={(open) => !isPrintingLabels && setIsPrintPreviewOpen(open)}
+      >
+        <DialogContent className="w-[96vw] max-w-[1800px]! border-gray-200 dark:border-gray-700 bg-white dark:bg-[#143E29] max-h-[95vh] overflow-hidden p-0">
+          <DialogHeader>
+            <DialogTitle className="px-6 pt-6 text-gray-900 dark:text-white">
+              Previsualizar carteles para imprimir
+            </DialogTitle>
+            <DialogDescription className="px-6 text-gray-600 dark:text-gray-400">
+              Revisá cada nombre antes de imprimir. La vista previa mantiene
+              carteles de 7 cm x 3.5 cm distribuidos en hojas A4.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,1.35fr)_minmax(0,1fr)] gap-6 overflow-hidden px-6 pb-6">
+            <div className="max-h-[72vh] overflow-y-auto rounded-2xl bg-gray-100 p-6 dark:bg-[#0f2f25]/60">
+              <div className="space-y-8">
+                {printPreviewPages.map((page, pageIndex) => (
+                  <div
+                    key={pageIndex}
+                    className="mx-auto w-full max-w-[640px] rounded-[28px] border border-gray-200 bg-white p-8 shadow-[0_18px_40px_rgba(15,23,42,0.12)] dark:border-gray-700"
+                  >
+                    <div className="mb-6 flex items-center justify-between text-xs font-semibold uppercase tracking-[0.18em] text-gray-500 dark:text-gray-400">
+                      <span>Hoja {pageIndex + 1}</span>
+                      <span>A4</span>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-x-3 gap-y-3">
+                      {page.map((name, labelIndex) => {
+                        const absoluteIndex = pageIndex * LABELS_PER_PAGE + labelIndex;
+
+                        return (
+                          <div
+                            key={`${pageIndex}-${labelIndex}`}
+                            className="aspect-[2/1] rounded-[16px] border-2 border-dashed border-gray-400 bg-white px-4 py-3 text-center shadow-[inset_0_0_0_1px_rgba(255,255,255,0.7)]"
+                          >
+                            <div className="flex h-full items-center justify-center overflow-hidden text-[15px] font-extrabold uppercase leading-[1.08] tracking-[-0.02em] text-gray-900 sm:text-[16px]">
+                              <span className="block max-h-full break-words overflow-hidden text-balance">
+                                {name || `Cartel ${absoluteIndex + 1}`}
+                              </span>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="max-h-[72vh] overflow-y-auto rounded-2xl border border-gray-200 bg-gray-50 p-5 dark:border-gray-700 dark:bg-[#0f2f25]/50">
+              <div className="mb-5 flex items-center justify-between gap-3">
+                <div>
+                  <h3 className="text-sm font-semibold text-gray-900 dark:text-white">
+                    Textos de los carteles
+                  </h3>
+                  <p className="text-xs text-gray-600 dark:text-gray-400">
+                    Editá en una grilla de dos columnas, igual que la distribución real.
+                  </p>
+                </div>
+                <Badge className="bg-[#68A243]/10 text-[#143E29] dark:bg-[#68A243]/20 dark:text-[#9FD27B]">
+                  {printLabelNames.length} carteles
+                </Badge>
+              </div>
+
+              <div className="space-y-6">
+                {printPreviewPages.map((page, pageIndex) => (
+                  <div
+                    key={`editor-page-${pageIndex}`}
+                    className="rounded-2xl border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-[#143E29]"
+                  >
+                    <div className="mb-4 flex items-center justify-between text-xs font-semibold uppercase tracking-[0.18em] text-gray-500 dark:text-gray-400">
+                      <span>Hoja {pageIndex + 1}</span>
+                      <span>{page.length} carteles</span>
+                    </div>
+
+                    <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+                      {page.map((name, labelIndex) => {
+                        const absoluteIndex = pageIndex * LABELS_PER_PAGE + labelIndex;
+
+                        return (
+                          <div
+                            key={`editor-${pageIndex}-${labelIndex}`}
+                            className="rounded-[16px] border-2 border-dashed border-gray-300 bg-gray-50 p-3 dark:border-gray-600 dark:bg-[#0f2f25]/60"
+                          >
+                            <div className="mb-2 text-[11px] font-semibold uppercase tracking-[0.16em] text-gray-500 dark:text-gray-400">
+                              Cartel {absoluteIndex + 1}
+                            </div>
+                            <Textarea
+                              value={name}
+                              onChange={(e) =>
+                                handlePrintLabelChange(
+                                  absoluteIndex,
+                                  e.target.value,
+                                )
+                              }
+                              rows={3}
+                              className="min-h-[96px] resize-y rounded-[12px] border-gray-300 bg-white text-center text-sm font-semibold leading-tight dark:border-gray-600 dark:bg-[#143E29]"
+                            />
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          <DialogFooter className="gap-3 px-6 pb-6">
+            <Button
+              variant="outline"
+              onClick={() => setIsPrintPreviewOpen(false)}
+              disabled={isPrintingLabels}
+              className="border-gray-300 text-gray-700 hover:bg-gray-100 dark:border-[#68A243]/40 dark:text-[#68A243] dark:hover:bg-[#68A243]/10"
+            >
+              Cancelar
+            </Button>
+            <Button
+              onClick={handleConfirmPrint}
+              disabled={isPrintingLabels || printLabelNames.length === 0}
+              className="bg-[#68A243] hover:bg-[#5a9038] text-white"
+            >
+              {isPrintingLabels ? "Abriendo impresión..." : "Confirmar e imprimir"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Detail Modal */}
       <Dialog open={isDetailOpen} onOpenChange={setIsDetailOpen}>
