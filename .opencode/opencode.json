@@ -1,0 +1,33 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "default_agent": "ronda-frontend",
+  "instructions": [
+    "AGENTS.md",
+    ".opencode/context/arquitectura.md",
+    ".opencode/context/flujos-y-convenciones.md"
+  ],
+  "references": {
+    "project-context": {
+      "path": ".opencode/context",
+      "description": "Contexto operativo del frontend, flujos y convenciones del proyecto."
+    }
+  },
+  "command": {
+    "verify-app": {
+      "description": "Corre las verificaciones habituales del frontend.",
+      "prompt": "Revisá el alcance del cambio y ejecutá las verificaciones proporcionales. Como baseline para este proyecto, corré `npm run typecheck` y `npm run lint`. Si el cambio toca rutas principales, integración, autenticación o build, corré también `npm run build`. Resumí qué comandos corriste, qué falló y qué quedó pendiente."
+    },
+    "review-admin": {
+      "description": "Revisión enfocada en panel administrativo.",
+      "prompt": "Hacé una review orientada a riesgos funcionales del panel administrativo. Priorizá permisos, flujos de operación en vivo, impacto sobre turnos/mesas/reuniones y regresiones visibles. Entregá findings primero, ordenados por severidad, con referencias de archivo y línea."
+    },
+    "sync-docs": {
+      "description": "Sincroniza documentación principal con el código.",
+      "prompt": "Revisá si el cambio modifica alcance, arquitectura, flujos o comportamiento principal del producto. Si aplica, actualizá `README.md` y `AGENTS.md` para dejarlos sincronizados con el estado real del repositorio. Mantené descripciones concretas y evitá documentar supuestos no verificados."
+    },
+    "investigate-bug": {
+      "description": "Diagnóstico guiado para bugs del frontend.",
+      "prompt": "Tomá el problema reportado, reproducilo si es posible, localizá causa raíz en código y proponé o implementá la corrección mínima adecuada. Revisá primero `src/App.tsx`, la página afectada, la API del dominio involucrado y cualquier guard/interceptor relacionado. Cerrá con causa raíz, cambio aplicado y validación realizada."
+    }
+  }
+}
