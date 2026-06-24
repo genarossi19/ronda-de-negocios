@@ -22,6 +22,9 @@ import {
   Users,
   CalendarCheck2,
   CalendarX,
+  AlertCircle,
+  Plus,
+  Filter,
   // RotateCcw,
 } from "lucide-react";
 import { Button } from "../../components/ui/button";
@@ -49,6 +52,21 @@ import {
 import { Input } from "../../components/ui/input";
 import { Skeleton } from "../../components/ui/skeleton";
 import { Textarea } from "../../components/ui/textarea";
+import {
+  DropdownMenu,
+  DropdownMenuCheckboxItem,
+  DropdownMenuContent,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "../../components/ui/dropdown-menu";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "../../components/ui/select";
 import Navbar from "../../components/Navbar";
 import Footer from "../../layout/Footer";
 import { toast } from "sonner";
@@ -71,6 +89,41 @@ interface CompanyRowTourRefs {
   deleteRef?: React.RefObject<HTMLButtonElement | null>;
   cardRef?: React.RefObject<HTMLDivElement | null>;
 }
+
+interface PrintLabel {
+  id: string;
+  name: string;
+  logo?: string;
+  originalLogo?: string;
+  initials: string;
+  sector?: string;
+  isSpecial?: boolean;
+  isCustom?: boolean;
+}
+
+type PrintPagePresetKey = "a4" | "letter" | "legal" | "a3" | "a5";
+
+interface PrintPagePreset {
+  key: PrintPagePresetKey;
+  label: string;
+  sizeCss: string;
+  widthMm: number;
+  heightMm: number;
+  columns: number;
+  rows: number;
+  paddingXMm: number;
+  paddingYMm: number;
+  columnGapMm: number;
+  rowGapMm: number;
+  previewMaxWidthPx: number;
+}
+
+type PrintLabelFilters = {
+  showCompanies: boolean;
+  showSpecialGuests: boolean;
+  showCustom: boolean;
+  onlyOverflow: boolean;
+};
 
 function CompanyRow({
   company,
@@ -644,25 +697,165 @@ function FiltersSkeleton() {
   );
 }
 
-const LABELS_PER_ROW = 2;
-const ROWS_PER_PAGE = 7;
-const LABELS_PER_PAGE = LABELS_PER_ROW * ROWS_PER_PAGE;
+const LABEL_WIDTH_MM = 70;
+const LABEL_HEIGHT_MM = 35;
+const SYSTEM_PRINT_LOGO = "/logo.ico";
+const DEFAULT_PRINT_LABEL_FILTERS: PrintLabelFilters = {
+  showCompanies: true,
+  showSpecialGuests: true,
+  showCustom: true,
+  onlyOverflow: false,
+};
+const PRINT_PAGE_PRESETS: Record<PrintPagePresetKey, PrintPagePreset> = {
+  a4: {
+    key: "a4",
+    label: "A4",
+    sizeCss: "A4 portrait",
+    widthMm: 210,
+    heightMm: 297,
+    columns: 2,
+    rows: 7,
+    paddingXMm: 33,
+    paddingYMm: 14,
+    columnGapMm: 4,
+    rowGapMm: 4,
+    previewMaxWidthPx: 640,
+  },
+  letter: {
+    key: "letter",
+    label: "Carta",
+    sizeCss: "216mm 279mm",
+    widthMm: 216,
+    heightMm: 279,
+    columns: 2,
+    rows: 6,
+    paddingXMm: 34,
+    paddingYMm: 22.5,
+    columnGapMm: 4,
+    rowGapMm: 4,
+    previewMaxWidthPx: 660,
+  },
+  legal: {
+    key: "legal",
+    label: "Oficio / Legal",
+    sizeCss: "216mm 356mm",
+    widthMm: 216,
+    heightMm: 356,
+    columns: 2,
+    rows: 8,
+    paddingXMm: 34,
+    paddingYMm: 22,
+    columnGapMm: 4,
+    rowGapMm: 4,
+    previewMaxWidthPx: 660,
+  },
+  a3: {
+    key: "a3",
+    label: "A3",
+    sizeCss: "A3 portrait",
+    widthMm: 297,
+    heightMm: 420,
+    columns: 3,
+    rows: 10,
+    paddingXMm: 35.5,
+    paddingYMm: 17,
+    columnGapMm: 4,
+    rowGapMm: 4,
+    previewMaxWidthPx: 760,
+  },
+  a5: {
+    key: "a5",
+    label: "A5",
+    sizeCss: "A5 portrait",
+    widthMm: 148,
+    heightMm: 210,
+    columns: 1,
+    rows: 5,
+    paddingXMm: 39,
+    paddingYMm: 9.5,
+    columnGapMm: 4,
+    rowGapMm: 4,
+    previewMaxWidthPx: 460,
+  },
+};
 
-function getPrintableCompanyNames(companies: EmpresaResponse[]) {
-  return companies
-    .filter((c) => c.aprobada && c.participa_evento)
-    .map((c) => c.razon_social);
+function revokeObjectUrlIfNeeded(url?: string) {
+  if (url?.startsWith("blob:")) {
+    URL.revokeObjectURL(url);
+  }
 }
 
-function getPrintLabelPages(names: string[]) {
+function cleanupPrintLabelLogos(labels: PrintLabel[]) {
+  labels.forEach((label) => {
+    revokeObjectUrlIfNeeded(label.logo);
+  });
+}
+
+function createPrintLabelId(prefix = "custom") {
+  if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
+    return `${prefix}-${crypto.randomUUID()}`;
+  }
+
+  return `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+}
+
+function getCompanyInitials(name: string) {
+  return name
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((word) => word[0]?.toUpperCase() ?? "")
+    .join("");
+}
+
+function getPrintableCompanyLabels(companies: EmpresaResponse[]): PrintLabel[] {
+  const labels = companies
+    .filter((c) => c.aprobada && c.participa_evento)
+    .map((c) => ({
+      id: `company-${c.id}`,
+      name: c.razon_social,
+      logo: c.logo,
+      originalLogo: c.logo,
+      initials: getCompanyInitials(c.razon_social),
+      sector: c.sector?.nombre ?? "",
+    }));
+
+  if (labels.length === 0) {
+    return [];
+  }
+
+  const specialGuests = Array.from({ length: 6 }, (_, index) => ({
+    id: `special-${index + 1}`,
+    name: "Invitado especial",
+    initials: "",
+    logo: SYSTEM_PRINT_LOGO,
+    originalLogo: SYSTEM_PRINT_LOGO,
+    sector: "",
+    isSpecial: true,
+  }));
+
+  return [...labels, ...specialGuests];
+}
+
+function getPrintLabelPages(
+  labels: PrintLabel[],
+  preset: PrintPagePreset,
+) {
+  const labelsPerPage = preset.columns * preset.rows;
+
   return Array.from(
-    { length: Math.ceil(names.length / LABELS_PER_PAGE) },
+    { length: Math.ceil(labels.length / labelsPerPage) },
     (_, pageIndex) =>
-      names.slice(
-        pageIndex * LABELS_PER_PAGE,
-        (pageIndex + 1) * LABELS_PER_PAGE,
+      labels.slice(
+        pageIndex * labelsPerPage,
+        (pageIndex + 1) * labelsPerPage,
       ),
   );
+}
+
+function isCompanyPrintLabel(label: PrintLabel) {
+  return !label.isSpecial && !label.isCustom;
 }
 
 function getInitialPrintLabelFontSize(name: string): number {
@@ -670,22 +863,27 @@ function getInitialPrintLabelFontSize(name: string): number {
   const longest = Math.max(...words.map((word) => word.length));
   const total = name.trim().length;
 
-  if (longest <= 8 && total <= 18) return 24;
-  if (longest <= 12 && total <= 26) return 20;
-  if (longest <= 16 && total <= 34) return 18;
-  return 16;
+  if (longest <= 8 && total <= 18) return 19;
+  if (longest <= 12 && total <= 26) return 17;
+  if (longest <= 16 && total <= 34) return 15;
+  return 13;
 }
 
-function buildPrintableLabelsHtml(names: string[]) {
+function buildPrintableLabelsHtml(
+  labels: PrintLabel[],
+  preset: PrintPagePreset,
+) {
   const safe = (s: string) =>
     s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 
-  const pageMarkup = getPrintLabelPages(names)
-    .map((pageNames, pageIndex, allPages) => {
-      const cells = pageNames
+  const safeAttribute = (s: string) => safe(s).replace(/"/g, "&quot;");
+
+  const pageMarkup = getPrintLabelPages(labels, preset)
+    .map((pageLabels, pageIndex, allPages) => {
+      const cells = pageLabels
         .map(
-          (name) =>
-            `<div class="label"><div class="label-content" style="font-size:${getInitialPrintLabelFontSize(name)}pt">${safe(name)}</div></div>`,
+          (label) =>
+            `<div class="label"><div class="label-shell"><div class="logo-box${label.isSpecial ? " special" : ""}">${label.logo ? `<img src="${safeAttribute(label.logo)}" alt="${safeAttribute(label.name)}" onerror="this.remove()"/>` : `<div class="logo-placeholder">${safe(label.isSpecial ? "" : label.initials || "?")}</div>`}</div><div class="label-copy"><div class="label-name" style="font-size:${getInitialPrintLabelFontSize(label.name)}pt">${safe(label.name)}</div>${label.sector ? `<div class="label-sector">${safe(label.sector)}</div>` : ""}</div></div></div>`,
         )
         .join("");
 
@@ -700,15 +898,15 @@ function buildPrintableLabelsHtml(names: string[]) {
   <title>Inscriptos</title>
   <style>
     @page {
-      size: A4 portrait;
+      size: ${preset.sizeCss};
       margin: 0;
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; }
 
     html, body {
-      width: 210mm;
-      min-height: 297mm;
+      width: ${preset.widthMm}mm;
+      min-height: ${preset.heightMm}mm;
       background: #fff;
     }
 
@@ -717,9 +915,9 @@ function buildPrintableLabelsHtml(names: string[]) {
     }
 
     .sheet {
-      width: 210mm;
-      min-height: 297mm;
-      padding: 14mm 33mm;
+      width: ${preset.widthMm}mm;
+      min-height: ${preset.heightMm}mm;
+      padding: ${preset.paddingYMm}mm ${preset.paddingXMm}mm;
       overflow: hidden;
     }
 
@@ -730,20 +928,19 @@ function buildPrintableLabelsHtml(names: string[]) {
 
     .grid {
       display: grid;
-      grid-template-columns: repeat(2, 70mm);
-      grid-auto-rows: 35mm;
-      column-gap: 4mm;
-      row-gap: 4mm;
+      grid-template-columns: repeat(${preset.columns}, ${LABEL_WIDTH_MM}mm);
+      grid-auto-rows: ${LABEL_HEIGHT_MM}mm;
+      column-gap: ${preset.columnGapMm}mm;
+      row-gap: ${preset.rowGapMm}mm;
     }
 
     .label {
-      width: 70mm;
-      height: 35mm;
+      width: ${LABEL_WIDTH_MM}mm;
+      height: ${LABEL_HEIGHT_MM}mm;
       display: flex;
       align-items: center;
       justify-content: center;
-      text-align: center;
-      padding: 3.5mm 5mm;
+      padding: 3mm 4mm;
       overflow: hidden;
       border: 1.2px dotted #8f8f8f;
       border-radius: 3mm;
@@ -751,15 +948,95 @@ function buildPrintableLabelsHtml(names: string[]) {
       page-break-inside: avoid;
     }
 
-    .label-content {
+    .label-shell {
+      width: 100%;
+      display: grid;
+      grid-template-columns: 15mm minmax(0, 1fr);
+      align-items: center;
+      gap: 3mm;
+      min-height: 100%;
+    }
+
+    .logo-box {
+      position: relative;
+      width: 15mm;
+      height: 15mm;
+      overflow: hidden;
+      border-radius: 3mm;
+      flex-shrink: 0;
+    }
+
+    .logo-box.special {
+      background: transparent;
+    }
+
+    .logo-box img,
+    .logo-placeholder {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      border-radius: 3mm;
+    }
+
+    .logo-box img {
+      object-fit: cover;
+      object-position: center;
+      z-index: 1;
+    }
+
+    .logo-box.special img {
+      object-fit: contain;
+      object-position: center;
+      padding: 0.75mm;
+      background: transparent;
+    }
+
+    .logo-placeholder {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(104, 162, 67, 0.18);
+      color: #143E29;
+      font-size: 9.5pt;
+      font-weight: 800;
+      letter-spacing: 0.03em;
+    }
+
+    .label-copy {
+      width: 100%;
+      min-width: 0;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 0.8mm;
+      overflow: hidden;
+    }
+
+    .label-name {
       font-weight: 800;
       color: #000;
-      line-height: 1.1;
+      line-height: 1.05;
+      padding-bottom: 0.5mm;
+      text-align: left;
       word-break: break-word;
       overflow-wrap: break-word;
-      display: block;
-      width: 100%;
-      max-height: 100%;
+      display: -webkit-box;
+      -webkit-line-clamp: 3;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    .label-sector {
+      color: #5f6b63;
+      font-size: 8pt;
+      line-height: 1.05;
+      text-align: left;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      font-weight: 500;
     }
 
     @media print {
@@ -775,19 +1052,18 @@ function buildPrintableLabelsHtml(names: string[]) {
   <script>
     function fitLabels() {
       document.querySelectorAll('.label').forEach(function (label) {
-        var content = label.querySelector('.label-content');
-        if (!content) return;
+        var copy = label.querySelector('.label-copy');
+        var name = label.querySelector('.label-name');
+        if (!copy || !name) return;
 
-        var maxHeight = label.clientHeight - 2;
-        var maxWidth = label.clientWidth - 2;
-        var size = parseFloat(window.getComputedStyle(content).fontSize);
+        var size = parseFloat(window.getComputedStyle(name).fontSize);
 
         while (
-          (content.scrollHeight > maxHeight || content.scrollWidth > maxWidth) &&
+          copy.scrollHeight > copy.clientHeight &&
           size > 9
         ) {
           size -= 1;
-          content.style.fontSize = size + 'px';
+          name.style.fontSize = size + 'px';
         }
       });
     }
@@ -802,8 +1078,8 @@ function buildPrintableLabelsHtml(names: string[]) {
 </html>`;
 }
 
-function printNamesAsPdf(names: string[]) {
-  if (names.length === 0) return false;
+function printNamesAsPdf(labels: PrintLabel[], preset: PrintPagePreset) {
+  if (labels.length === 0) return false;
 
   const iframe = document.createElement("iframe");
   iframe.style.position = "fixed";
@@ -813,7 +1089,7 @@ function printNamesAsPdf(names: string[]) {
   iframe.style.right = "0";
   iframe.style.bottom = "0";
   iframe.setAttribute("aria-hidden", "true");
-  iframe.srcdoc = buildPrintableLabelsHtml(names);
+  iframe.srcdoc = buildPrintableLabelsHtml(labels, preset);
 
   const cleanup = () => {
     setTimeout(() => {
@@ -939,6 +1215,172 @@ function CompanyRowSkeleton() {
   );
 }
 
+function PrintLabelPreviewCard({
+  label,
+  compact = false,
+  showOverflowWarning = false,
+  onLogoClick,
+  onOverflowChange,
+  onLogoDelete,
+}: {
+  label: PrintLabel;
+  compact?: boolean;
+  showOverflowWarning?: boolean;
+  onLogoClick?: () => void;
+  onOverflowChange?: (id: string, hasOverflow: boolean) => void;
+  onLogoDelete?: () => void;
+}) {
+  const [imageError, setImageError] = useState(false);
+  const [hasOverflow, setHasOverflow] = useState(false);
+  const showLogo = Boolean(label.logo) && !imageError;
+  const copyRef = useRef<HTMLDivElement | null>(null);
+  const nameRef = useRef<HTMLDivElement | null>(null);
+  const placeholderText = label.isSpecial ? "" : label.initials || "?";
+  const logoClickable = Boolean(onLogoClick);
+
+  useEffect(() => {
+    setImageError(false);
+  }, [label.logo]);
+
+  useEffect(() => {
+    const measureOverflow = () => {
+      if (!copyRef.current || !nameRef.current) return;
+
+      const nameStyle = window.getComputedStyle(nameRef.current);
+      const parsedLineHeight = Number.parseFloat(nameStyle.lineHeight);
+      const lineHeight = Number.isFinite(parsedLineHeight)
+        ? parsedLineHeight
+        : nameRef.current.clientHeight / 3;
+      const maxNameHeight = lineHeight * 3 + 2;
+
+      const nextHasOverflow =
+        nameRef.current.scrollHeight > maxNameHeight + 2 ||
+        copyRef.current.scrollHeight > copyRef.current.clientHeight + 6;
+
+      setHasOverflow(nextHasOverflow);
+      onOverflowChange?.(label.id, nextHasOverflow);
+    };
+
+    const frame = window.requestAnimationFrame(measureOverflow);
+    const observer = new ResizeObserver(measureOverflow);
+
+    if (copyRef.current) observer.observe(copyRef.current);
+    if (nameRef.current) observer.observe(nameRef.current);
+
+    return () => {
+      window.cancelAnimationFrame(frame);
+      observer.disconnect();
+    };
+  }, [compact, label.id, label.name, label.sector, onOverflowChange, showLogo]);
+
+  return (
+    <div
+      className={`relative h-full rounded-[16px] border-2 border-dashed bg-white shadow-[inset_0_0_0_1px_rgba(255,255,255,0.7)] ${
+        showOverflowWarning && hasOverflow
+          ? "border-red-500"
+          : "border-gray-400"
+      } ${compact ? "px-3 py-2.5" : "px-4 py-3"}
+      ${showOverflowWarning && hasOverflow ? "ring-2 ring-red-200" : ""
+      }`}
+    >
+      {showOverflowWarning && hasOverflow && (
+        <div className="absolute right-2 top-2 z-10 inline-flex items-center gap-1 rounded-full bg-red-600 px-2 py-1 text-[10px] font-semibold text-white shadow-sm">
+          <AlertCircle className="h-3 w-3" />
+          Revisar
+        </div>
+      )}
+
+      <div className="grid h-full grid-cols-[48px_minmax(0,1fr)] items-center gap-3">
+        <div
+          className={`relative h-12 w-12 overflow-hidden rounded-[10px] ${logoClickable ? "cursor-pointer" : ""}`}
+          onClick={logoClickable ? onLogoClick : undefined}
+          role={logoClickable ? "button" : undefined}
+          tabIndex={logoClickable ? 0 : undefined}
+          onKeyDown={
+            logoClickable
+              ? (event) => {
+                  if (event.key === "Enter" || event.key === " ") {
+                    event.preventDefault();
+                    onLogoClick?.();
+                  }
+                }
+              : undefined
+          }
+        >
+          {!showLogo && (
+            <div
+              className={`absolute inset-0 flex items-center justify-center rounded-[10px] text-sm font-extrabold tracking-[0.04em] ${
+                label.isSpecial
+                  ? "bg-[#143E29] text-white"
+                  : "bg-[#68A243]/20 text-[#143E29]"
+              }`}
+            >
+              {placeholderText}
+            </div>
+          )}
+          {showLogo && (
+            <>
+              <img
+                src={label.logo}
+                alt={label.name}
+                onError={() => setImageError(true)}
+                onClick={onLogoClick}
+                className={`absolute inset-0 h-full w-full rounded-[10px] ${
+                  onLogoClick ? "cursor-pointer" : ""
+                } ${
+                  label.isSpecial
+                    ? "object-contain object-center p-1"
+                    : "object-cover object-center"
+                }`}
+              />
+              {onLogoDelete ? (
+                <button
+                  type="button"
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    onLogoDelete();
+                  }}
+                  className="absolute inset-0 z-10 flex items-center justify-center rounded-[10px] bg-black/0 text-white opacity-0 transition-all hover:bg-black/45 hover:opacity-100 focus:bg-black/45 focus:opacity-100"
+                  aria-label="Eliminar logo"
+                >
+                  <Trash2 className="h-5 w-5" />
+                </button>
+              ) : null}
+            </>
+          )}
+        </div>
+
+        <div
+          ref={copyRef}
+          className="flex min-w-0 flex-col justify-center gap-0.5 overflow-hidden"
+        >
+          <div
+            ref={nameRef}
+            className={`break-words font-extrabold leading-[1.05] tracking-[-0.025em] text-gray-900 ${
+              compact ? "text-[15px]" : "text-[19px] sm:text-[20px]"
+            }`}
+            style={{
+              display: "-webkit-box",
+              WebkitLineClamp: 3,
+              WebkitBoxOrient: "vertical",
+              overflow: "hidden",
+              paddingBottom: "2px",
+            }}
+          >
+            {label.name}
+          </div>
+          {label.sector ? (
+            <div className="truncate text-[11px] font-medium text-gray-500">
+              {label.sector}
+            </div>
+          ) : null}
+        </div>
+      </div>
+
+    </div>
+  );
+}
+
 const MOCK_COMPANY: EmpresaResponse = {
   id: -1,
   razon_social: "Empresa Demo S.A.",
@@ -1002,10 +1444,27 @@ export default function CompaniesManagement() {
   } | null>(null);
   const [isResultsOpen, setIsResultsOpen] = useState(false);
   const [isPrintPreviewOpen, setIsPrintPreviewOpen] = useState(false);
-  const [printLabelNames, setPrintLabelNames] = useState<string[]>([]);
+  const [printLabels, setPrintLabels] = useState<PrintLabel[]>([]);
+  const [printPagePresetKey, setPrintPagePresetKey] =
+    useState<PrintPagePresetKey>("a4");
+  const [printLabelFilters, setPrintLabelFilters] = useState<PrintLabelFilters>(
+    DEFAULT_PRINT_LABEL_FILTERS,
+  );
+  const [overflowLabelIds, setOverflowLabelIds] = useState<Set<string>>(
+    new Set(),
+  );
+  const [highlightedEditorLabelId, setHighlightedEditorLabelId] = useState<
+    string | null
+  >(null);
+  const [pendingScrollLabelId, setPendingScrollLabelId] = useState<string | null>(
+    null,
+  );
   const [isPrintingLabels, setIsPrintingLabels] = useState(false);
   const [isFooterVisible, setIsFooterVisible] = useState(false);
   const footerRef = useRef<HTMLDivElement | null>(null);
+  const customLogoInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
+  const editorCardRefs = useRef<Record<string, HTMLDivElement | null>>({});
+  const latestPrintLabelsRef = useRef<PrintLabel[]>([]);
   const [animatingCompanies, setAnimatingCompanies] = useState<
     Map<number, "approved" | "unapproved" | "deleted">
   >(new Map());
@@ -1083,6 +1542,16 @@ export default function CompaniesManagement() {
     return () => observer.disconnect();
   }, []);
 
+  useEffect(() => {
+    latestPrintLabelsRef.current = printLabels;
+  }, [printLabels]);
+
+  useEffect(() => {
+    return () => {
+      cleanupPrintLabelLogos(latestPrintLabelsRef.current);
+    };
+  }, []);
+
   const pendingCompanies = companies.filter((c) => !c.aprobada);
   const approvedCompanies = companies.filter((c) => c.aprobada);
 
@@ -1126,10 +1595,54 @@ export default function CompaniesManagement() {
     return [];
   }, [filteredCompanies, tourMockActive, companies.length]);
 
+  const currentPrintPagePreset = PRINT_PAGE_PRESETS[printPagePresetKey];
+
+  const filteredEditorLabels = useMemo(() => {
+    return printLabels.filter((label) => {
+      if (label.isSpecial && !printLabelFilters.showSpecialGuests) return false;
+      if (label.isCustom && !printLabelFilters.showCustom) return false;
+      if (isCompanyPrintLabel(label) && !printLabelFilters.showCompanies)
+        return false;
+      if (printLabelFilters.onlyOverflow && !overflowLabelIds.has(label.id))
+        return false;
+
+      return true;
+    });
+  }, [overflowLabelIds, printLabelFilters, printLabels]);
+
   const printPreviewPages = useMemo(
-    () => getPrintLabelPages(printLabelNames),
-    [printLabelNames],
+    () => getPrintLabelPages(printLabels, currentPrintPagePreset),
+    [currentPrintPagePreset, printLabels],
   );
+
+  const printEditorPages = useMemo(
+    () => getPrintLabelPages(filteredEditorLabels, currentPrintPagePreset),
+    [currentPrintPagePreset, filteredEditorLabels],
+  );
+
+  const printLabelOrderMap = useMemo(
+    () => new Map(printLabels.map((label, index) => [label.id, index + 1])),
+    [printLabels],
+  );
+
+  useEffect(() => {
+    if (!pendingScrollLabelId) return;
+
+    const node = editorCardRefs.current[pendingScrollLabelId];
+    if (!node) return;
+
+    node.scrollIntoView({ behavior: "smooth", block: "center" });
+    setHighlightedEditorLabelId(pendingScrollLabelId);
+    setPendingScrollLabelId(null);
+
+    const timeoutId = window.setTimeout(() => {
+      setHighlightedEditorLabelId((current) =>
+        current === pendingScrollLabelId ? null : current,
+      );
+    }, 1800);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [filteredEditorLabels, pendingScrollLabelId]);
 
   // Tour: definición de steps
   const tourSteps: TourStep[] = [
@@ -1440,35 +1953,171 @@ export default function CompaniesManagement() {
   };
 
   const handleOpenPrintPreview = () => {
-    const names = getPrintableCompanyNames(companies);
+    const labels = getPrintableCompanyLabels(companies);
 
-    if (names.length === 0) {
+    if (labels.length === 0) {
       toast.info("No hay empresas aprobadas y participando para imprimir");
       return;
     }
 
-    setPrintLabelNames(names);
+    cleanupPrintLabelLogos(printLabels);
+    setPrintLabels(labels);
+    setPrintPagePresetKey("a4");
+    setPrintLabelFilters(DEFAULT_PRINT_LABEL_FILTERS);
+    setOverflowLabelIds(new Set());
     setIsPrintPreviewOpen(true);
   };
 
-  const handlePrintLabelChange = (index: number, value: string) => {
-    setPrintLabelNames((prev) =>
-      prev.map((name, currentIndex) =>
-        currentIndex === index ? value : name,
+  const handlePrintLabelChange = (id: string, value: string) => {
+    setPrintLabels((prev) =>
+      prev.map((label) =>
+        label.id === id
+          ? {
+              ...label,
+              name: value,
+              initials: getCompanyInitials(value),
+            }
+          : label,
       ),
     );
   };
 
-  const handleConfirmPrint = () => {
-    const normalizedNames = printLabelNames.map((name) => name.trim());
+  const handlePrintLabelSectorChange = (id: string, value: string) => {
+    setPrintLabels((prev) =>
+      prev.map((label) =>
+        label.id === id
+          ? {
+              ...label,
+              sector: value,
+            }
+          : label,
+      ),
+    );
+  };
 
-    if (normalizedNames.some((name) => name.length === 0)) {
+  const handleAddCustomPrintLabel = () => {
+    const id = createPrintLabelId();
+
+    setPrintLabels((prev) => [
+      ...prev,
+      {
+        id,
+        name: "",
+        logo: undefined,
+        originalLogo: undefined,
+        initials: "",
+        sector: "",
+        isCustom: true,
+      },
+    ]);
+    setPrintLabelFilters((prev) => ({
+      ...prev,
+      showCustom: true,
+      onlyOverflow: false,
+    }));
+    setPendingScrollLabelId(id);
+  };
+
+  const handleRemovePrintLabel = (id: string) => {
+    setPrintLabels((prev) => {
+      const labelToRemove = prev.find((label) => label.id === id);
+      if (labelToRemove) {
+        revokeObjectUrlIfNeeded(labelToRemove.logo);
+      }
+
+      delete customLogoInputRefs.current[id];
+
+      return prev.filter((label) => label.id !== id);
+    });
+    setOverflowLabelIds((prev) => {
+      const next = new Set(prev);
+      next.delete(id);
+      return next;
+    });
+  };
+
+  const handlePrintLabelLogoChange = (
+    id: string,
+    file: File | null,
+  ) => {
+    if (!file) return;
+
+    const objectUrl = URL.createObjectURL(file);
+
+    setPrintLabels((prev) =>
+      prev.map((label) => {
+        if (label.id !== id) return label;
+
+        revokeObjectUrlIfNeeded(label.logo);
+
+        return {
+          ...label,
+          logo: objectUrl,
+        };
+      }),
+    );
+  };
+
+  const handleResetPrintLabelLogo = (id: string) => {
+    setPrintLabels((prev) =>
+      prev.map((label) => {
+        if (label.id !== id) return label;
+
+        revokeObjectUrlIfNeeded(label.logo);
+
+        return {
+          ...label,
+          logo: label.originalLogo,
+        };
+      }),
+    );
+  };
+
+  const handlePrintLabelOverflowChange = (id: string, hasOverflow: boolean) => {
+    setOverflowLabelIds((prev) => {
+      const next = new Set(prev);
+
+      if (hasOverflow) {
+        next.add(id);
+      } else {
+        next.delete(id);
+      }
+
+      return next;
+    });
+  };
+
+  const handlePreviewLabelClick = (label: PrintLabel) => {
+    setPrintLabelFilters((prev) => ({
+      showCompanies: prev.showCompanies || isCompanyPrintLabel(label),
+      showSpecialGuests: prev.showSpecialGuests || Boolean(label.isSpecial),
+      showCustom: prev.showCustom || Boolean(label.isCustom),
+      onlyOverflow:
+        prev.onlyOverflow && overflowLabelIds.has(label.id)
+          ? prev.onlyOverflow
+          : false,
+    }));
+    setPendingScrollLabelId(label.id);
+  };
+
+  const handleConfirmPrint = () => {
+    const normalizedLabels = printLabels.map((label) => {
+      const name = label.name.trim();
+
+      return {
+        ...label,
+        name,
+        initials: getCompanyInitials(name),
+      };
+    });
+
+    if (normalizedLabels.some((label) => label.name.length === 0)) {
       toast.error("Todos los carteles deben tener un nombre antes de imprimir");
       return;
     }
 
     setIsPrintingLabels(true);
-    const printed = printNamesAsPdf(normalizedNames);
+    const printed = printNamesAsPdf(normalizedLabels, currentPrintPagePreset);
     setIsPrintingLabels(false);
 
     if (!printed) {
@@ -1476,7 +2125,7 @@ export default function CompaniesManagement() {
       return;
     }
 
-    setPrintLabelNames(normalizedNames);
+    setPrintLabels(normalizedLabels);
     setIsPrintPreviewOpen(false);
   };
 
@@ -2115,7 +2764,7 @@ export default function CompaniesManagement() {
             </DialogTitle>
             <DialogDescription className="px-6 text-gray-600 dark:text-gray-400">
               Revisá cada nombre antes de imprimir. La vista previa mantiene
-              carteles de 7 cm x 3.5 cm distribuidos en hojas A4.
+              carteles de 7 cm x 3.5 cm distribuidos en hojas {currentPrintPagePreset.label}.
             </DialogDescription>
           </DialogHeader>
 
@@ -2125,27 +2774,37 @@ export default function CompaniesManagement() {
                 {printPreviewPages.map((page, pageIndex) => (
                   <div
                     key={pageIndex}
-                    className="mx-auto w-full max-w-[640px] rounded-[28px] border border-gray-200 bg-white p-8 shadow-[0_18px_40px_rgba(15,23,42,0.12)] dark:border-gray-700"
+                    className="mx-auto w-full rounded-[28px] border border-gray-200 bg-white p-8 shadow-[0_18px_40px_rgba(15,23,42,0.12)] dark:border-gray-700"
+                    style={{ maxWidth: `${currentPrintPagePreset.previewMaxWidthPx}px` }}
                   >
                     <div className="mb-6 flex items-center justify-between text-xs font-semibold uppercase tracking-[0.18em] text-gray-500 dark:text-gray-400">
                       <span>Hoja {pageIndex + 1}</span>
-                      <span>A4</span>
+                      <span>{currentPrintPagePreset.label}</span>
                     </div>
 
-                    <div className="grid grid-cols-2 gap-x-3 gap-y-3">
-                      {page.map((name, labelIndex) => {
-                        const absoluteIndex = pageIndex * LABELS_PER_PAGE + labelIndex;
-
+                    <div
+                      className="grid gap-x-3 gap-y-3"
+                      style={{
+                        gridTemplateColumns: `repeat(${currentPrintPagePreset.columns}, minmax(0, 1fr))`,
+                      }}
+                    >
+                      {page.map((label) => {
                         return (
                           <div
-                            key={`${pageIndex}-${labelIndex}`}
-                            className="aspect-[2/1] rounded-[16px] border-2 border-dashed border-gray-400 bg-white px-4 py-3 text-center shadow-[inset_0_0_0_1px_rgba(255,255,255,0.7)]"
+                            key={label.id}
+                            className="aspect-[2/1]"
                           >
-                            <div className="flex h-full items-center justify-center overflow-hidden text-[15px] font-extrabold uppercase leading-[1.08] tracking-[-0.02em] text-gray-900 sm:text-[16px]">
-                              <span className="block max-h-full break-words overflow-hidden text-balance">
-                                {name || `Cartel ${absoluteIndex + 1}`}
-                              </span>
-                            </div>
+                            <button
+                              type="button"
+                              className="h-full w-full text-left"
+                              onClick={() => handlePreviewLabelClick(label)}
+                            >
+                              <PrintLabelPreviewCard
+                                label={label}
+                                showOverflowWarning
+                                onOverflowChange={handlePrintLabelOverflowChange}
+                              />
+                            </button>
                           </div>
                         );
                       })}
@@ -2166,12 +2825,100 @@ export default function CompaniesManagement() {
                   </p>
                 </div>
                 <Badge className="bg-[#68A243]/10 text-[#143E29] dark:bg-[#68A243]/20 dark:text-[#9FD27B]">
-                  {printLabelNames.length} carteles
+                  {printLabels.length} carteles
                 </Badge>
               </div>
 
+              <div className="mb-5 flex items-center justify-between gap-3">
+                <Select
+                  value={printPagePresetKey}
+                  onValueChange={(value) =>
+                    setPrintPagePresetKey(value as PrintPagePresetKey)
+                  }
+                >
+                  <SelectTrigger className="w-[180px]">
+                    <SelectValue placeholder="Tipo de hoja" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {Object.values(PRINT_PAGE_PRESETS).map((preset) => (
+                      <SelectItem key={preset.key} value={preset.key}>
+                        {preset.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="gap-2 border-gray-300 text-gray-700 dark:border-[#68A243]/40 dark:text-[#9FD27B]"
+                    >
+                      <Filter className="h-4 w-4" />
+                      Filtros
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-60">
+                    <DropdownMenuLabel>Mostrar en edición</DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuCheckboxItem
+                      checked={printLabelFilters.showCompanies}
+                      onCheckedChange={(checked) =>
+                        setPrintLabelFilters((prev) => ({
+                          ...prev,
+                          showCompanies: checked === true,
+                        }))
+                      }
+                    >
+                      Empresas
+                    </DropdownMenuCheckboxItem>
+                    <DropdownMenuCheckboxItem
+                      checked={printLabelFilters.showSpecialGuests}
+                      onCheckedChange={(checked) =>
+                        setPrintLabelFilters((prev) => ({
+                          ...prev,
+                          showSpecialGuests: checked === true,
+                        }))
+                      }
+                    >
+                      Invitados especiales
+                    </DropdownMenuCheckboxItem>
+                    <DropdownMenuCheckboxItem
+                      checked={printLabelFilters.showCustom}
+                      onCheckedChange={(checked) =>
+                        setPrintLabelFilters((prev) => ({
+                          ...prev,
+                          showCustom: checked === true,
+                        }))
+                      }
+                    >
+                      Personalizadas
+                    </DropdownMenuCheckboxItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuCheckboxItem
+                      checked={printLabelFilters.onlyOverflow}
+                      onCheckedChange={(checked) =>
+                        setPrintLabelFilters((prev) => ({
+                          ...prev,
+                          onlyOverflow: checked === true,
+                        }))
+                      }
+                    >
+                      Solo revisar
+                    </DropdownMenuCheckboxItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
+
               <div className="space-y-6">
-                {printPreviewPages.map((page, pageIndex) => (
+                {printEditorPages.length === 0 ? (
+                  <div className="rounded-2xl border border-dashed border-gray-300 bg-white p-6 text-center text-sm text-gray-500 dark:border-gray-700 dark:bg-[#143E29] dark:text-gray-400">
+                    No hay carteles visibles con los filtros actuales.
+                  </div>
+                ) : null}
+
+                {printEditorPages.map((page, pageIndex) => (
                   <div
                     key={`editor-page-${pageIndex}`}
                     className="rounded-2xl border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-[#143E29]"
@@ -2182,27 +2929,89 @@ export default function CompaniesManagement() {
                     </div>
 
                     <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-                      {page.map((name, labelIndex) => {
-                        const absoluteIndex = pageIndex * LABELS_PER_PAGE + labelIndex;
+                      {page.map((label) => {
+                        const labelOrder = printLabelOrderMap.get(label.id) ?? 0;
 
                         return (
                           <div
-                            key={`editor-${pageIndex}-${labelIndex}`}
-                            className="rounded-[16px] border-2 border-dashed border-gray-300 bg-gray-50 p-3 dark:border-gray-600 dark:bg-[#0f2f25]/60"
+                            key={label.id}
+                            ref={(node) => {
+                              editorCardRefs.current[label.id] = node;
+                            }}
+                            className={`rounded-[16px] border-2 border-dashed border-gray-300 bg-gray-50 p-3 transition-colors dark:border-gray-600 dark:bg-[#0f2f25]/60 ${
+                              highlightedEditorLabelId === label.id
+                                ? "border-[#68A243] ring-2 ring-[#68A243]/30"
+                                : ""
+                            }`}
                           >
-                            <div className="mb-2 text-[11px] font-semibold uppercase tracking-[0.16em] text-gray-500 dark:text-gray-400">
-                              Cartel {absoluteIndex + 1}
+                            <div className="mb-2 flex items-center justify-between gap-2 text-[11px] font-semibold uppercase tracking-[0.16em] text-gray-500 dark:text-gray-400">
+                              <span>Cartel {labelOrder}</span>
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => handleRemovePrintLabel(label.id)}
+                                className="h-7 px-2 text-red-600 hover:bg-red-50 hover:text-red-700 dark:text-red-400 dark:hover:bg-red-950/20"
+                              >
+                                Eliminar
+                              </Button>
                             </div>
+                            <div className="mb-3 aspect-[2/1]">
+                              <PrintLabelPreviewCard
+                                label={label}
+                                compact
+                                showOverflowWarning
+                                onOverflowChange={handlePrintLabelOverflowChange}
+                                onLogoClick={
+                                  !label.isSpecial
+                                    ? () =>
+                                        customLogoInputRefs.current[
+                                          label.id
+                                        ]?.click()
+                                    : undefined
+                                }
+                                onLogoDelete={
+                                  !label.isSpecial && label.logo !== label.originalLogo
+                                    ? () => handleResetPrintLabelLogo(label.id)
+                                    : undefined
+                                }
+                              />
+                            </div>
+                            {!label.isSpecial ? (
+                              <input
+                                ref={(node) => {
+                                  customLogoInputRefs.current[label.id] = node;
+                                }}
+                                type="file"
+                                accept="image/*"
+                                className="sr-only"
+                                onChange={(e) => {
+                                  handlePrintLabelLogoChange(
+                                    label.id,
+                                    e.target.files?.[0] ?? null,
+                                  );
+                                  e.currentTarget.value = "";
+                                }}
+                              />
+                            ) : null}
                             <Textarea
-                              value={name}
+                              value={label.name}
                               onChange={(e) =>
-                                handlePrintLabelChange(
-                                  absoluteIndex,
-                                  e.target.value,
-                                )
+                                handlePrintLabelChange(label.id, e.target.value)
                               }
                               rows={3}
                               className="min-h-[96px] resize-y rounded-[12px] border-gray-300 bg-white text-center text-sm font-semibold leading-tight dark:border-gray-600 dark:bg-[#143E29]"
+                            />
+                            <Input
+                              value={label.sector ?? ""}
+                              onChange={(e) =>
+                                handlePrintLabelSectorChange(
+                                  label.id,
+                                  e.target.value,
+                                )
+                              }
+                              placeholder="Sector (opcional)"
+                              className="mt-3 border-gray-300 bg-white text-sm dark:border-gray-600 dark:bg-[#143E29]"
                             />
                           </div>
                         );
@@ -2210,6 +3019,24 @@ export default function CompaniesManagement() {
                     </div>
                   </div>
                 ))}
+
+                <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+                  <button
+                    type="button"
+                    onClick={handleAddCustomPrintLabel}
+                    className="aspect-[2/1] rounded-[16px] border-2 border-dashed border-[#68A243]/35 bg-white/80 p-3 text-[#143E29] transition-colors hover:bg-[#68A243]/10 dark:border-[#68A243]/45 dark:bg-[#143E29]/70 dark:text-[#9FD27B] dark:hover:bg-[#68A243]/10"
+                  >
+                    <div className="flex h-full flex-col items-center justify-center gap-2 rounded-[12px]">
+                      <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[#68A243]/12 dark:bg-[#68A243]/20">
+                        <Plus className="h-6 w-6" />
+                      </div>
+                      <div className="text-sm font-semibold">Nueva etiqueta</div>
+                      <div className="text-xs text-gray-500 dark:text-gray-400">
+                        Agregar cartel personalizado
+                      </div>
+                    </div>
+                  </button>
+                </div>
               </div>
             </div>
           </div>
@@ -2225,7 +3052,7 @@ export default function CompaniesManagement() {
             </Button>
             <Button
               onClick={handleConfirmPrint}
-              disabled={isPrintingLabels || printLabelNames.length === 0}
+              disabled={isPrintingLabels || printLabels.length === 0}
               className="bg-[#68A243] hover:bg-[#5a9038] text-white"
             >
               {isPrintingLabels ? "Abriendo impresión..." : "Confirmar e imprimir"}
