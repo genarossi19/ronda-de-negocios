@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { memo, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router";
 import {
   ArrowLeft,
@@ -114,6 +114,16 @@ function formatCountdown(totalSeconds: number): string {
   const m = Math.floor(totalSeconds / 60);
   const s = totalSeconds % 60;
   return `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
+}
+
+function isInteractiveShortcutTarget(target: EventTarget | null): boolean {
+  if (!(target instanceof HTMLElement)) return false;
+
+  return Boolean(
+    target.closest(
+      'input, textarea, select, button, a, [contenteditable="true"], [role="button"], [role="checkbox"], [role="combobox"], [role="menuitem"]',
+    ),
+  );
 }
 
 // ─── Skeleton ─────────────────────────────────────────────────────────────────
@@ -361,55 +371,131 @@ function CountdownDisplay({
 
 interface SponsorCarouselProps {
   logos: string[];
+  direction?: "up" | "down";
 }
 
 interface ImageErrors {
   [key: string]: boolean;
 }
 
-function SponsorCarousel({ logos }: SponsorCarouselProps) {
-  const [imageErrors, setImageErrors] = useState<ImageErrors>({});
-  const scrollRef = useRef<HTMLDivElement>(null);
+const SALA_EN_VIVO_SPONSOR_LOGOS = ["/logo1.png", "/logo2.png", "/logo3.png"];
+const SPONSOR_CARD_HEIGHT = 96;
+const SPONSOR_GAP = 24;
+const SPONSOR_ITEM_BLOCK_SIZE = SPONSOR_CARD_HEIGHT + SPONSOR_GAP;
+const SPONSOR_SCROLL_SPEED = 28;
 
-  // Memorizamos el array de logos para que NO cambie su referencia con cada segundo del cronómetro
-  const duplicatedLogos = useMemo(() => {
+const SponsorCarousel = memo(function SponsorCarousel({
+  logos,
+  direction = "up",
+}: SponsorCarouselProps) {
+  const [imageErrors, setImageErrors] = useState<ImageErrors>({});
+  const [containerHeight, setContainerHeight] = useState(0);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const trackRef = useRef<HTMLDivElement>(null);
+  const animationFrameRef = useRef<number | null>(null);
+  const lastFrameTimeRef = useRef<number | null>(null);
+  const offsetRef = useRef(0);
+
+  const loopedLogos = useMemo(() => {
     if (!logos.length) return [];
 
-    // Multiplicamos el array lo suficiente para que no queden huecos
-    return [...logos, ...logos, ...logos, ...logos];
-  }, [logos]);
+    const minimumItems =
+      containerHeight > 0
+        ? Math.ceil(containerHeight / SPONSOR_ITEM_BLOCK_SIZE) + 1
+        : logos.length;
+    const loopCopies = Math.max(1, Math.ceil(minimumItems / logos.length));
 
-  // Hilo de ejecución del scroll totalmente aislado del componente padre
+    return Array.from({ length: loopCopies }, () => logos).flat();
+  }, [containerHeight, logos]);
+
+  const duplicatedLogos = useMemo(
+    () => [...loopedLogos, ...loopedLogos],
+    [loopedLogos],
+  );
+
+  const loopDistance = loopedLogos.length * SPONSOR_ITEM_BLOCK_SIZE;
+
   useEffect(() => {
-    const scrollContainer = scrollRef.current;
-    if (!scrollContainer || !duplicatedLogos.length) return;
+    const container = containerRef.current;
+    if (!container) return;
 
-    const scrollStep = 1;
-    let scrollAmount = scrollContainer.scrollTop;
-
-    const scroll = () => {
-      scrollAmount += scrollStep;
-      scrollContainer.scrollTop = scrollAmount;
-
-      // Si llegó a la mitad del contenido, reseteamos a 0 de forma imperceptible
-      if (scrollAmount >= scrollContainer.scrollHeight / 2) {
-        scrollAmount = 0;
-        scrollContainer.scrollTop = 0;
-      }
+    const updateHeight = () => {
+      setContainerHeight(container.clientHeight);
     };
 
-    const interval = setInterval(scroll, 25);
-    return () => clearInterval(interval);
-  }, [duplicatedLogos]);
+    updateHeight();
+
+    const resizeObserver = new ResizeObserver(updateHeight);
+    resizeObserver.observe(container);
+
+    return () => {
+      resizeObserver.disconnect();
+    };
+  }, []);
+
+  useEffect(() => {
+    const track = trackRef.current;
+    if (!track || loopDistance <= 0) return;
+
+    const animate = (timestamp: number) => {
+      if (lastFrameTimeRef.current === null) {
+        lastFrameTimeRef.current = timestamp;
+      }
+
+      const delta = timestamp - lastFrameTimeRef.current;
+      lastFrameTimeRef.current = timestamp;
+
+      offsetRef.current += (delta / 1000) * SPONSOR_SCROLL_SPEED;
+
+      if (offsetRef.current >= loopDistance) {
+        offsetRef.current -= loopDistance;
+      }
+
+      const translateY =
+        direction === "down"
+          ? offsetRef.current - loopDistance
+          : -offsetRef.current;
+
+      track.style.transform = `translate3d(0, ${translateY}px, 0)`;
+      animationFrameRef.current = window.requestAnimationFrame(animate);
+    };
+
+    if (offsetRef.current >= loopDistance) {
+      offsetRef.current %= loopDistance;
+    }
+
+    const initialTranslateY =
+      direction === "down"
+        ? offsetRef.current - loopDistance
+        : -offsetRef.current;
+
+    track.style.transform = `translate3d(0, ${initialTranslateY}px, 0)`;
+    animationFrameRef.current = window.requestAnimationFrame(animate);
+
+    return () => {
+      if (animationFrameRef.current !== null) {
+        window.cancelAnimationFrame(animationFrameRef.current);
+      }
+      animationFrameRef.current = null;
+      lastFrameTimeRef.current = null;
+    };
+  }, [direction, loopDistance]);
 
   if (!logos.length) return null;
 
   return (
-    <div className="w-full h-full overflow-hidden relative">
+    <div ref={containerRef} className="w-full h-full overflow-hidden relative">
       <div
-        ref={scrollRef}
-        className="w-full h-full overflow-y-hidden flex flex-col gap-6 px-2"
-        style={{ scrollBehavior: "auto" }}
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-x-0 top-0 z-10 h-16 bg-gradient-to-b from-gray-50 via-gray-50/80 to-transparent dark:from-[#0a1a15] dark:via-[#0a1a15]/80"
+      />
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-x-0 bottom-0 z-10 h-16 bg-gradient-to-t from-gray-50 via-gray-50/80 to-transparent dark:from-[#0a1a15] dark:via-[#0a1a15]/80"
+      />
+      <div
+        ref={trackRef}
+        className="flex flex-col gap-6 px-2 will-change-transform"
       >
         {duplicatedLogos.map((src, i) => {
           const imageKey = `${src}-${i}`;
@@ -446,7 +532,9 @@ function SponsorCarousel({ logos }: SponsorCarouselProps) {
       </div>
     </div>
   );
-}
+});
+
+SponsorCarousel.displayName = "SponsorCarousel";
 // ─── Main component ───────────────────────────────────────────────────────────
 
 export default function SalaEnVivo() {
@@ -464,6 +552,10 @@ export default function SalaEnVivo() {
   const [totalSeconds, setTotalSeconds] = useState<number>(0);
   const [isRunning, setIsRunning] = useState(false);
   const [isFinished, setIsFinished] = useState(false);
+  const [activeTab, setActiveTab] = useState<"cronometro" | "reuniones">(
+    "cronometro",
+  );
+  const [isPresentationMode, setIsPresentationMode] = useState(false);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   // Entretiempo state
@@ -497,6 +589,8 @@ export default function SalaEnVivo() {
       ? turnosOrdenados[idx + 1]
       : null;
   }, [selectedTurno, turnosOrdenados]);
+
+  const visibleTab = isPresentationMode ? "cronometro" : activeTab;
 
   // ─── Load data ────────────────────────────────────────────────────────────
 
@@ -599,6 +693,68 @@ export default function SalaEnVivo() {
       if (intervalRef.current) clearInterval(intervalRef.current);
     };
   }, [isRunning]);
+
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.defaultPrevented || event.repeat) return;
+      if (isInteractiveShortcutTarget(event.target)) return;
+
+      if (event.code === "Space") {
+        if (!selectedTurno || isFinished || secondsLeft === 0) return;
+
+        event.preventDefault();
+
+        if (isRunning) {
+          if (intervalRef.current) clearInterval(intervalRef.current);
+          setIsRunning(false);
+        } else {
+          setIsRunning(true);
+        }
+
+        return;
+      }
+
+      if (event.key.toLowerCase() === "o") {
+        event.preventDefault();
+        setIsPresentationMode((prev) => !prev);
+        return;
+      }
+
+      if (event.key === "ArrowRight") {
+        if (!selectedTurno || !nextTurno) return;
+
+        event.preventDefault();
+
+        if (timerMode === "turno") {
+          const secs = Math.max(parseTimeInput(breakMinutes), 1);
+          setTimerMode("entretiempo");
+          setTotalSeconds(secs);
+          setSecondsLeft(secs);
+          setIsFinished(false);
+          setIsRunning(true);
+          return;
+        }
+
+        pendingAutoStartRef.current = false;
+        setTimerMode("turno");
+        setSelectedTurnoId(nextTurno.id);
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [
+    breakMinutes,
+    isFinished,
+    isRunning,
+    nextTurno,
+    secondsLeft,
+    selectedTurno,
+    timerMode,
+  ]);
 
   // ─── Auto-advance effect ──────────────────────────────────────────────────
 
@@ -718,6 +874,8 @@ export default function SalaEnVivo() {
   }
 
   function handleTabChange(tab: string) {
+    setActiveTab(tab === "reuniones" ? "reuniones" : "cronometro");
+
     if (tab === "reuniones" && selectedTurnoId) {
       loadMesas(selectedTurnoId);
     }
@@ -735,7 +893,9 @@ export default function SalaEnVivo() {
   return (
     <div className="h-screen flex flex-col bg-gray-50 dark:bg-[#0a1a15] transition-colors duration-300 overflow-hidden">
       {/* ── Compact header ── */}
-      <header className="shrink-0 border-b border-[#0f2f25] bg-gradient-to-r from-[#143E29] via-[#1a5032] to-[#143E29] shadow-lg shadow-black/10 px-4 py-2.5">
+      <header
+        className={`${isPresentationMode ? "hidden" : "shrink-0"} border-b border-[#0f2f25] bg-gradient-to-r from-[#143E29] via-[#1a5032] to-[#143E29] shadow-lg shadow-black/10 px-4 py-2.5`}
+      >
         <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
           <div className="flex items-center gap-3 min-w-0">
             <Button
@@ -778,14 +938,20 @@ export default function SalaEnVivo() {
       </header>
 
       {/* ── Content ── */}
-      <main className="flex-1 min-h-0 px-4 py-3">
-        <div className="h-full max-w-7xl mx-auto flex flex-col">
+      <main
+        className={`flex-1 min-h-0 ${isPresentationMode ? "px-0 py-0" : "px-4 py-3"}`}
+      >
+        <div
+          className={`h-full flex flex-col ${isPresentationMode ? "w-full" : "max-w-7xl mx-auto"}`}
+        >
           <Tabs
-            defaultValue="cronometro"
+            value={visibleTab}
             onValueChange={handleTabChange}
             className="flex flex-col h-full"
           >
-            <TabsList className="shrink-0 mb-3 w-fit bg-[#68A243]/10 dark:bg-[#143E29]/60">
+            <TabsList
+              className={`${isPresentationMode ? "hidden" : "shrink-0 mb-3 w-fit"} bg-[#68A243]/10 dark:bg-[#143E29]/60`}
+            >
               <TabsTrigger
                 value="cronometro"
                 className="data-[state=active]:bg-[#143E29] data-[state=active]:text-white dark:data-[state=active]:bg-[#68A243]"
@@ -807,9 +973,24 @@ export default function SalaEnVivo() {
               value="cronometro"
               className="flex-1 min-h-0 mt-0 data-[state=inactive]:hidden"
             >
-              <div className="h-full grid grid-cols-[300px_1fr_120px] gap-4 items-stretch">
+              <div
+                className={`h-full grid gap-4 items-stretch ${isPresentationMode ? "grid-cols-[140px_minmax(0,1fr)_140px]" : "grid-cols-[300px_1fr_120px]"}`}
+              >
                 {/* Left: settings + controls */}
-                <div className="flex flex-col justify-center gap-3 overflow-y-auto">
+                <div
+                  className={
+                    isPresentationMode
+                      ? "py-4 overflow-hidden"
+                      : "flex flex-col justify-center gap-3 overflow-y-auto"
+                  }
+                >
+                  {isPresentationMode ? (
+                    <SponsorCarousel
+                      logos={SALA_EN_VIVO_SPONSOR_LOGOS}
+                      direction="down"
+                    />
+                  ) : (
+                    <>
                   {/* Settings card */}
                   <div className="rounded-2xl border border-[#68A243]/25 bg-white dark:bg-[#0f2f25] shadow-sm p-4 space-y-3">
                     {timerMode === "turno" && (
@@ -1047,44 +1228,60 @@ export default function SalaEnVivo() {
                       </Button>
                     </div>
                   )}
+                    </>
+                  )}
                 </div>
 
                 {/* Center: big timer */}
-                <div className="flex items-center justify-center min-h-0 h-full p-2">
-                  {selectedTurno ? (
-                    <CountdownDisplay
-                      secondsLeft={secondsLeft}
-                      totalSeconds={totalSeconds}
-                      isRunning={isRunning}
-                      isFinished={isFinished}
-                      variant={timerMode}
-                      label={
-                        timerMode === "entretiempo"
-                          ? `Entretiempo · ${fmt(selectedTurno.hora_fin)} → ${nextTurno ? fmt(nextTurno.hora_inicio) : "–"}`
-                          : `Turno ${turnoNumberMap.get(selectedTurno.id)} · ${fmt(selectedTurno.hora_inicio)} – ${fmt(selectedTurno.hora_fin)}`
-                      }
-                      sublabel={
-                        timerMode === "entretiempo" && nextTurno
-                          ? `A continuación: Turno ${turnoNumberMap.get(nextTurno.id)} (${getTurnoDuration(nextTurno)} min)`
-                          : timerMode === "turno" && nextTurno
-                            ? `Próximo turno: ${fmt(nextTurno.hora_inicio)} – ${fmt(nextTurno.hora_fin)}`
-                            : undefined
-                      }
-                    />
-                  ) : (
-                    <div className="text-center text-muted-foreground dark:text-gray-300">
-                      <Clock3 className="h-14 w-14 mx-auto mb-3 opacity-20" />
-                      <p className="text-lg">
-                        Seleccioná un turno para empezar
-                      </p>
+                <div className="flex flex-col items-center justify-center min-h-0 h-full p-2 min-w-0">
+                  {isPresentationMode && (
+                    <div className="shrink-0 text-center mb-4 sm:mb-6">
+                      <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold tracking-[0.2em] uppercase mb-1 text-[#143E29] dark:text-white">
+                        Ronda de Negocios
+                      </h1>
+                      <h2 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-balance block bg-gradient-to-b from-[#143E29] from-40% to-[#68A243] dark:from-white dark:to-[#a0a0a0] bg-clip-text text-transparent">
+                        Trenque Lauquen
+                      </h2>
                     </div>
                   )}
+
+                  <div className="flex-1 min-h-0 w-full flex items-center justify-center">
+                    {selectedTurno ? (
+                      <CountdownDisplay
+                        secondsLeft={secondsLeft}
+                        totalSeconds={totalSeconds}
+                        isRunning={isRunning}
+                        isFinished={isFinished}
+                        variant={timerMode}
+                        label={
+                          timerMode === "entretiempo"
+                            ? `Entretiempo · ${fmt(selectedTurno.hora_fin)} → ${nextTurno ? fmt(nextTurno.hora_inicio) : "–"}`
+                            : `Turno ${turnoNumberMap.get(selectedTurno.id)} · ${fmt(selectedTurno.hora_inicio)} – ${fmt(selectedTurno.hora_fin)}`
+                        }
+                        sublabel={
+                          timerMode === "entretiempo" && nextTurno
+                            ? `A continuación: Turno ${turnoNumberMap.get(nextTurno.id)} (${getTurnoDuration(nextTurno)} min)`
+                            : timerMode === "turno" && nextTurno
+                              ? `Próximo turno: ${fmt(nextTurno.hora_inicio)} – ${fmt(nextTurno.hora_fin)}`
+                              : undefined
+                        }
+                      />
+                    ) : (
+                      <div className="text-center text-muted-foreground dark:text-gray-300">
+                        <Clock3 className="h-14 w-14 mx-auto mb-3 opacity-20" />
+                        <p className="text-lg">
+                          Seleccioná un turno para empezar
+                        </p>
+                      </div>
+                    )}
+                  </div>
                 </div>
 
                 {/* Right: Vertical Sponsor Carousel Continuous Loop */}
                 <div className="py-4 overflow-hidden">
                   <SponsorCarousel
-                    logos={["/logo1.png", "/logo2.png", "/logo3.png"]}
+                    logos={SALA_EN_VIVO_SPONSOR_LOGOS}
+                    direction="up"
                   />
                 </div>
               </div>
