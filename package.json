@@ -1,7 +1,7 @@
 {
   "name": "ronda-de-negocios",
   "private": true,
-  "version": "0.4.4",
+  "version": "0.4.5",
   "description": "Sistema de gestión de Rondas de Negocios para la Subsecretaría de Desarrollo Económico y Productivo del Municipio de Trenque Lauquen, Buenos Aires, Argentina.",
   "author": {
     "name": "Genaro Rossi",
