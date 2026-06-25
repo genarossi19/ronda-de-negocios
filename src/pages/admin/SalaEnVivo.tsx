@@ -35,14 +35,6 @@ import {
   SelectValue,
 } from "../../components/ui/select";
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "../../components/ui/table";
-import {
   Tabs,
   TabsContent,
   TabsList,
@@ -568,6 +560,7 @@ export default function SalaEnVivo() {
   const [mesas, setMesas] = useState<MesaResponse[]>([]);
   const [mesasTurnoId, setMesasTurnoId] = useState<number | null>(null);
   const [isLoadingMesas, setIsLoadingMesas] = useState(false);
+  const areSponsorsVisible = false;
 
   const turnoNumberMap = useMemo(() => createTurnoNumberMap(turnos), [turnos]);
 
@@ -589,6 +582,23 @@ export default function SalaEnVivo() {
       ? turnosOrdenados[idx + 1]
       : null;
   }, [selectedTurno, turnosOrdenados]);
+
+  const reunionesProyectables = useMemo(
+    () =>
+      mesas
+        .slice()
+        .sort((a, b) => a.num_mesa - b.num_mesa)
+        .filter((mesa) => mesa.asientos.length > 0),
+    [mesas],
+  );
+
+  const cronometroGridClass = isPresentationMode
+    ? areSponsorsVisible
+      ? "grid-cols-[140px_minmax(0,1fr)_140px]"
+      : "grid-cols-[minmax(0,1fr)]"
+    : areSponsorsVisible
+      ? "grid-cols-[300px_1fr_120px]"
+      : "grid-cols-[300px_1fr]";
 
   const visibleTab = isPresentationMode ? "cronometro" : activeTab;
 
@@ -853,8 +863,8 @@ export default function SalaEnVivo() {
 
   // ─── Load mesas for meetings tab ──────────────────────────────────────────
 
-  async function loadMesas(turnoId: number) {
-    if (mesasTurnoId === turnoId) return;
+  async function loadMesas(turnoId: number, force = false) {
+    if (!force && mesasTurnoId === turnoId) return;
     try {
       setIsLoadingMesas(true);
       const data = await getMesasByTurnoId(turnoId);
@@ -881,9 +891,12 @@ export default function SalaEnVivo() {
     }
   }
 
-  function handleMeetingsTurnoChange(turnoId: number) {
-    loadMesas(turnoId);
-  }
+  useEffect(() => {
+    if (activeTab !== "reuniones" || !selectedTurnoId) return;
+    if (mesasTurnoId === selectedTurnoId) return;
+    loadMesas(selectedTurnoId);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeTab, selectedTurnoId, mesasTurnoId]);
 
   // ─── Render ───────────────────────────────────────────────────────────────
 
@@ -987,23 +1000,24 @@ export default function SalaEnVivo() {
               className="flex-1 min-h-0 mt-0 data-[state=inactive]:hidden overflow-hidden"
             >
               <div
-                className={`h-full grid gap-4 items-stretch ${isPresentationMode ? "grid-cols-[140px_minmax(0,1fr)_140px]" : "grid-cols-[300px_1fr_120px]"}`}
+                className={`h-full grid gap-4 items-stretch ${cronometroGridClass}`}
               >
                 {/* Left: settings + controls */}
-                <div
-                  className={
-                    isPresentationMode
-                      ? "py-4 overflow-hidden"
-                      : "flex flex-col justify-center gap-3 overflow-y-auto"
-                  }
-                >
-                  {isPresentationMode ? (
-                    <SponsorCarousel
-                      logos={SALA_EN_VIVO_SPONSOR_LOGOS}
-                      direction="down"
-                    />
-                  ) : (
-                    <>
+                {(!isPresentationMode || areSponsorsVisible) && (
+                  <div
+                    className={
+                      isPresentationMode
+                        ? "py-4 overflow-hidden"
+                        : "flex flex-col justify-center gap-3 overflow-y-auto"
+                    }
+                  >
+                    {isPresentationMode ? (
+                      <SponsorCarousel
+                        logos={SALA_EN_VIVO_SPONSOR_LOGOS}
+                        direction="down"
+                      />
+                    ) : (
+                      <>
                   {/* Settings card */}
                   <div className="rounded-2xl border border-[#68A243]/25 bg-white dark:bg-[#0f2f25] shadow-sm p-4 space-y-3">
                     {timerMode === "turno" && (
@@ -1241,9 +1255,10 @@ export default function SalaEnVivo() {
                       </Button>
                     </div>
                   )}
-                    </>
-                  )}
-                </div>
+                      </>
+                    )}
+                  </div>
+                )}
 
                 {/* Center: big timer */}
                 <div className="flex flex-col items-center justify-center min-h-0 h-full p-2 min-w-0">
@@ -1291,12 +1306,14 @@ export default function SalaEnVivo() {
                 </div>
 
                 {/* Right: Vertical Sponsor Carousel Continuous Loop */}
-                <div className="py-4 overflow-hidden">
-                  <SponsorCarousel
-                    logos={SALA_EN_VIVO_SPONSOR_LOGOS}
-                    direction="up"
-                  />
-                </div>
+                {areSponsorsVisible && (
+                  <div className="py-4 overflow-hidden">
+                    <SponsorCarousel
+                      logos={SALA_EN_VIVO_SPONSOR_LOGOS}
+                      direction="up"
+                    />
+                  </div>
+                )}
               </div>
             </TabsContent>
 
@@ -1305,219 +1322,126 @@ export default function SalaEnVivo() {
               value="reuniones"
               className="flex-1 min-h-0 mt-0 data-[state=inactive]:hidden"
             >
-              <div className="h-full grid grid-cols-[220px_1fr] gap-5 items-stretch">
-                {/* Left: mini timer + selector */}
-                <div className="flex flex-col gap-4 justify-start pt-2">
-                  {selectedTurno && totalSeconds > 0 && (
-                    <div className="flex justify-center">
-                      <CountdownDisplay
-                        secondsLeft={secondsLeft}
-                        totalSeconds={totalSeconds}
-                        isRunning={isRunning}
-                        isFinished={isFinished}
-                        label={
-                          timerMode === "entretiempo"
-                            ? "Entretiempo"
-                            : `Turno ${turnoNumberMap.get(selectedTurno.id)}`
-                        }
-                        compact
-                        variant={timerMode}
-                      />
-                    </div>
-                  )}
-
-                  <div className="space-y-1.5">
-                    <Label className="text-xs font-semibold uppercase tracking-wider text-[#68A243]">
-                      Ver reuniones del turno
-                    </Label>
-                    <Select
-                      value={
-                        mesasTurnoId?.toString() ??
-                        selectedTurnoId?.toString() ??
-                        ""
-                      }
-                      onValueChange={(val) =>
-                        handleMeetingsTurnoChange(Number(val))
-                      }
-                    >
-                      <SelectTrigger className="h-10 border-[#68A243]/30 bg-[#68A243]/5 dark:bg-[#143E29] focus:ring-[#68A243] font-medium text-[#143E29] dark:text-white">
-                        <SelectValue placeholder="Seleccioná un turno" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {turnosOrdenados.map((t) => (
-                          <SelectItem key={t.id} value={t.id.toString()}>
-                            Turno {turnoNumberMap.get(t.id)} ·{" "}
-                            {fmt(t.hora_inicio)} – {fmt(t.hora_fin)}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  {mesasTurnoId && (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => {
-                        setMesasTurnoId(null);
-                        if (selectedTurnoId) loadMesas(selectedTurnoId);
-                      }}
-                      className="text-[#68A243] hover:text-[#68A243] hover:bg-[#68A243]/10 gap-1.5 w-full"
-                    >
-                      <RefreshCw className="h-3.5 w-3.5" />
-                      Actualizar mesas
-                    </Button>
-                  )}
-                </div>
-
-                {/* Right: table */}
-                <div className="min-h-0 flex flex-col rounded-2xl border border-[#68A243]/20 bg-white dark:bg-[#0f2f25] overflow-hidden">
-                  {/* Table header */}
-                  <div className="shrink-0 px-5 py-3 border-b border-[#68A243]/10 dark:border-[#68A243]/20 flex items-center gap-2">
-                    <TableProperties className="h-4 w-4 text-[#68A243]" />
-                    <span className="font-semibold text-[#143E29] dark:text-white text-base">
-                      Mesas y reuniones
-                    </span>
-                    {mesas.length > 0 && (
-                      <Badge className="bg-[#68A243]/10 text-[#3F6E20] border-[#68A243]/20 dark:bg-[#68A243]/20 dark:text-[#9FD27B] dark:border-[#68A243]/30 ml-auto font-normal text-xs">
-                        {mesas.filter((m) => m.asientos.length > 0).length} de{" "}
-                        {mesas.length} con reunión
-                      </Badge>
-                    )}
-                  </div>
-
-                  {/* Table body */}
-                  <div className="flex-1 min-h-0 overflow-y-auto">
-                    {isLoadingMesas ? (
-                      <div className="space-y-2 p-5">
-                        {Array.from({ length: 6 }).map((_, i) => (
-                          <Skeleton
-                            key={i}
-                            className="h-11 w-full dark:bg-[#0f2f25]"
-                          />
-                        ))}
+              <div className="h-full flex flex-col gap-3">
+                <div className="shrink-0 rounded-2xl border border-[#68A243]/20 bg-white/88 dark:bg-[#0f2f25]/88 backdrop-blur-sm px-5 py-3 shadow-sm">
+                  <div className="flex flex-wrap items-center justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#68A243]">
+                        Reuniones del turno actual
+                      </p>
+                      <div className="mt-1 flex flex-wrap items-center gap-x-4 gap-y-1">
+                        <h2 className="text-2xl sm:text-3xl font-bold text-[#143E29] dark:text-white leading-tight">
+                          {selectedTurno
+                            ? `Turno ${turnoNumberMap.get(selectedTurno.id)}`
+                            : "Turno sin seleccionar"}
+                        </h2>
+                        {selectedTurno && (
+                          <span className="text-base sm:text-lg font-medium text-gray-700 dark:text-gray-200">
+                            {fmt(selectedTurno.hora_inicio)} - {fmt(selectedTurno.hora_fin)}
+                          </span>
+                        )}
+                        <Badge className="border-[#68A243]/30 bg-[#68A243]/10 text-[#3F6E20] dark:bg-[#68A243]/20 dark:text-[#9FD27B]">
+                          {reunionesProyectables.length} mesa{reunionesProyectables.length === 1 ? "" : "s"}
+                        </Badge>
                       </div>
-                    ) : mesas.length === 0 ? (
-                      <div className="h-full flex flex-col items-center justify-center text-muted-foreground dark:text-gray-300 gap-3">
-                        <TableProperties className="h-10 w-10 opacity-25" />
-                        <p className="text-sm">
-                          Seleccioná un turno para ver sus mesas
+                    </div>
+
+                    <div className="flex items-center gap-4">
+                      <div className="text-right">
+                        <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#68A243]">
+                          Cronometro
+                        </p>
+                        <p className="font-mono text-3xl sm:text-4xl font-bold tabular-nums leading-none text-[#143E29] dark:text-white">
+                          {formatCountdown(secondsLeft)}
                         </p>
                       </div>
-                    ) : (
-                      <Table>
-                        <TableHeader>
-                          <TableRow className="border-[#68A243]/15 hover:bg-transparent">
-                            <TableHead className="text-[#143E29] dark:text-gray-100 font-semibold w-16">
-                              Mesa
-                            </TableHead>
-                            <TableHead className="text-[#143E29] dark:text-gray-100 font-semibold">
-                              Anfitriona
-                            </TableHead>
-                            <TableHead className="text-[#143E29] dark:text-gray-100 font-semibold">
-                              Invitada
-                            </TableHead>
-                            <TableHead className="text-[#143E29] dark:text-gray-100 font-semibold text-center w-24">
-                              Estado
-                            </TableHead>
-                          </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                          {mesas
-                            .slice()
-                            .sort((a, b) => a.num_mesa - b.num_mesa)
-                            .map((mesa) => {
-                              const anfitriona = mesa.asientos.find(
-                                (a) => a.anfitriona,
-                              );
-                              const invitada = mesa.asientos.find(
-                                (a) => !a.anfitriona,
-                              );
-                              const isFull = mesa.asientos.length >= 2;
-                              const isEmpty = mesa.asientos.length === 0;
-
-                              return (
-                                <TableRow
-                                  key={mesa.id}
-                                  className={`border-[#68A243]/10 transition-colors ${
-                                    isEmpty
-                                      ? "opacity-40"
-                                      : "hover:bg-[#68A243]/5 dark:hover:bg-[#68A243]/5"
-                                  }`}
-                                >
-                                  <TableCell className="font-bold text-[#143E29] dark:text-white text-base">
-                                    {mesa.num_mesa}
-                                  </TableCell>
-                                  <TableCell className="text-gray-700 dark:text-gray-200 text-sm">
-                                    {anfitriona ? (
-                                      <div>
-                                        <p className="font-medium leading-tight">
-                                          {anfitriona.empresa_nombre}
-                                        </p>
-                                        {(anfitriona.representante_nombre ||
-                                          anfitriona.representante_apellido) && (
-                                          <p className="text-xs text-muted-foreground dark:text-gray-300 leading-tight">
-                                            {[
-                                              anfitriona.representante_nombre,
-                                              anfitriona.representante_apellido,
-                                            ]
-                                              .filter(Boolean)
-                                              .join(" ")}
-                                          </p>
-                                        )}
-                                      </div>
-                                    ) : (
-                                      <span className="text-muted-foreground dark:text-gray-500 italic">
-                                        —
-                                      </span>
-                                    )}
-                                  </TableCell>
-                                  <TableCell className="text-gray-700 dark:text-gray-200 text-sm">
-                                    {invitada ? (
-                                      <div>
-                                        <p className="font-medium leading-tight">
-                                          {invitada.empresa_nombre}
-                                        </p>
-                                        {(invitada.representante_nombre ||
-                                          invitada.representante_apellido) && (
-                                          <p className="text-xs text-muted-foreground dark:text-gray-300 leading-tight">
-                                            {[
-                                              invitada.representante_nombre,
-                                              invitada.representante_apellido,
-                                            ]
-                                              .filter(Boolean)
-                                              .join(" ")}
-                                          </p>
-                                        )}
-                                      </div>
-                                    ) : (
-                                      <span className="text-muted-foreground dark:text-gray-500 italic">
-                                        —
-                                      </span>
-                                    )}
-                                  </TableCell>
-                                  <TableCell className="text-center">
-                                    {isEmpty ? (
-                                      <Badge className="bg-gray-100 text-gray-500 border-gray-200 dark:bg-gray-800 dark:text-gray-300 dark:border-gray-700">
-                                        Libre
-                                      </Badge>
-                                    ) : isFull ? (
-                                      <Badge className="bg-[#68A243]/15 text-[#3F6E20] border-[#68A243]/30 dark:bg-[#68A243]/20 dark:text-[#9FD27B] dark:border-[#68A243]/40">
-                                        Completa
-                                      </Badge>
-                                    ) : (
-                                      <Badge className="bg-amber-100 text-amber-800 border-amber-200 dark:bg-amber-950/30 dark:text-amber-300 dark:border-amber-800/50">
-                                        Parcial
-                                      </Badge>
-                                    )}
-                                  </TableCell>
-                                </TableRow>
-                              );
-                            })}
-                        </TableBody>
-                      </Table>
-                    )}
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => {
+                          if (selectedTurnoId) loadMesas(selectedTurnoId, true);
+                        }}
+                        className="text-[#68A243] hover:text-[#68A243] hover:bg-[#68A243]/10 gap-1.5"
+                      >
+                        <RefreshCw className="h-3.5 w-3.5" />
+                        Actualizar
+                      </Button>
+                    </div>
                   </div>
+                </div>
+
+                <div className="min-h-0 flex-1 rounded-2xl border border-[#68A243]/20 bg-white/88 dark:bg-[#0f2f25]/88 backdrop-blur-sm p-3 shadow-sm overflow-hidden">
+                  {isLoadingMesas ? (
+                    <div className="grid h-full grid-cols-2 xl:grid-cols-3 gap-3 auto-rows-fr">
+                      {Array.from({ length: 12 }).map((_, i) => (
+                        <Skeleton
+                          key={i}
+                          className="h-full min-h-24 rounded-2xl dark:bg-[#143E29]"
+                        />
+                      ))}
+                    </div>
+                  ) : reunionesProyectables.length === 0 ? (
+                    <div className="h-full flex flex-col items-center justify-center text-center text-muted-foreground dark:text-gray-300 gap-3">
+                      <TableProperties className="h-12 w-12 opacity-25" />
+                      <p className="text-xl font-semibold">
+                        No hay reuniones asignadas para el turno actual
+                      </p>
+                      <p className="text-sm max-w-md">
+                        Actualiza la vista cuando las mesas ya esten armadas.
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="h-full overflow-y-auto pr-1">
+                      <div className="grid grid-cols-2 xl:grid-cols-3 gap-3 auto-rows-fr">
+                        {reunionesProyectables.map((mesa) => {
+                          const participantes = mesa.asientos.map((asiento) => ({
+                            id: asiento.id,
+                            empresa: asiento.empresa_nombre,
+                            representante: [
+                              asiento.representante_nombre,
+                              asiento.representante_apellido,
+                            ]
+                              .filter(Boolean)
+                              .join(" "),
+                          }));
+
+                          return (
+                            <article
+                              key={mesa.id}
+                              className="grid grid-cols-[78px_1fr] gap-3 rounded-2xl border border-[#68A243]/20 bg-white/75 dark:bg-[#143E29]/60 p-3 shadow-sm min-h-28"
+                            >
+                              <div className="rounded-xl bg-[#143E29] text-white dark:bg-[#68A243] dark:text-[#143E29] flex flex-col items-center justify-center text-center px-2">
+                                <span className="text-[10px] font-semibold uppercase tracking-[0.18em] opacity-80">
+                                  Mesa
+                                </span>
+                                <span className="mt-1 text-3xl font-extrabold leading-none">
+                                  {mesa.num_mesa}
+                                </span>
+                              </div>
+
+                              <div className="min-w-0 flex flex-col justify-center divide-y divide-[#68A243]/15">
+                                {participantes.map((participante) => (
+                                  <div key={participante.id} className="py-1.5 first:pt-0 last:pb-0">
+                                    <p className="text-base 2xl:text-lg font-bold leading-tight text-[#143E29] dark:text-white truncate">
+                                      {participante.empresa}
+                                    </p>
+                                    <p className="text-sm 2xl:text-base leading-tight text-gray-700 dark:text-gray-200 truncate">
+                                      {participante.representante || "Representante no asignado"}
+                                    </p>
+                                  </div>
+                                ))}
+                                {participantes.length === 1 && (
+                                  <div className="py-1.5 text-xs font-medium text-amber-700 dark:text-amber-300">
+                                    Mesa parcial
+                                  </div>
+                                )}
+                              </div>
+                            </article>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
             </TabsContent>

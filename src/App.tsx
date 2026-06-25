@@ -1,4 +1,10 @@
-import { Routes, Route, useLocation, useNavigate } from "react-router";
+import {
+  Routes,
+  Route,
+  matchPath,
+  useLocation,
+  useNavigate,
+} from "react-router";
 import { AuthProvider } from "./context/AuthContext";
 import { ThemeProvider } from "./context/ThemeContext";
 import { MotionPreferencesProvider } from "./context/MotionPreferencesContext";
@@ -45,6 +51,8 @@ type SessionExpiredEventDetail = {
   reason?: string;
 };
 
+const SALA_EN_VIVO_ROUTE = "/panel-administrador/sala-en-vivo/:eventoId";
+
 function AuthRedirectHandler() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -56,6 +64,10 @@ function AuthRedirectHandler() {
       const customEvent = event as CustomEvent<SessionExpiredEventDetail>;
       const reason = customEvent.detail?.reason ?? SESSION_EXPIRED_REASON;
       const message = customEvent.detail?.message ?? SESSION_EXPIRED_MESSAGE;
+
+      if (matchPath(SALA_EN_VIVO_ROUTE, location.pathname)) {
+        return;
+      }
 
       navigate(`/login?reason=${reason}`, {
         replace: true,
