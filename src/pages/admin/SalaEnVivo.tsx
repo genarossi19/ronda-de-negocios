@@ -583,6 +583,10 @@ export default function SalaEnVivo() {
       : null;
   }, [selectedTurno, turnosOrdenados]);
 
+  const reunionesTurno =
+    timerMode === "entretiempo" && nextTurno ? nextTurno : selectedTurno;
+  const reunionesTurnoId = reunionesTurno?.id ?? null;
+
   const reunionesProyectables = useMemo(
     () =>
       mesas
@@ -886,17 +890,17 @@ export default function SalaEnVivo() {
   function handleTabChange(tab: string) {
     setActiveTab(tab === "reuniones" ? "reuniones" : "cronometro");
 
-    if (tab === "reuniones" && selectedTurnoId) {
-      loadMesas(selectedTurnoId);
+    if (tab === "reuniones" && reunionesTurnoId) {
+      loadMesas(reunionesTurnoId);
     }
   }
 
   useEffect(() => {
-    if (activeTab !== "reuniones" || !selectedTurnoId) return;
-    if (mesasTurnoId === selectedTurnoId) return;
-    loadMesas(selectedTurnoId);
+    if (activeTab !== "reuniones" || !reunionesTurnoId) return;
+    if (mesasTurnoId === reunionesTurnoId) return;
+    loadMesas(reunionesTurnoId);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeTab, selectedTurnoId, mesasTurnoId]);
+  }, [activeTab, reunionesTurnoId, mesasTurnoId]);
 
   // ─── Render ───────────────────────────────────────────────────────────────
 
@@ -1327,17 +1331,19 @@ export default function SalaEnVivo() {
                   <div className="flex flex-wrap items-center justify-between gap-3">
                     <div className="min-w-0">
                       <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#68A243]">
-                        Reuniones del turno actual
+                        {timerMode === "entretiempo" && nextTurno
+                          ? "Reuniones del próximo turno"
+                          : "Reuniones del turno actual"}
                       </p>
                       <div className="mt-1 flex flex-wrap items-center gap-x-4 gap-y-1">
                         <h2 className="text-2xl sm:text-3xl font-bold text-[#143E29] dark:text-white leading-tight">
-                          {selectedTurno
-                            ? `Turno ${turnoNumberMap.get(selectedTurno.id)}`
+                          {reunionesTurno
+                            ? `Turno ${turnoNumberMap.get(reunionesTurno.id)}`
                             : "Turno sin seleccionar"}
                         </h2>
-                        {selectedTurno && (
+                        {reunionesTurno && (
                           <span className="text-base sm:text-lg font-medium text-gray-700 dark:text-gray-200">
-                            {fmt(selectedTurno.hora_inicio)} - {fmt(selectedTurno.hora_fin)}
+                            {fmt(reunionesTurno.hora_inicio)} - {fmt(reunionesTurno.hora_fin)}
                           </span>
                         )}
                         <Badge className="border-[#68A243]/30 bg-[#68A243]/10 text-[#3F6E20] dark:bg-[#68A243]/20 dark:text-[#9FD27B]">
@@ -1359,7 +1365,7 @@ export default function SalaEnVivo() {
                         variant="ghost"
                         size="sm"
                         onClick={() => {
-                          if (selectedTurnoId) loadMesas(selectedTurnoId, true);
+                          if (reunionesTurnoId) loadMesas(reunionesTurnoId, true);
                         }}
                         className="text-[#68A243] hover:text-[#68A243] hover:bg-[#68A243]/10 gap-1.5"
                       >
@@ -1384,7 +1390,7 @@ export default function SalaEnVivo() {
                     <div className="h-full flex flex-col items-center justify-center text-center text-muted-foreground dark:text-gray-300 gap-3">
                       <TableProperties className="h-12 w-12 opacity-25" />
                       <p className="text-xl font-semibold">
-                        No hay reuniones asignadas para el turno actual
+                        No hay reuniones asignadas para este turno
                       </p>
                       <p className="text-sm max-w-md">
                         Actualiza la vista cuando las mesas ya esten armadas.
