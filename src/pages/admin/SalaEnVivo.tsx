@@ -891,10 +891,23 @@ export default function SalaEnVivo() {
   if (!evento) return null;
 
   return (
-    <div className="h-screen flex flex-col bg-gray-50 dark:bg-[#0a1a15] transition-colors duration-300 overflow-hidden">
+    <div className="relative h-screen flex flex-col bg-gray-50 dark:bg-[#0a1a15] transition-colors duration-300 overflow-hidden">
+      <div aria-hidden="true" className="pointer-events-none absolute inset-0 z-0">
+        <img
+          src="/fondo-claro.webp"
+          alt=""
+          className="block dark:hidden h-full w-full object-cover object-center"
+        />
+        <img
+          src="/fondo-oscuro.webp"
+          alt=""
+          className="hidden dark:block h-full w-full object-cover object-center"
+        />
+        <div className="absolute inset-0 bg-white/40 dark:bg-[#071710]/35" />
+      </div>
       {/* ── Compact header ── */}
       <header
-        className={`${isPresentationMode ? "hidden" : "shrink-0"} border-b border-[#0f2f25] bg-gradient-to-r from-[#143E29] via-[#1a5032] to-[#143E29] shadow-lg shadow-black/10 px-4 py-2.5`}
+        className={`${isPresentationMode ? "hidden" : "shrink-0"} relative z-10 border-b border-[#0f2f25] bg-gradient-to-r from-[#143E29] via-[#1a5032] to-[#143E29] shadow-lg shadow-black/10 px-4 py-2.5`}
       >
         <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
           <div className="flex items-center gap-3 min-w-0">
@@ -939,7 +952,7 @@ export default function SalaEnVivo() {
 
       {/* ── Content ── */}
       <main
-        className={`flex-1 min-h-0 ${isPresentationMode ? "px-0 py-0" : "px-4 py-3"}`}
+        className={`relative z-10 flex-1 min-h-0 ${isPresentationMode ? "px-0 py-0" : "px-4 py-3"}`}
       >
         <div
           className={`h-full flex flex-col ${isPresentationMode ? "w-full" : "max-w-7xl mx-auto"}`}
@@ -971,7 +984,7 @@ export default function SalaEnVivo() {
             {/* ── Cronómetro tab ── */}
             <TabsContent
               value="cronometro"
-              className="flex-1 min-h-0 mt-0 data-[state=inactive]:hidden"
+              className="flex-1 min-h-0 mt-0 data-[state=inactive]:hidden overflow-hidden"
             >
               <div
                 className={`h-full grid gap-4 items-stretch ${isPresentationMode ? "grid-cols-[140px_minmax(0,1fr)_140px]" : "grid-cols-[300px_1fr_120px]"}`}
