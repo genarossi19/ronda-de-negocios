@@ -29,6 +29,7 @@
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "preview": "vite preview",
+    "preview:prod": "npm run clean && tsc -b && vite build --mode production && vite preview",
     "clean": "rm -rf dist",
     "release:rc": "npm version prerelease --preid=rc && npm run build && git push && git push --tags",
     "release:patch": "npm version patch && npm run build && git push && git push --tags",

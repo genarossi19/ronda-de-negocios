@@ -9,6 +9,7 @@ export const SESSION_EXPIRED_MESSAGE =
   "Su sesion expiro. Vuelve a iniciar sesion";
 export const SESSION_EXPIRED_REASON = "session-expired";
 export const AUTH_SESSION_EXPIRED_EVENT = "auth:session-expired";
+const API_BASE_URL = import.meta.env.VITE_API_URL;
 const AUTH_REDIRECT_HANDLED_FLAG = "__authRedirectHandled";
 const AUTH_MESSAGE_FRAGMENTS = [
   "authentication credentials were not provided",
@@ -165,8 +166,7 @@ export function getApiErrorMessage(error: unknown, fallback: string) {
 }
 
 const api = axios.create({
-  // baseURL: "https://incomprehensive-nedra-subthoracic.ngrok-free.dev",
-  baseURL: "https://rondadenegocios-api.trenquelauquen.gov.ar",
+  baseURL: API_BASE_URL,
   timeout: 20000,
   headers: {
     "Content-Type": "application/json",
@@ -176,8 +176,7 @@ const api = axios.create({
 
 // Instancia pública sin interceptor de token (para endpoints abiertos como /empresas)
 export const publicApi = axios.create({
-  // baseURL: "https://incomprehensive-nedra-subthoracic.ngrok-free.dev",
-  baseURL: "https://rondadenegocios-api.trenquelauquen.gov.ar",
+  baseURL: API_BASE_URL,
   timeout: 20000,
   headers: {
     "Content-Type": "application/json",
